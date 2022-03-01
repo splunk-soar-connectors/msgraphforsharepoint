@@ -100,7 +100,7 @@ def _save_app_state(state, asset_id, app_connector=None):
         return phantom.APP_ERROR
 
     if app_connector:
-        app_connector.debug_print('Saving state: ', state)
+        app_connector.debug_print('Saving state: {}'.format(state))
 
     try:
         with open(real_state_file_path, 'w+') as state_file_obj:
@@ -426,7 +426,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._access_token = resp_json[MS_SHAREPOINT_JSON_ACCESS_TOKEN]
         self.save_state(self._state)
 
-        return phantom.APP_SUCCESS
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully fetched access token")
 
     def _make_rest_call_helper(
             self, endpoint, action_result, verify=True, headers=None, params=None,
@@ -453,8 +453,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if headers is None:
             headers = {}
 
-        token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {})
-        if not token.get(MS_SHAREPOINT_JSON_ACCESS_TOKEN):
+        if not self._access_token:
             self.save_progress("Generating a token")
             ret_val = self._get_token(action_result)
 
@@ -646,7 +645,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         while True:
             if next_link:
-                ret_val, response = self._make_rest_call_helper(endpoint, action_result, next_link=next_link, params=params)
+                ret_val, response = self._make_rest_call_helper(endpoint, action_result, next_link=next_link)
             else:
                 ret_val, response = self._make_rest_call_helper(endpoint, action_result, params=params)
 
@@ -663,12 +662,6 @@ class MsGraphForSharepointConnector(BaseConnector):
             if not next_link:
                 break
 
-            if params is not None and '$top' in params:
-                del params['$top']
-
-            if params == {}:
-                params = None
-
         return phantom.APP_SUCCESS, list_items
 
     def _handle_list_sites(self, param):
@@ -676,7 +669,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         limit = param.get('limit')
-        ret_val, limit = self._validate_integer(action_result, limit, MS_SHAREPOINT_LIMIT_KEY)
+        ret_val, limit = self._validate_integer(action_result, limit, MS_SHAREPOINT_LIMIT_KEY, False)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -700,7 +693,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERR_MISSING_SITE_ID.format('retrieving a list'))
 
         limit = param.get('limit')
-        ret_val, limit = self._validate_integer(action_result, limit, MS_SHAREPOINT_LIMIT_KEY)
+        ret_val, limit = self._validate_integer(action_result, limit, MS_SHAREPOINT_LIMIT_KEY, False)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 

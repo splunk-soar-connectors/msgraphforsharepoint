@@ -117,14 +117,6 @@
                                 <tbody>
                                     {% for column in list.columns %}
                                         <tr>
-                                            <!-- <td>
-                                                <a href="javascript:;"
-                                                onclick="context_menu(this, [{'contains': ['defender atp device id'], 'value': '{{ device.id }}' }], 0, {{ container.id }}, null, false);">
-                                                    {{ device.id }}
-                                                    &nbsp;
-                                                    <span class="fa fa-caret-down" style="font-size: smaller;"></span>
-                                                </a>
-                                            </td> -->
                                             <td>{{ column.name | default:"None" }}</td>
                                             <td>{{ column.displayName | default:"None" }}</td>
                                             <td>{{ column.description | default:"None" }}</td>
