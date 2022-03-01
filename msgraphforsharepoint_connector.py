@@ -368,12 +368,13 @@ class MsGraphForSharepointConnector(BaseConnector):
         """ Function that makes the REST call to the app.
         :param endpoint: REST endpoint that needs to appended to the service address
         :param action_result: object of ActionResult class
+        :param verify: verify server certificate (Default True)
         :param headers: request headers
         :param params: request parameters
         :param data: request body
         :param json: JSON object
         :param method: GET/POST/PUT/DELETE/PATCH (Default will be GET)
-        :param verify: verify server certificate (Default True)
+        :param download: use streaming for the file download to handle large files
         :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message),
         response obtained by making an API call
         """
@@ -386,16 +387,26 @@ class MsGraphForSharepointConnector(BaseConnector):
             return RetVal(action_result.set_status(phantom.APP_ERROR, "Invalid method: {0}".format(method)), resp_json)
 
         try:
-            r = request_func(endpoint, json=json, data=data, headers=headers, verify=verify, params=params)
+            if download:
+                if hasattr(Vault, 'get_vault_tmp_dir'):
+                    fd, tmp_file_path = tempfile.mkstemp(dir=Vault.get_vault_tmp_dir())
+                else:
+                    fd, tmp_file_path = tempfile.mkstemp(dir='/opt/phantom/vault/tmp')
+                os.close(fd)
+
+                r = request_func(endpoint, json=json, data=data, headers=headers, params=params, stream=True)
+                if 200 <= r.status_code < 399:
+                    with open(tmp_file_path, 'wb') as fp:
+                        for chunk in r.iter_content(chunk_size=10 * 1024 * 1024):
+                            fp.write(chunk)
+                    return RetVal(phantom.APP_SUCCESS, tmp_file_path)
+                self.debug_print("Error while downloading file. StatusCode: {}, text: {}".format(r.status_code, r.text))
+            else:
+                r = request_func(endpoint, json=json, data=data, headers=headers, verify=verify, params=params)
         except Exception as e:
             error_msg = self._get_error_message_from_exception(e)
             return RetVal(action_result.set_status(phantom.APP_ERROR,
                                                    "Error Connecting to server. Details: {0}".format(error_msg)), resp_json)
-
-        if download:
-            if r.status_code == 200:
-                return phantom.APP_SUCCESS, r.content
-            self.debug_print("Error while downloading file. StatusCode: {}, text: {}".format(r.status_code, r.text))
 
         return self._process_response(r, action_result)
 
@@ -733,19 +744,12 @@ class MsGraphForSharepointConnector(BaseConnector):
             return action_result.get_status()
 
         # Get the file content
-        ret_val, file_content = self._make_rest_call_helper(MS_GET_FILE_CONTENT_ENDPOINT.format(endpoint), action_result, download=True)
+        ret_val, tmp_file_path = self._make_rest_call_helper(MS_GET_FILE_CONTENT_ENDPOINT.format(endpoint), action_result, download=True)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         # Save attachment file to the vault
         try:
-            if hasattr(Vault, 'get_vault_tmp_dir'):
-                fd, tmp_file_path = tempfile.mkstemp(dir=Vault.get_vault_tmp_dir())
-            else:
-                fd, tmp_file_path = tempfile.mkstemp(dir='/opt/phantom/vault/tmp')
-            os.write(fd, file_content)
-            os.close(fd)
-
             success, message, attachment_vault_id = ph_rules.vault_add(
                 container=self.get_container_id(),
                 file_location=tmp_file_path,
