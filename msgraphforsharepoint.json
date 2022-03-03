@@ -16,6 +16,7 @@
     "package_name": "phantom_msgraphforsharepoint",
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
+    "fips_compliant": true,
     "min_phantom_version": "5.1.0",
     "latest_tested_versions": [
         "SharePoint Cloud: 25 February, 2022"
@@ -861,6 +862,7 @@
             "action": "get file",
             "identifier": "get_file",
             "description": "Retrieves a file from a SharePoint Site",
+            "verbose": "The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
             "type": "generic",
             "read_only": true,
             "parameters": {
@@ -1131,6 +1133,7 @@
             "action": "remove file",
             "identifier": "remove_file",
             "description": "Removes a file from a SharePoint Site",
+            "verbose": "The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
             "type": "generic",
             "read_only": false,
             "parameters": {

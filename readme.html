@@ -63,19 +63,39 @@ and limitations under the License.
     <br><br>
     For the asset configuration parameter <b>SharePoint Site ID</b>, it should be in the format <b>{Hostname},{SPSite-id},{SPWeb-id}</b>. You can get the <b>SharePoint Site ID</b> by running the <b>'list site'</b> action. For more information check out the <a href="https://docs.microsoft.com/en-us/graph/api/resources/sharepoint?view=graph-rest-1.0#note-for-existing-sharepoint-developers" target="_blank">Microsoft documentation</a>.
 
-  <h2>Restrictions and Limitations</h2>
-  Some special characters aren't allowed as a SharePoint list name. If you have created the list with these special characters, SharePoint API will not allow you to retrieve the list information. For more information check out the <a href="https://support.microsoft.com/en-us/kb/905231" target="_blank">Microsoft documentation for limitations</a>.
-  <br><br>
-  As a workaround, you can use the list_id instead of the list_name. Follow the below steps to find the list_id from SharePoint UI.
-  <ul>
-    <li>Open SharePoint, and navigate to the list that contains your workflow.</li>
-    <li>Click on the <b>Settings</b> icon and then select <b>List Settings</b>.</li>
-    <li>Copy the URL, and find the text after <b>List=</b>.</li>
-    <li>Remove "%7B" from the front of the list and "%7D" from the end of the list.</li>
-    <li>Replace %2D with a hyphen(-) if applicable.</li>
+    <h2>Restrictions and Limitations</h2>
+    Some special characters aren't allowed as a SharePoint <b>list name</b> and <b>file/folder name</b>. If you have created the list/files with these special characters, SharePoint API will not allow you to retrieve the list information. For more information about limitations check out the <a href="https://support.microsoft.com/en-us/kb/905231" target="_blank">Microsoft documentation</a>.
+    <br>
+    As a workaround for lists, you can use the list_id instead of the list_name. Follow the below steps to find the list_id from SharePoint UI.
+    <ul>
+      <li>Open SharePoint, and navigate to the list that contains your workflow.</li>
+      <li>Click on the <b>Settings</b> icon and then select <b>List Settings</b>.</li>
+      <li>Copy the URL, and find the text after <b>List=</b>.</li>
+      <li>Remove "%7B" from the front of the list and "%7D" from the end of the list.</li>
+      <li>Replace %2D with a hyphen(-) if applicable.</li>
+    </ul>
     For example:
     <br> 1. "%7B9D5F2138%2DC9E6%2D4473%2DA094%2DD7F4284C0388%7D" to "9D5F2138-C9E6-4473-A094-D7F4284C0388"
     <br> 2. "%7B72c91cad-fd79-4604-877b-1e34552f0297%7D" to "72c91cad-fd79-4604-877b-1e34552f0297"
-  </ul>
+
+    <h2>Port Information</h2>
+    The app uses HTTP/ HTTPS protocol for communicating with the Microsoft servers. Below are the default ports used by Splunk SOAR.
+    <table>
+        <tr class=plain>
+            <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Service Name</th>
+            <th>Transport Protocol</th>
+            <th>Port</th>
+        </tr>
+        <tr>
+            <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http</td>
+            <td>tcp</td>
+            <td>80</td>
+        </tr>
+        <tr>
+            <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;https</td>
+            <td>tcp</td>
+            <td>443</td>
+        </tr>
+    </table>
   </body>
 </html>
