@@ -441,17 +441,20 @@ class MsGraphForSharepointConnector(BaseConnector):
 
     def _make_rest_call_helper(
             self, endpoint, action_result, verify=True, headers=None, params=None,
-            data=None, json=None, method="get", download=False, next_link=None
+            data=None, json=None, method="get", download=False, next_link=None, is_force=False
     ):
         """ Function that helps to set a REST call to the app.
         :param endpoint: REST endpoint that needs to appended to the service address
         :param action_result: object of ActionResult class
+        :param verify: verify server certificate (Default True)
         :param headers: request headers
         :param params: request parameters
         :param data: request body
         :param json: JSON object
         :param method: GET/POST/PUT/DELETE/PATCH (Default will be GET)
-        :param verify: verify server certificate (Default True)
+        :param download: use streaming for the file download to handle large files
+        :param next_link: used for pagination, next_link is returned in the API response
+        :param is_force: ignore the token available in the state file
         :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message),
         response obtained by making an API call
         """
@@ -464,7 +467,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if headers is None:
             headers = {}
 
-        if not self._access_token:
+        if not self._access_token or is_force:
             self.save_progress("Generating a token")
             ret_val = self._get_token(action_result)
 
@@ -623,7 +626,7 @@ class MsGraphForSharepointConnector(BaseConnector):
                 self.save_progress("Test Connectivity Failed")
                 return action_result.get_status()
 
-        ret_val, _ = self._make_rest_call_helper(MS_TEST_CONNECTIVITY_ENDPOINT, action_result)
+        ret_val, _ = self._make_rest_call_helper(MS_TEST_CONNECTIVITY_ENDPOINT, action_result, is_force=True)
         if phantom.is_fail(ret_val):
             self.save_progress("Test Connectivity Failed")
             return action_result.get_status()
