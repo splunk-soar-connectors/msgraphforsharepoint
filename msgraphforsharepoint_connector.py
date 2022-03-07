@@ -611,6 +611,11 @@ class MsGraphForSharepointConnector(BaseConnector):
                 return action_result.set_status(phantom.APP_ERROR)
             else:
                 self.save_progress("Admin consent received")
+                self.save_progress("Waiting for 30 seconds before generating token. If action fails with '403: AccessDenied' error, "
+                                   "please check permissions and re-run the 'test connectivity' after some time. ")
+                self.save_progress("Admin consent is already received. You can mark 'Admin Consent Already Provided' to True, "
+                                   "unless you make changes in the permissions")
+                time.sleep(30)
                 return action_result.set_status(phantom.APP_SUCCESS)
 
         self.save_progress("Timed out waiting for login, please try again")
