@@ -203,8 +203,8 @@ class MsGraphForSharepointConnector(BaseConnector):
         :return: error message
         """
 
-        error_code = MS_SHAREPOINT_ERR_CODE_MESSAGE
-        error_msg = MS_SHAREPOINT_ERR_MESSAGE
+        error_code = MS_SHAREPOINT_ERR_CODE_MSG
+        error_msg = MS_SHAREPOINT_ERR_MSG
         try:
             if hasattr(e, "args"):
                 if len(e.args) > 1:
@@ -263,6 +263,9 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         try:
             soup = BeautifulSoup(response.text, "html.parser")
+            # Remove the script, style, footer and navigation part from the HTML message
+            for element in soup(["script", "style", "footer", "nav"]):
+                element.extract()
             error_text = soup.text
             split_lines = error_text.split('\n')
             split_lines = [x.strip() for x in split_lines if x.strip()]
@@ -280,9 +283,10 @@ class MsGraphForSharepointConnector(BaseConnector):
         try:
             resp_json = r.json()
         except Exception as e:
+            error_msg = self._get_error_message_from_exception(e)
             return RetVal(
                 action_result.set_status(
-                    phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(str(e))
+                    phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(error_msg)
                 ), None
             )
 
@@ -485,7 +489,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         # If token is expired, generate a new token
         msg = action_result.get_message()
-        if msg and any(failure_message in msg for failure_message in MS_AUTH_FAILURE_MESSAGES):
+        if msg and any(failure_message in msg for failure_message in MS_AUTH_FAILURE_MSGS):
             self.save_progress("Bad token, generating a new one")
             ret_val = self._get_token(action_result)
             if phantom.is_fail(ret_val):
@@ -513,7 +517,8 @@ class MsGraphForSharepointConnector(BaseConnector):
         try:
             resp_json = r.json()
         except Exception as e:
-            return action_result.set_status(phantom.APP_ERROR, "Error processing response JSON", e), None
+            error_msg = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, "Error processing response JSON. Error: {}".format(error_msg)), None
 
         return phantom.APP_SUCCESS, resp_json
 
@@ -612,9 +617,9 @@ class MsGraphForSharepointConnector(BaseConnector):
             else:
                 self.save_progress("Admin consent received")
                 self.save_progress("Waiting for 30 seconds before generating token. If action fails with '403: AccessDenied' error, "
-                                   "please check permissions and re-run the 'test connectivity' after some time. ")
+                                   "please check permissions and re-run the 'test connectivity' after some time.")
                 self.save_progress("Admin consent is already received. You can mark 'Admin Consent Already Provided' to True, "
-                                   "unless you make changes in the permissions")
+                                   "unless you make changes in the permissions.")
                 time.sleep(30)
                 return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -687,8 +692,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        limit = param.get('limit')
-        ret_val, limit = self._validate_integer(action_result, limit, MS_SHAREPOINT_LIMIT_KEY, False)
+        ret_val, limit = self._validate_integer(action_result, param.get('limit'), MS_SHAREPOINT_LIMIT_KEY, False)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -711,8 +715,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if not self._site_id:
             return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERR_MISSING_SITE_ID.format('retrieving a list'))
 
-        limit = param.get('limit')
-        ret_val, limit = self._validate_integer(action_result, limit, MS_SHAREPOINT_LIMIT_KEY, False)
+        ret_val, limit = self._validate_integer(action_result, param.get('limit'), MS_SHAREPOINT_LIMIT_KEY, False)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -724,11 +727,11 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         params = {"expand": "fields"}
         endpoint = "{}/items".format(endpoint)
-        ret_val, events = self._paginator(action_result, endpoint, params=params, limit=limit)
+        ret_val, list_items = self._paginator(action_result, endpoint, params=params, limit=limit)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        response["items"] = events
+        response["items"] = list_items
         action_result.add_data(response)
         summary = action_result.update_summary({})
         summary[MS_SHAREPOINT_JSON_ITEM_COUNT] = len(response.get('items', []))

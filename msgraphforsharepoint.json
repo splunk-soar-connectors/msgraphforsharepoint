@@ -71,6 +71,7 @@
             "action": "list sites",
             "identifier": "list_sites",
             "description": "Fetch the details of the SharePoint sites",
+            "verbose": "The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
             "type": "investigate",
             "read_only": true,
             "parameters": {
@@ -195,6 +196,7 @@
             "action": "get list",
             "identifier": "get_list",
             "description": "Retrieves a list from a SharePoint Site",
+            "verbose": "The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
             "type": "investigate",
             "read_only": true,
             "parameters": {

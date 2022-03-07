@@ -34,7 +34,7 @@ MS_LIST_SITES_ENDPOINT = '/sites'
 MS_GET_LIST_ENDPOINT = '/sites/{0}/lists/{1}'
 MS_GET_FILE_METADATA_ENDPOINT = '/sites/{0}/drive/root:/{1}/{2}'
 MS_GET_FILE_CONTENT_ENDPOINT = '{0}:/content'
-MS_AUTH_FAILURE_MESSAGES = ['token is invalid', 'token has expired', 'ExpiredAuthenticationToken', 'AuthenticationFailed']
+MS_AUTH_FAILURE_MSGS = ['token is invalid', 'token has expired', 'ExpiredAuthenticationToken', 'AuthenticationFailed']
 
 # Splunk SOAR Endpoints
 SOAR_SYS_INFO_URL = "{url}rest/system_info"
@@ -45,8 +45,8 @@ STATE_FILE_PATH = '{0}/{1}_state.json'
 MS_SHAREPOINT_PER_PAGE_COUNT = 1000
 
 # Status/Progress Messages
-MS_SHAREPOINT_ERR_CODE_MESSAGE = 'Error code unavailable'
-MS_SHAREPOINT_ERR_MESSAGE = 'Unknown error occurred. Please check the asset configuration and|or action parameters'
+MS_SHAREPOINT_ERR_CODE_MSG = 'Error code unavailable'
+MS_SHAREPOINT_ERR_MSG = 'Unknown error occurred. Please check the asset configuration and|or action parameters'
 MS_SHAREPOINT_ERR_MISSING_SITE_ID = "The asset configuration parameter 'Sharepoint Site ID' is required for {0} from specific site"
 MS_SHAREPOINT_ERR_STATE_FILE_CORRUPT = 'Error occurred while loading the state file due to its unexpected format. ' \
                                        'Resetting the state file with the default format. Please try again.'
