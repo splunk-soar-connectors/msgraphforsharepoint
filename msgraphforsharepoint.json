@@ -193,6 +193,223 @@
             "versions": "EQ(*)"
         },
         {
+            "action": "list lists",
+            "identifier": "list_lists",
+            "description": "Fetch the available lists under a SharePoint site",
+            "verbose": "The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
+            "type": "investigate",
+            "read_only": true,
+            "parameters": {
+                "limit": {
+                    "description": "Maximum number of sites to return",
+                    "data_type": "numeric",
+                    "order": 0
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.limit",
+                    "data_type": "numeric",
+                    "example_values": [
+                        500
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.@odata.etag",
+                    "data_type": "string",
+                    "example_values": [
+                        "\"4896b66a-659c-4fce-a148-0b26bd718f68,5\""
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.createdBy.user.displayName",
+                    "data_type": "string",
+                    "example_values": [
+                        "Test User"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.createdBy.user.email",
+                    "data_type": "string",
+                    "example_values": [
+                        "test_user@tenant-name.onmicrosoft.com"
+                    ],
+                    "contains": [
+                        "email"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.createdBy.user.id",
+                    "data_type": "string",
+                    "example_values": [
+                        "eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.createdDateTime",
+                    "data_type": "string",
+                    "example_values": [
+                        "2022-02-24T05:38:53Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.description",
+                    "data_type": "string",
+                    "example_values": [
+                        "RecruitmentTracker"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.displayName",
+                    "data_type": "string",
+                    "example_values": [
+                        "ListName"
+                    ],
+                    "column_name": "List Name",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.eTag",
+                    "data_type": "string",
+                    "example_values": [
+                        "\"4896b66a-659c-4fce-a148-0b26bd718f68,5\""
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "example_values": [
+                        "4896b66a-659c-4fce-a148-0b26bd718f68"
+                    ],
+                    "contains": [
+                        "sharepoint list id"
+                    ],
+                    "column_name": "List ID",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.lastModifiedBy.user.displayName",
+                    "data_type": "string",
+                    "example_values": [
+                        "Test User"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.lastModifiedBy.user.email",
+                    "data_type": "string",
+                    "example_values": [
+                        "test_user@tenant-name.onmicrosoft.com"
+                    ],
+                    "contains": [
+                        "email"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.lastModifiedBy.user.id",
+                    "data_type": "string",
+                    "example_values": [
+                        "eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.lastModifiedDateTime",
+                    "data_type": "string",
+                    "example_values": [
+                        "2022-03-03T13:43:06Z"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.list.contentTypesEnabled",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.list.hidden",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.list.template",
+                    "data_type": "string",
+                    "example_values": [
+                        "genericList"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string",
+                    "example_values": [
+                        "ListName"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.parentReference.siteId",
+                    "data_type": "string",
+                    "example_values": [
+                        "tenant-name.sharepoint.com,dc6f43e9-54fa-4a39-8783-314e3bbbed41,c42b48c4-59b9-48f1-b96e-e8145b5539fa"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.webUrl",
+                    "data_type": "string",
+                    "example_values": [
+                        "https://tenant-name.sharepoint.com/sites/SiteName/Lists/ListName"
+                    ],
+                    "contains": [
+                        "url"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary.lists_count",
+                    "data_type": "numeric",
+                    "example_values": [
+                        25
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string",
+                    "example_values": [
+                        "Lists count: 25"
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                }
+            ],
+            "render": {
+                "type": "custom",
+                "view": "msgraphforsharepoint_view.list_view",
+                "title": "List Lists"
+            },
+            "versions": "EQ(*)"
+        },
+        {
             "action": "get list",
             "identifier": "get_list",
             "description": "Retrieves a list from a SharePoint Site",
@@ -203,6 +420,10 @@
                 "list": {
                     "description": "Title or ID of the list to retrieve",
                     "data_type": "string",
+                    "contains": [
+                        "sharepoint list id"
+                    ],
+                    "primary": true,
                     "required": true,
                     "order": 0
                 },
@@ -231,7 +452,11 @@
                 {
                     "data_path": "action_result.parameter.list",
                     "data_type": "string",
+                    "contains": [
+                        "sharepoint list id"
+                    ],
                     "example_values": [
+                        "4961c496-52c1-49bd-b1fa-e1b2e976256c",
                         "Test List Name"
                     ]
                 },
@@ -489,6 +714,9 @@
                 {
                     "data_path": "action_result.data.*.id",
                     "data_type": "string",
+                    "contains": [
+                        "sharepoint list id"
+                    ],
                     "example_values": [
                         "4961c496-52c1-49bd-b1fa-e1b2e976256c"
                     ]
@@ -855,7 +1083,7 @@
             ],
             "render": {
                 "type": "custom",
-                "view": "msgraphforsharepoint_view.get_list",
+                "view": "msgraphforsharepoint_view.list_view",
                 "title": "Get List"
             },
             "versions": "EQ(*)"
@@ -863,7 +1091,7 @@
         {
             "action": "get file",
             "identifier": "get_file",
-            "description": "Retrieves a file from a SharePoint Site",
+            "description": "Retrieves a file from a SharePoint site",
             "verbose": "The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
             "type": "generic",
             "read_only": true,
@@ -1134,7 +1362,7 @@
         {
             "action": "remove file",
             "identifier": "remove_file",
-            "description": "Removes a file from a SharePoint Site",
+            "description": "Removes a file from a SharePoint site",
             "verbose": "The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
             "type": "generic",
             "read_only": false,

@@ -692,7 +692,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        ret_val, limit = self._validate_integer(action_result, param.get('limit'), MS_SHAREPOINT_LIMIT_KEY, False)
+        ret_val, limit = self._validate_integer(action_result, param.get(MS_SHAREPOINT_JSON_LIMIT), MS_SHAREPOINT_LIMIT_KEY, False)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -708,6 +708,29 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _handle_list_lists(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        if not self._site_id:
+            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERR_MISSING_SITE_ID.format('retrieving lists information'))
+
+        ret_val, limit = self._validate_integer(action_result, param.get(MS_SHAREPOINT_JSON_LIMIT), MS_SHAREPOINT_LIMIT_KEY, False)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        ret_val, lists = self._paginator(action_result, MS_LIST_LISTS_ENDPOINT.format(self._site_id), limit=limit)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        for list_info in lists:
+            action_result.add_data(list_info)
+
+        summary = action_result.update_summary({})
+        summary[MS_SHAREPOINT_JSON_LISTS_COUNT] = action_result.get_data_size()
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _handle_get_list(self, param):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
@@ -715,7 +738,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if not self._site_id:
             return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERR_MISSING_SITE_ID.format('retrieving a list'))
 
-        ret_val, limit = self._validate_integer(action_result, param.get('limit'), MS_SHAREPOINT_LIMIT_KEY, False)
+        ret_val, limit = self._validate_integer(action_result, param.get(MS_SHAREPOINT_JSON_LIMIT), MS_SHAREPOINT_LIMIT_KEY, False)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -814,6 +837,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_get_file(param)
         elif action_id == 'remove_file':
             ret_val = self._handle_remove_file(param)
+        elif action_id == 'list_lists':
+            ret_val = self._handle_list_lists(param)
 
         return ret_val
 

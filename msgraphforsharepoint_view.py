@@ -31,7 +31,7 @@ def get_ctx_result(result):
     return ctx_result
 
 
-def get_list(provides, all_app_runs, context):
+def list_view(provides, all_app_runs, context):
 
     context['results'] = results = []
 
@@ -42,4 +42,6 @@ def get_list(provides, all_app_runs, context):
                 continue
             results.append(ctx_result)
 
-    return 'msgraphforsharepoint_get_list.html'
+    if provides == 'get list':
+        return 'msgraphforsharepoint_get_list.html'
+    return 'msgraphforsharepoint_list_lists.html'
