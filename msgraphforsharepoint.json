@@ -264,7 +264,7 @@
                     "data_path": "action_result.data.*.description",
                     "data_type": "string",
                     "example_values": [
-                        "RecruitmentTracker"
+                        "Test List Description"
                     ]
                 },
                 {
@@ -273,8 +273,9 @@
                     "example_values": [
                         "ListName"
                     ],
-                    "column_name": "List Name",
-                    "column_order": 0
+                    "contains": [
+                        "sharepoint list name"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.eTag",
@@ -291,9 +292,7 @@
                     ],
                     "contains": [
                         "sharepoint list id"
-                    ],
-                    "column_name": "List ID",
-                    "column_order": 1
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.lastModifiedBy.user.displayName",
@@ -421,7 +420,8 @@
                     "description": "Title or ID of the list to retrieve",
                     "data_type": "string",
                     "contains": [
-                        "sharepoint list id"
+                        "sharepoint list id",
+                        "sharepoint list name"
                     ],
                     "primary": true,
                     "required": true,
@@ -453,7 +453,8 @@
                     "data_path": "action_result.parameter.list",
                     "data_type": "string",
                     "contains": [
-                        "sharepoint list id"
+                        "sharepoint list id",
+                        "sharepoint list name"
                     ],
                     "example_values": [
                         "4961c496-52c1-49bd-b1fa-e1b2e976256c",
@@ -500,7 +501,10 @@
                 },
                 {
                     "data_path": "action_result.data.*.columns.*.description",
-                    "data_type": "string"
+                    "data_type": "string",
+                    "example_values": [
+                        "Test List Description"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.columns.*.displayName",
@@ -694,12 +698,15 @@
                     "data_path": "action_result.data.*.description",
                     "data_type": "string",
                     "example_values": [
-                        "Test List Name"
+                        "Test List Description"
                     ]
                 },
                 {
                     "data_path": "action_result.data.*.displayName",
                     "data_type": "string",
+                    "contains": [
+                        "sharepoint list name"
+                    ],
                     "example_values": [
                         "Test List Name"
                     ]
