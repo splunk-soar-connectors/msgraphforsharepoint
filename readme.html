@@ -1,0 +1,90 @@
+<!--File: readme.html
+Copyright (c) 2022 Splunk Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under
+the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+either express or implied. See the License for the specific language governing permissions
+and limitations under the License.
+-->
+<html>
+  <head></head>
+  <body>
+    <h2>Authentication</h2>
+    You will first need to create an application on the Azure AD Admin Portal. Follow the steps outlined below to do this:
+    <ul>
+      <li>Navigate to <a href="https://portal.azure.com" target="_blank">https://portal.azure.com</a> in a browser and log in with a Microsoft account</li>
+      <li>Select <b>Azure Active Directory</b> from the left side menu</li>
+      <li>From the left panel, select <b>App Registrations</b></li>
+      <li>At the top of the middle section, select <b>New registration</b></li>
+      <li>On the next page, give your application a name and click <b>Register</b></li>
+      <li>Once the app is created, the below steps need to be taken on the next page:</li>
+        <ul>
+          <li>Under <b>Certificates & secrets</b> select <b>New client secret</b>. Note down this key somewhere secure, as it cannot be retrieved after closing the window.</li>
+          <li>Under <b>Authentication</b>, select <b>Add a platform</b>. In the <b>Add a platform</b> window, select <b>Web</b>. The <b>Redirect URLs</b> should be filled right here. We will get <b>Redirect URLs</b> from the Phantom asset we create below in the section titled <b>Phantom Asset for SharePoint</b>. This step is required only if you are a non-admin user.</li>
+          <li>Under <b>API Permissions</b> Click on <b>Add a permission</b>.</li>
+          <li>Under the <b>Microsoft API</b> section, select <b>Microsoft Graph</b>.</li>
+          <li>Provide the following Application permissions to the app.</li>
+            <ul>
+              <li>Sites.Read.All</li>
+              <li>Files.Read.All</li>
+              <li>Files.ReadWrite.All</li>
+            </ul>
+          <li>After making these changes, click <b>Add permissions</b> at the bottom of the screen.</li>
+        </ul>
+      <li>If you are an admin user, then click <b>Grant admin consent for Phantom</b> and provide admin consent. And configure asset configuration parameter <b>Admin Consent Already Provided</b> with value <b>True</b>.</li>
+      <li>If you are a non-admin user, then follow the steps listed below to grant admin consent:</li>
+        <ul>
+          <li>Configure an asset configuration parameter <b>Admin Consent Already Provided</b> with value <b>False</b>.</li>
+          <li>You must have configured the <b>Redirect URLs</b> mentioned in the above steps.To configure <b>Redirect URLs</b>, checkout the section titled <b>Phantom Asset for SharePoint</b> below.</li>
+          <li>Run the <b>Test Connectivity</b>.</li>
+          <li>You will be asked to open a link in a new tab. Open the link in the same browser so that you are logged into Splunk Phantom for the redirect. If you wish to use a different browser, log in to the Splunk Phantom first, and then open the provided link.</li>
+          <li>Proceed to log in to the Microsoft site with the admin user.</li>
+          <li>You will be prompted to agree to the permissions requested by the App.</li>
+          <li>If all goes well the browser should instruct you to close the tab.</li>
+          <li>Now go back and check the message on the Test Connectivity dialog box, it should say <b>Test Connectivity Passed</b>.</li>
+        </ul>
+    </ul>
+
+    <h2>Phantom Asset for SharePoint</h2>
+    When creating an asset for the <b>MS Graph for SharePoint</b> app, place the <b>Application ID</b> and <b>Client secret</b> of the app created during the previous step in the <b>Client/Application ID</b> and <b>Client Secret</b> fields respectively. You can also find <b>Tenant ID</b> on the application overview page. After filling in all the required values, click <b>SAVE</b>.
+    <br><br>
+    After saving, a new field will appear in the <b>Asset Settings</b> tab. Take the URL found in the <b>POST incoming for MS Graph for SharePoint to this location</b> field and place it in the <b>Redirect URLs</b> field mentioned in a previous step. After doing so the URL should look something like:
+    <br>
+    <p>https://&lt;phantom_host&gt;/rest/handler/msgraphforsharepoint_7963f3ef-b527-40e5-a704-392c56f0a88d/&lt;asset_name&gt;</p>
+    <br>
+    Additionally, updating the Base URL in the Company Settings is also required. Navigate to <b>Administration > Company Settings > Info</b> to configure the <b>Base URL For Splunk SOAR</b>. Then, select <b>Save Changes</b>.
+    <br><br>
+    For the asset configuration parameter <b>SharePoint Site ID</b>, it should be in the format <b>{Hostname},{SPSite-id},{SPWeb-id}</b>. You can get the <b>SharePoint Site ID</b> by running the <b>'list site'</b> action. For more information check out the <a href="https://docs.microsoft.com/en-us/graph/api/resources/sharepoint?view=graph-rest-1.0#note-for-existing-sharepoint-developers" target="_blank">Microsoft documentation</a>.
+
+    <h2>Restrictions and Limitations</h2>
+    Some special characters aren't allowed as a SharePoint <b>list name</b> and <b>file/folder name</b>. If you have created the list/files with these special characters, SharePoint API will not allow us to retrieve the list information. For more information about limitations check out the <a href="https://support.microsoft.com/en-us/kb/905231" target="_blank">Microsoft documentation</a>.
+    <br>
+    As a workaround for lists, we can use the list_id instead of the list_name. Run the 'list lists' action to get the list_id.
+
+    <h2>Port Information</h2>
+    The app uses HTTP/ HTTPS protocol for communicating with the Microsoft servers. Below are the default ports used by Splunk SOAR.
+    <table>
+        <tr class=plain>
+            <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Service Name</th>
+            <th>Transport Protocol</th>
+            <th>Port</th>
+        </tr>
+        <tr>
+            <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;http</td>
+            <td>tcp</td>
+            <td>80</td>
+        </tr>
+        <tr>
+            <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;https</td>
+            <td>tcp</td>
+            <td>443</td>
+        </tr>
+    </table>
+  </body>
+</html>
