@@ -196,6 +196,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._access_token = None
         self._admin_consent = None
         self._site_id = None
+        self._group_id = None
 
     def _get_error_message_from_exception(self, e):
         """ This method is used to get appropriate error message from the exception.
@@ -688,6 +689,28 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         return phantom.APP_SUCCESS, list_items
 
+    def _handle_add_item(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        if self._group_id:
+            endpoint = MS_GROUPS_ENDPOINT.format(self._group_id) + MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        else:
+            endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+
+        endpoint = "{}/items".format(endpoint)
+
+        ret_val, item = self._make_rest_call(method="POST", endpoint=endpoint, action_result=action_result)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        action_result.add_data(item)
+
+        summary = action_result.update_summary({})
+        summary[MS_SHAREPOINT_JSON_SITES_COUNT] = action_result.get_data_size()
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _handle_list_sites(self, param):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
@@ -696,7 +719,12 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        ret_val, sites = self._paginator(action_result, MS_LIST_SITES_ENDPOINT, limit=limit)
+        if self._group_id:
+            endpoint = MS_GROUPS_ENDPOINT.format(self._group_id) + MS_LIST_SITES_ENDPOINT
+        else:
+            endpoint = MS_LIST_SITES_ENDPOINT
+
+        ret_val, sites = self._paginator(action_result, endpoint, limit=limit)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -719,7 +747,12 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        ret_val, lists = self._paginator(action_result, MS_LIST_LISTS_ENDPOINT.format(self._site_id), limit=limit)
+        if self._group_id:
+            endpoint = MS_GROUPS_ENDPOINT.format(self._group_id) + MS_LIST_LISTS_ENDPOINT.format(self._site_id)
+        else:
+            endpoint = MS_LIST_LISTS_ENDPOINT.format(self._site_id)
+
+        ret_val, lists = self._paginator(action_result, endpoint, limit=limit)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -742,7 +775,11 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        if self._group_id:
+            endpoint = MS_GROUPS_ENDPOINT.format(self._group_id) + MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        else:
+            endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+
         params = {"expand": "columns"}
         ret_val, response = self._make_rest_call_helper(endpoint, action_result, params=params)
         if phantom.is_fail(ret_val):
@@ -839,6 +876,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_remove_file(param)
         elif action_id == 'list_lists':
             ret_val = self._handle_list_lists(param)
+        elif action_id == "add_item":
+            ret_val = self._handle_add_item(param)
 
         return ret_val
 
@@ -858,6 +897,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._client_id = config[MS_SHAREPOINT_CONFIG_CLIENT_ID]
         self._client_secret = config[MS_SHAREPOINT_CONFIG_CLIENT_SECRET]
         self._site_id = config.get('site_id')
+        self._group_id = config.get('group_id')
         self._admin_consent = config.get('admin_consent')
         self._access_token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN)
 
