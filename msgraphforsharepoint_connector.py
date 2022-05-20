@@ -692,6 +692,7 @@ class MsGraphForSharepointConnector(BaseConnector):
     def _handle_add_item(self, param):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
+        item = param.get('item')
 
         if self._group_id:
             endpoint = MS_GROUPS_ENDPOINT.format(self._group_id) + MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
@@ -700,7 +701,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         endpoint = "{}/items".format(endpoint)
 
-        ret_val, item = self._make_rest_call(method="POST", endpoint=endpoint, action_result=action_result)
+        ret_val, item = self._make_rest_call_helper(method="post", endpoint=endpoint, data=item, action_result=action_result)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
