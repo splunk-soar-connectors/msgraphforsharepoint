@@ -111,6 +111,8 @@ For the asset configuration parameter **SharePoint Site ID** , it should be in t
 documentation](https://docs.microsoft.com/en-us/graph/api/resources/sharepoint?view=graph-rest-1.0#note-for-existing-sharepoint-developers)
 .
 
+For the **Sharepoint Group ID**, this should be the Group or Team subsite in your Sharepoint tenant. This is optional.
+
 ## Restrictions and Limitations
 
 Some special characters aren't allowed as a SharePoint **list name** and **file/folder name** . If
@@ -138,6 +140,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
 **tenant\_id** |  required  | string | Tenant ID
 **site\_id** |  optional  | string | SharePoint Site ID
+**group\_id** | optional | strong | Sharepoint Group ID
 **admin\_consent** |  optional  | boolean | Admin Consent Already Provided
 **client\_id** |  required  | string | Client/Application ID
 **client\_secret** |  required  | password | Client Secret
@@ -146,6 +149,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration  
 [list sites](#action-list-sites) - Fetch the details of the SharePoint sites  
 [list lists](#action-list-lists) - Fetch the available lists under a SharePoint site  
+[add item](#action-add-item) - Add an item to a list
 [get list](#action-get-list) - Retrieves a list from a SharePoint Site  
 [get file](#action-get-file) - Retrieves a file from a SharePoint site  
 [remove file](#action-remove-file) - Removes a file from a SharePoint site  
@@ -339,6 +343,23 @@ action\_result\.summary\.item\_count | numeric |
 action\_result\.message | string | 
 summary\.total\_objects | numeric | 
 summary\.total\_objects\_successful | numeric |   
+
+## action: 'add item'
+Add an item to a Sharepoint list
+
+Type: **generic**
+Read only: **False**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**list\_id** |  required  | ID of list to update | string | 
+**item** |  required  | JSON post body of item to add | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS
+--------- | ---- | --------
+(unsure of good way to generate this)
 
 ## action: 'get file'
 Retrieves a file from a SharePoint site
