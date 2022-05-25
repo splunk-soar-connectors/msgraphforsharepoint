@@ -712,6 +712,30 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _handle_update_item(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        item = param.get('item')
+        item_id = param.get('item_id')
+
+        if self._group_id:
+            endpoint = MS_GROUPS_ENDPOINT.format(self._group_id) + MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        else:
+            endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+
+        endpoint = "{}/items/{}".format(endpoint, item_id)
+
+        ret_val, item = self._make_rest_call_helper(method="patch", endpoint=endpoint, data=item, action_result=action_result)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        action_result.add_data(item)
+
+        summary = action_result.update_summary({})
+        summary[MS_SHAREPOINT_JSON_SITES_COUNT] = action_result.get_data_size()
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _handle_list_sites(self, param):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
@@ -879,6 +903,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_list_lists(param)
         elif action_id == "add_item":
             ret_val = self._handle_add_item(param)
+        elif action_id == "update_item":
+            ret_val = self._handle_update_item(param)
 
         return ret_val
 

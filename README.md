@@ -149,7 +149,8 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration  
 [list sites](#action-list-sites) - Fetch the details of the SharePoint sites  
 [list lists](#action-list-lists) - Fetch the available lists under a SharePoint site  
-[add item](#action-add-item) - Add an item to a list
+[add item](#action-add-item) - Add an item to a list  
+[update item](#action-update-item) - Update an item in a list  
 [get list](#action-get-list) - Retrieves a list from a SharePoint Site  
 [get file](#action-get-file) - Retrieves a file from a SharePoint site  
 [remove file](#action-remove-file) - Removes a file from a SharePoint site  
@@ -354,6 +355,24 @@ Read only: **False**
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
 **list\_id** |  required  | ID of list to update | string | 
+**item** |  required  | JSON post body of item to add | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS
+--------- | ---- | --------
+(unsure of good way to generate this)
+
+## action: 'update item'
+Update an item in a Sharepoint list
+
+Type: **generic**
+Read only: **False**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**list\_id** |  required  | ID of list to update | string | 
+**item\_id** |  required  | ID of item to update | numeric | 
 **item** |  required  | JSON post body of item to add | string | 
 
 #### Action Output
