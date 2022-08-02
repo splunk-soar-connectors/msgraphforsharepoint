@@ -37,6 +37,7 @@ MS_LIST_LISTS_ENDPOINT = '/sites/{0}/lists'
 MS_GET_LIST_ENDPOINT = '/sites/{0}/lists/{1}'
 MS_GET_FILE_METADATA_ENDPOINT = '/sites/{0}/drive/root:/{1}/{2}'
 MS_GET_FILE_CONTENT_ENDPOINT = '{0}:/content'
+MS_GROUPS_ENDPOINT = '/groups/{0}'
 MS_AUTH_FAILURE_MSGS = ['token is invalid', 'token has expired', 'ExpiredAuthenticationToken', 'AuthenticationFailed']
 
 # Splunk SOAR Endpoints
@@ -57,3 +58,10 @@ MS_SHAREPOINT_VALID_INTEGER_MSG = "Please provide a valid integer value in the {
 MS_SHAREPOINT_NON_NEGATIVE_INTEGER_MSG = "Please provide a valid non-zero positive integer value in the {}"
 MS_SHAREPOINT_POSITIVE_INTEGER_MSG = "Please provide non-zero positive integer in {}"
 MS_SHAREPOINT_LIMIT_KEY = "'limit' action parameter"
+
+# For encryption and decryption
+MS_SHAREPOINT_STATE_IS_ENCRYPTED = 'is_encrypted'
+MS_SHAREPOINT_ENCRYPT_TOKEN = "Encrypting the {} token"
+MS_SHAREPOINT_DECRYPT_TOKEN = "Decrypting the {} token"
+MS_SHAREPOINT_ENCRYPTION_ERR = "Error occurred while encrypting the state file"
+MS_SHAREPOINT_DECRYPTION_ERR = "Error occurred while decrypting the state file"
