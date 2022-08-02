@@ -17,14 +17,14 @@
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
     "fips_compliant": true,
-    "min_phantom_version": "5.2.0",
+    "min_phantom_version": "5.3.0",
     "contributors": [
         {
             "name": "import-au"
         }
     ],
     "latest_tested_versions": [
-        "SharePoint Cloud: 07 June, 2022"
+        "SharePoint Cloud: 02 August, 2022"
     ],
     "app_wizard_version": "1.0.0",
     "configuration": {
