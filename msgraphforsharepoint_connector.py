@@ -658,7 +658,11 @@ class MsGraphForSharepointConnector(BaseConnector):
                 self.save_progress("Test Connectivity Failed")
                 return action_result.get_status()
 
-        ret_val, _ = self._make_rest_call_helper(MS_TEST_CONNECTIVITY_ENDPOINT, action_result, is_force=True)
+        if self._group_id:
+            endpoint = "{}{}".format(MS_GROUPS_ENDPOINT.format(self._group_id), MS_TEST_CONNECTIVITY_ENDPOINT)
+        else:
+            endpoint = MS_TEST_CONNECTIVITY_ENDPOINT
+        ret_val, _ = self._make_rest_call_helper(endpoint, action_result, is_force=True)
         if phantom.is_fail(ret_val):
             self.save_progress("Test Connectivity Failed")
             return action_result.get_status()
