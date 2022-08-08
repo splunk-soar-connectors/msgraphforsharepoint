@@ -1132,7 +1132,10 @@
                     "data_path": "action_result.data.*.id",
                     "data_type": "string",
                     "column_name": "ID",
-                    "column_order": 0
+                    "column_order": 0,
+                    "contains": [
+                        "sharepoint item id"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.eTag",
@@ -1342,10 +1345,14 @@
                     "order": 0
                 },
                 "item_id": {
-                    "description": "Title or ID of the list to update",
+                    "description": "ID of the item to update",
                     "data_type": "numeric",
                     "required": true,
-                    "order": 1
+                    "order": 1,
+                    "contains": [
+                        "sharepoint item id"
+                    ],
+                    "primary": true
                 },
                 "item": {
                     "description": "JSON string of item",
@@ -1530,7 +1537,10 @@
                 },
                 {
                     "data_path": "action_result.parameter.item_id",
-                    "data_type": "numeric"
+                    "data_type": "numeric",
+                    "contains": [
+                        "sharepoint item id"
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.list",
