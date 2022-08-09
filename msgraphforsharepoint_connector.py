@@ -658,11 +658,7 @@ class MsGraphForSharepointConnector(BaseConnector):
                 self.save_progress("Test Connectivity Failed")
                 return action_result.get_status()
 
-        if self._group_id:
-            endpoint = "{}{}".format(MS_GROUPS_ENDPOINT.format(self._group_id), MS_TEST_CONNECTIVITY_ENDPOINT)
-        else:
-            endpoint = MS_TEST_CONNECTIVITY_ENDPOINT
-        ret_val, _ = self._make_rest_call_helper(endpoint, action_result, is_force=True)
+        ret_val, _ = self._make_rest_call_helper(MS_TEST_CONNECTIVITY_ENDPOINT, action_result, is_force=True)
         if phantom.is_fail(ret_val):
             self.save_progress("Test Connectivity Failed")
             return action_result.get_status()
@@ -719,11 +715,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
         item = param.get('item')
 
-        if self._group_id:
-            endpoint = "{}{}".format(MS_GROUPS_ENDPOINT.format(self._group_id),
-                MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])))
-        else:
-            endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
 
         endpoint = "{}/items".format(endpoint)
 
@@ -744,11 +736,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         item = param.get('item')
         item_id = param.get('item_id')
 
-        if self._group_id:
-            endpoint = "{}{}".format(MS_GROUPS_ENDPOINT.format(self._group_id),
-                MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])))
-        else:
-            endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
 
         endpoint = "{}/items/{}".format(endpoint, item_id)
 
@@ -771,12 +759,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        if self._group_id:
-            endpoint = "{}{}".format(MS_GROUPS_ENDPOINT.format(self._group_id), MS_LIST_SITES_ENDPOINT)
-        else:
-            endpoint = MS_LIST_SITES_ENDPOINT
-
-        ret_val, sites = self._paginator(action_result, endpoint, limit=limit)
+        ret_val, sites = self._paginator(action_result, MS_LIST_SITES_ENDPOINT, limit=limit)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -799,12 +782,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        if self._group_id:
-            endpoint = "{}{}".format(MS_GROUPS_ENDPOINT.format(self._group_id), MS_LIST_LISTS_ENDPOINT.format(self._site_id))
-        else:
-            endpoint = MS_LIST_LISTS_ENDPOINT.format(self._site_id)
-
-        ret_val, lists = self._paginator(action_result, endpoint, limit=limit)
+        ret_val, lists = self._paginator(action_result, MS_LIST_LISTS_ENDPOINT.format(self._site_id), limit=limit)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -827,11 +805,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        if self._group_id:
-            endpoint = "{}{}".format(MS_GROUPS_ENDPOINT.format(self._group_id),
-                MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])))
-        else:
-            endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
 
         params = {"expand": "columns"}
         ret_val, response = self._make_rest_call_helper(endpoint, action_result, params=params)
