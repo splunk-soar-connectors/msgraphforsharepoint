@@ -197,7 +197,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._access_token = None
         self._admin_consent = None
         self._site_id = None
-        self._group_id = None
         self.asset_id = self.get_asset_id()
 
     def encrypt_state(self, encrypt_var, token_name):
@@ -925,7 +924,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._client_id = config[MS_SHAREPOINT_CONFIG_CLIENT_ID]
         self._client_secret = config[MS_SHAREPOINT_CONFIG_CLIENT_SECRET]
         self._site_id = config.get('site_id')
-        self._group_id = config.get('group_id')
         self._admin_consent = config.get('admin_consent')
         self._access_token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN, None)
         if self._state.get(MS_SHAREPOINT_STATE_IS_ENCRYPTED) and self._access_token:
