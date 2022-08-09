@@ -805,7 +805,6 @@ class MsGraphForSharepointConnector(BaseConnector):
             return action_result.get_status()
 
         endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
-
         params = {"expand": "columns"}
         ret_val, response = self._make_rest_call_helper(endpoint, action_result, params=params)
         if phantom.is_fail(ret_val):

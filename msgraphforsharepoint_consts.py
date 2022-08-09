@@ -37,7 +37,6 @@ MS_LIST_LISTS_ENDPOINT = '/sites/{0}/lists'
 MS_GET_LIST_ENDPOINT = '/sites/{0}/lists/{1}'
 MS_GET_FILE_METADATA_ENDPOINT = '/sites/{0}/drive/root:/{1}/{2}'
 MS_GET_FILE_CONTENT_ENDPOINT = '{0}:/content'
-MS_GROUPS_ENDPOINT = '/groups/{0}'
 MS_AUTH_FAILURE_MSGS = ['token is invalid', 'token has expired', 'ExpiredAuthenticationToken', 'AuthenticationFailed']
 
 # Splunk SOAR Endpoints
