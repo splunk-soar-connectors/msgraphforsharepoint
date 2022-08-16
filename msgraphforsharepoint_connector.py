@@ -713,11 +713,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
         item = param.get('item')
-
-        endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
-
-        endpoint = "{}/items".format(endpoint)
-
+        endpoint = "{}/items".format(MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])))
         ret_val, item = self._make_rest_call_helper(method="post", endpoint=endpoint, data=item, action_result=action_result)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
@@ -735,9 +731,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         item = param.get('item')
         item_id = param.get('item_id')
 
-        endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
-
-        endpoint = "{}/items/{}".format(endpoint, item_id)
+        endpoint = "{}/items/{}".format(MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])), item_id)
 
         ret_val, item = self._make_rest_call_helper(method="patch", endpoint=endpoint, data=item, action_result=action_result)
         if phantom.is_fail(ret_val):
