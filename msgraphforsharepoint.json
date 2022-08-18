@@ -1325,7 +1325,7 @@
             "read_only": false,
             "parameters": {
                 "list": {
-                    "description": "Title or ID of the list to retrieve",
+                    "description": "Title or ID of the list to add an item",
                     "data_type": "string",
                     "contains": [
                         "sharepoint list id",
@@ -1680,7 +1680,7 @@
             "read_only": false,
             "parameters": {
                 "list": {
-                    "description": "Title or ID of the list to update",
+                    "description": "Title or ID of the list to update it's item",
                     "data_type": "string",
                     "contains": [
                         "sharepoint list id",
