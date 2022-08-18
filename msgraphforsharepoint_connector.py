@@ -460,7 +460,6 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         self._state[MS_SHAREPOINT_JSON_TOKEN] = resp_json
         self._access_token = resp_json[MS_SHAREPOINT_JSON_ACCESS_TOKEN]
-        self.save_state(self._state)
 
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully fetched access token")
 
@@ -654,11 +653,15 @@ class MsGraphForSharepointConnector(BaseConnector):
         if not self._admin_consent:
             ret_val = self._get_admin_consent(action_result)
             if phantom.is_fail(ret_val):
+                if self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN):
+                    self._state[MS_SHAREPOINT_JSON_TOKEN].pop(MS_SHAREPOINT_JSON_ACCESS_TOKEN)
                 self.save_progress("Test Connectivity Failed")
                 return action_result.get_status()
 
         ret_val, _ = self._make_rest_call_helper(MS_TEST_CONNECTIVITY_ENDPOINT, action_result, is_force=True)
         if phantom.is_fail(ret_val):
+            if self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN):
+                self._state[MS_SHAREPOINT_JSON_TOKEN].pop(MS_SHAREPOINT_JSON_ACCESS_TOKEN)
             self.save_progress("Test Connectivity Failed")
             return action_result.get_status()
 
@@ -923,7 +926,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             try:
                 self._access_token = self.decrypt_state(self._access_token, "access")
             except Exception as e:
-                self.debug_print("{}: {}".format(MS_SHAREPOINT_DECRYPTION_ERR, self._get_error_message_from_exception(e)))
+                self.debug_print("{}: {}".format(MS_SHAREPOINT_DECRYPTION_ERR, e))
                 self._access_token = None
 
         self._base_url = MS_GRAPH_BASE_URL
@@ -934,9 +937,10 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         try:
             if self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN):
-                self._state[MS_SHAREPOINT_JSON_TOKEN][MS_SHAREPOINT_JSON_ACCESS_TOKEN] = self.encrypt_state(self._access_token, "access")
+                self._state[MS_SHAREPOINT_JSON_TOKEN][MS_SHAREPOINT_JSON_ACCESS_TOKEN] = self.encrypt_state(
+                    self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN), "access")
         except Exception as e:
-            self.debug_print("{}: {}".format(MS_SHAREPOINT_ENCRYPTION_ERR, self._get_error_message_from_exception(e)))
+            self.debug_print("{}: {}".format(MS_SHAREPOINT_ENCRYPTION_ERR, e))
             return self.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ENCRYPTION_ERR)
         # Save the state, this data is saved across actions and app upgrades
         self._state[MS_SHAREPOINT_STATE_IS_ENCRYPTED] = True
