@@ -653,15 +653,17 @@ class MsGraphForSharepointConnector(BaseConnector):
         if not self._admin_consent:
             ret_val = self._get_admin_consent(action_result)
             if phantom.is_fail(ret_val):
-                if self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN):
-                    self._state[MS_SHAREPOINT_JSON_TOKEN].pop(MS_SHAREPOINT_JSON_ACCESS_TOKEN)
+                self._state = {
+                    "app_version": self.get_app_json().get('app_version')
+                }
                 self.save_progress("Test Connectivity Failed")
                 return action_result.get_status()
 
         ret_val, _ = self._make_rest_call_helper(MS_TEST_CONNECTIVITY_ENDPOINT, action_result, is_force=True)
         if phantom.is_fail(ret_val):
-            if self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN):
-                self._state[MS_SHAREPOINT_JSON_TOKEN].pop(MS_SHAREPOINT_JSON_ACCESS_TOKEN)
+            self._state = {
+                    "app_version": self.get_app_json().get('app_version')
+                }
             self.save_progress("Test Connectivity Failed")
             return action_result.get_status()
 
@@ -911,7 +913,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._state = self.load_state()
         if not isinstance(self._state, dict):
             self.debug_print("Resetting the state file with the default format")
-            self._state = {}
+            self._state = {
+                "app_version": self.get_app_json().get('app_version')
+            }
 
         # get the asset config
         config = self.get_config()
