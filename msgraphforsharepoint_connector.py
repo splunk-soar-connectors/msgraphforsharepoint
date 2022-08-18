@@ -460,7 +460,6 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         self._state[MS_SHAREPOINT_JSON_TOKEN] = resp_json
         self._access_token = resp_json[MS_SHAREPOINT_JSON_ACCESS_TOKEN]
-        self.save_state(self._state)
 
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully fetched access token")
 
@@ -941,7 +940,7 @@ class MsGraphForSharepointConnector(BaseConnector):
     def finalize(self):
 
         try:
-            if self._access_token:
+            if self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN):
                 self._state[MS_SHAREPOINT_JSON_TOKEN][MS_SHAREPOINT_JSON_ACCESS_TOKEN] = self.encrypt_state(self._access_token, "access")
                 self._state[MS_SHAREPOINT_STATE_IS_ENCRYPTED] = True
         except Exception as e:
