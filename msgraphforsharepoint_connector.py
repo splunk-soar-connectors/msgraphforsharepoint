@@ -943,11 +943,11 @@ class MsGraphForSharepointConnector(BaseConnector):
         try:
             if self._access_token:
                 self._state[MS_SHAREPOINT_JSON_TOKEN][MS_SHAREPOINT_JSON_ACCESS_TOKEN] = self.encrypt_state(self._access_token, "access")
+                self._state[MS_SHAREPOINT_STATE_IS_ENCRYPTED] = True
         except Exception as e:
             self.debug_print("{}: {}".format(MS_SHAREPOINT_ENCRYPTION_ERR, e))
             return self.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ENCRYPTION_ERR)
         # Save the state, this data is saved across actions and app upgrades
-        self._state[MS_SHAREPOINT_STATE_IS_ENCRYPTED] = True
         self.save_state(self._state)
         return phantom.APP_SUCCESS
 
