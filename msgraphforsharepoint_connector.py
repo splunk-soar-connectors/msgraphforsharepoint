@@ -20,6 +20,7 @@ import tempfile
 import time
 import urllib.parse
 
+import encryption_helper
 import phantom.app as phantom
 import phantom.rules as ph_rules
 import requests
@@ -196,6 +197,26 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._access_token = None
         self._admin_consent = None
         self._site_id = None
+        self.asset_id = self.get_asset_id()
+
+    def encrypt_state(self, encrypt_var, token_name):
+        """ Handle encryption of token.
+        :param encrypt_var: Variable needs to be encrypted
+        :return: encrypted variable
+        """
+        self.debug_print(MS_SHAREPOINT_ENCRYPT_TOKEN.format(token_name))  # nosemgrep
+        return encryption_helper.encrypt(encrypt_var, self.asset_id)
+
+    def decrypt_state(self, decrypt_var, token_name):
+        """ Handle decryption of token.
+        :param decrypt_var: Variable needs to be decrypted
+        :return: decrypted variable
+        """
+        self.debug_print(MS_SHAREPOINT_DECRYPT_TOKEN.format(token_name))  # nosemgrep
+        if self._state.get(MS_SHAREPOINT_STATE_IS_ENCRYPTED):
+            return encryption_helper.decrypt(decrypt_var, self.asset_id)
+        else:
+            return
 
     def _get_error_message_from_exception(self, e):
         """ This method is used to get appropriate error message from the exception.
@@ -439,7 +460,6 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         self._state[MS_SHAREPOINT_JSON_TOKEN] = resp_json
         self._access_token = resp_json[MS_SHAREPOINT_JSON_ACCESS_TOKEN]
-        self.save_state(self._state)
 
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully fetched access token")
 
@@ -633,11 +653,17 @@ class MsGraphForSharepointConnector(BaseConnector):
         if not self._admin_consent:
             ret_val = self._get_admin_consent(action_result)
             if phantom.is_fail(ret_val):
+                self._state = {
+                    "app_version": self.get_app_json().get('app_version')
+                }
                 self.save_progress("Test Connectivity Failed")
                 return action_result.get_status()
 
         ret_val, _ = self._make_rest_call_helper(MS_TEST_CONNECTIVITY_ENDPOINT, action_result, is_force=True)
         if phantom.is_fail(ret_val):
+            self._state = {
+                    "app_version": self.get_app_json().get('app_version')
+                }
             self.save_progress("Test Connectivity Failed")
             return action_result.get_status()
 
@@ -687,6 +713,41 @@ class MsGraphForSharepointConnector(BaseConnector):
                 break
 
         return phantom.APP_SUCCESS, list_items
+
+    def _handle_add_item(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        item = param.get('item')
+        endpoint = "{}/items".format(MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])))
+        ret_val, item = self._make_rest_call_helper(method="post", endpoint=endpoint, data=item.encode('utf-8'), action_result=action_result)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        action_result.add_data(item)
+
+        summary = action_result.update_summary({})
+        summary[MS_SHAREPOINT_JSON_SITES_COUNT] = action_result.get_data_size()
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_update_item(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        item = param.get('item')
+        item_id = param.get('item_id')
+
+        endpoint = "{}/items/{}".format(MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])), item_id)
+
+        ret_val, item = self._make_rest_call_helper(method="patch", endpoint=endpoint, data=item.encode('utf-8'), action_result=action_result)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        action_result.add_data(item)
+
+        summary = action_result.update_summary({})
+        summary[MS_SHAREPOINT_JSON_SITES_COUNT] = action_result.get_data_size()
+
+        return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_sites(self, param):
 
@@ -839,6 +900,10 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_remove_file(param)
         elif action_id == 'list_lists':
             ret_val = self._handle_list_lists(param)
+        elif action_id == "add_item":
+            ret_val = self._handle_add_item(param)
+        elif action_id == "update_item":
+            ret_val = self._handle_update_item(param)
 
         return ret_val
 
@@ -848,8 +913,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._state = self.load_state()
         if not isinstance(self._state, dict):
             self.debug_print("Resetting the state file with the default format")
-            self._state = {"app_version": self.get_app_json().get("app_version")}
-            return self.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERR_STATE_FILE_CORRUPT)
+            self._state = {
+                "app_version": self.get_app_json().get('app_version')
+            }
 
         # get the asset config
         config = self.get_config()
@@ -859,13 +925,27 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._client_secret = config[MS_SHAREPOINT_CONFIG_CLIENT_SECRET]
         self._site_id = config.get('site_id')
         self._admin_consent = config.get('admin_consent')
-        self._access_token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN)
+        self._access_token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN, None)
+        if self._state.get(MS_SHAREPOINT_STATE_IS_ENCRYPTED) and self._access_token:
+            try:
+                self._access_token = self.decrypt_state(self._access_token, "access")
+            except Exception as e:
+                self.debug_print("{}: {}".format(MS_SHAREPOINT_DECRYPTION_ERR, e))
+                self._access_token = None
 
         self._base_url = MS_GRAPH_BASE_URL
 
         return phantom.APP_SUCCESS
 
     def finalize(self):
+
+        try:
+            if self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN):
+                self._state[MS_SHAREPOINT_JSON_TOKEN][MS_SHAREPOINT_JSON_ACCESS_TOKEN] = self.encrypt_state(self._access_token, "access")
+                self._state[MS_SHAREPOINT_STATE_IS_ENCRYPTED] = True
+        except Exception as e:
+            self.debug_print("{}: {}".format(MS_SHAREPOINT_ENCRYPTION_ERR, e))
+            return self.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ENCRYPTION_ERR)
         # Save the state, this data is saved across actions and app upgrades
         self.save_state(self._state)
         return phantom.APP_SUCCESS

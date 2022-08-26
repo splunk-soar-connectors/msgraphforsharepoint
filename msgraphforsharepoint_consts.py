@@ -57,3 +57,10 @@ MS_SHAREPOINT_VALID_INTEGER_MSG = "Please provide a valid integer value in the {
 MS_SHAREPOINT_NON_NEGATIVE_INTEGER_MSG = "Please provide a valid non-zero positive integer value in the {}"
 MS_SHAREPOINT_POSITIVE_INTEGER_MSG = "Please provide non-zero positive integer in {}"
 MS_SHAREPOINT_LIMIT_KEY = "'limit' action parameter"
+
+# For encryption and decryption
+MS_SHAREPOINT_STATE_IS_ENCRYPTED = 'is_encrypted'
+MS_SHAREPOINT_ENCRYPT_TOKEN = "Encrypting the {} token"
+MS_SHAREPOINT_DECRYPT_TOKEN = "Decrypting the {} token"
+MS_SHAREPOINT_ENCRYPTION_ERR = "Error occurred while encrypting the state file"
+MS_SHAREPOINT_DECRYPTION_ERR = "Error occurred while decrypting the state file"
