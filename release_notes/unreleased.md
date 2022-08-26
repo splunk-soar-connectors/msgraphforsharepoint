@@ -1,2 +1,1 @@
 **Unreleased**
-* Added the 'add item' and 'update item' actions
