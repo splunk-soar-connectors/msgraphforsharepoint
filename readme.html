@@ -29,13 +29,22 @@ and limitations under the License.
           <li>Under <b>Authentication</b>, select <b>Add a platform</b>. In the <b>Add a platform</b> window, select <b>Web</b>. The <b>Redirect URLs</b> should be filled right here. We will get <b>Redirect URLs</b> from the Phantom asset we create below in the section titled <b>Phantom Asset for SharePoint</b>. This step is required only if you are a non-admin user.</li>
           <li>Under <b>API Permissions</b> Click on <b>Add a permission</b>.</li>
           <li>Under the <b>Microsoft API</b> section, select <b>Microsoft Graph</b>.</li>
-          <li>Provide the following Application and Delegated permissions to the app.</li>
-            <ul>
-              <li>Sites.Read.All</li>
-              <li>Files.Read.All</li>
-              <li>Files.ReadWrite.All</li>
-              <li>Sites.ReadWrite.All</li>
-            </ul>
+          <li>There are two ways to gives the Application and Delegated permissions to the app.</li>
+          <ol>
+            <li> Permissive mode</li>
+              <ul>
+                <li>Sites.Read.All</li>
+                <li>Files.Read.All</li>
+                <li>Files.ReadWrite.All</li>
+                <li>Sites.ReadWrite.All</li>
+              </ul>
+            <li> Restrictive mode</li>
+              <ul>
+                <li>Sites.Selected (only Application permission)</li>
+              </ul>
+              The user will have to configure permissions for each of the sites that they are working with. You can find more information <a href="https://devblogs.microsoft.com/microsoft365dev/controlling-app-access-on-specific-sharepoint-site-collections/" target="_blank">here</a>. Also, while using this mode 'list sites' action will return the empty list.<br>
+              <b>Note:</b> You need <b>Sites.FullControl.All</b> Application permission while using the site permission endpoint.
+            </ol>
           <li>After making these changes, click <b>Add permissions</b> at the bottom of the screen.</li>
         </ul>
       <li>If you are an admin user, then click <b>Grant admin consent for Phantom</b> and provide admin consent. And configure asset configuration parameter <b>Admin Consent Already Provided</b> with value <b>True</b>.</li>
