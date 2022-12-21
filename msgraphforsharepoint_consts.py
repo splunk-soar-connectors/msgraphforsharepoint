@@ -48,7 +48,6 @@ STATE_FILE_PATH = '{0}/{1}_state.json'
 MS_SHAREPOINT_PER_PAGE_COUNT = 1000
 
 # Status/Progress Messages
-MS_SHAREPOINT_ERROR_CODE_MSG = 'Error code unavailable'
 MS_SHAREPOINT_ERROR_MSG = 'Unknown error occurred. Please check the asset configuration and|or action parameters'
 MS_SHAREPOINT_ERROR_MISSING_SITE_ID = "The asset configuration parameter 'Sharepoint Site ID' is required for {0} from specific site"
 MS_SHAREPOINT_ERROR_STATE_FILE_CORRUPT = 'Error occurred while loading the state file due to its unexpected format. ' \

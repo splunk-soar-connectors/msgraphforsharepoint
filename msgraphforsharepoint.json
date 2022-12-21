@@ -159,7 +159,7 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/search"
+                        "https://test-tenant-name.sharepoint.com/search"
                     ],
                     "contains": [
                         "url"
@@ -247,7 +247,7 @@
                     "data_path": "action_result.data.*.createdBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -312,7 +312,7 @@
                     "data_path": "action_result.data.*.lastModifiedBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -373,7 +373,7 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/SiteName/Lists/ListName"
+                        "https://test-tenant-name.sharepoint.com/sites/SiteName/Lists/ListName"
                     ],
                     "contains": [
                         "url"
@@ -472,7 +472,7 @@
                     "data_path": "action_result.data.*.@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/lists/$entity"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists/$entity"
                     ],
                     "contains": [
                         "url"
@@ -706,7 +706,7 @@
                     "data_path": "action_result.data.*.columns@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/columns"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/columns"
                     ],
                     "contains": [
                         "url"
@@ -723,7 +723,7 @@
                     "data_path": "action_result.data.*.createdBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -809,7 +809,7 @@
                     "data_path": "action_result.data.*.items.*.createdBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -1113,7 +1113,7 @@
                     "data_path": "action_result.data.*.items.*.fields@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items('1')/fields/$entity"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items('1')/fields/$entity"
                     ],
                     "contains": [
                         "url"
@@ -1151,7 +1151,7 @@
                     "data_path": "action_result.data.*.items.*.lastModifiedBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -1189,7 +1189,7 @@
                     "data_path": "action_result.data.*.items.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name/1_.000"
+                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name/1_.000"
                     ],
                     "contains": [
                         "url"
@@ -1199,7 +1199,7 @@
                     "data_path": "action_result.data.*.items@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items"
                     ],
                     "contains": [
                         "url"
@@ -1216,7 +1216,7 @@
                     "data_path": "action_result.data.*.lastModifiedBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -1277,7 +1277,7 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name"
+                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name"
                     ],
                     "contains": [
                         "url"
@@ -2044,7 +2044,7 @@
             "description": "Retrieves a file from a SharePoint site",
             "verbose": "The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
             "type": "generic",
-            "read_only": true,
+            "read_only": false,
             "parameters": {
                 "file_name": {
                     "description": "File name to retrieve",
@@ -2086,7 +2086,7 @@
                     "data_path": "action_result.data.*.@microsoft.graph.downloadUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/TestSiteName/_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0"
+                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0"
                     ],
                     "contains": [
                         "url"
@@ -2096,7 +2096,7 @@
                     "data_path": "action_result.data.*.@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/drive/root/$entity"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/drive/root/$entity"
                     ],
                     "contains": [
                         "url"
@@ -2122,7 +2122,7 @@
                     "data_path": "action_result.data.*.createdBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -2199,7 +2199,7 @@
                     "data_path": "action_result.data.*.lastModifiedBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -2265,7 +2265,7 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt"
+                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt"
                     ],
                     "contains": [
                         "url"

@@ -224,7 +224,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         :return: error message
         """
 
-        error_code = MS_SHAREPOINT_ERROR_CODE_MSG
+        error_code = None
         error_msg = MS_SHAREPOINT_ERROR_MSG
 
         self.error_print("Error Occurred.", e)
@@ -660,12 +660,11 @@ class MsGraphForSharepointConnector(BaseConnector):
                 }
                 self.save_progress("Test Connectivity Failed")
                 return action_result.get_status()
-        if self._endpoint_test_connectivity:
-            endpoint = self._endpoint_test_connectivity
-            if endpoint[0] != "/":
-                endpoint = "/{}".format(endpoint)
-        else:
-            endpoint = MS_TEST_CONNECTIVITY_ENDPOINT
+
+        endpoint = self._endpoint_test_connectivity
+        if endpoint[0] != "/":
+            endpoint = "/{}".format(endpoint)
+
         ret_val, _ = self._make_rest_call_helper(endpoint, action_result, is_force=True)
         if phantom.is_fail(ret_val):
             self._state = {
@@ -932,7 +931,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._client_secret = config[MS_SHAREPOINT_CONFIG_CLIENT_SECRET]
         self._site_id = config.get('site_id')
         self._admin_consent = config.get('admin_consent')
-        self._endpoint_test_connectivity = config.get('endpoint_test_connectivity', "/sites/root")
+        self._endpoint_test_connectivity = config.get('endpoint_test_connectivity', MS_TEST_CONNECTIVITY_ENDPOINT)
         self._access_token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN, None)
         if self._state.get(MS_SHAREPOINT_STATE_IS_ENCRYPTED) and self._access_token:
             try:
