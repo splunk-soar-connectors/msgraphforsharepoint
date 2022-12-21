@@ -2409,7 +2409,7 @@
             },
             {
                 "module": "certifi",
-                "input_file": "wheels/py3/certifi-2022.9.24-py3-none-any.whl"
+                "input_file": "wheels/py3/certifi-2022.12.7-py3-none-any.whl"
             },
             {
                 "module": "charset_normalizer",
@@ -2421,7 +2421,7 @@
             },
             {
                 "module": "pytz",
-                "input_file": "wheels/shared/pytz-2022.6-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/pytz-2022.7-py2.py3-none-any.whl"
             },
             {
                 "module": "requests",
@@ -2441,7 +2441,7 @@
             },
             {
                 "module": "urllib3",
-                "input_file": "wheels/shared/urllib3-1.26.12-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/urllib3-1.26.13-py2.py3-none-any.whl"
             }
         ]
     },
@@ -2453,7 +2453,7 @@
             },
             {
                 "module": "asgiref",
-                "input_file": "wheels/py3/asgiref-3.5.2-py3-none-any.whl"
+                "input_file": "wheels/py3/asgiref-3.6.0-py3-none-any.whl"
             },
             {
                 "module": "beautifulsoup4",
@@ -2461,7 +2461,7 @@
             },
             {
                 "module": "certifi",
-                "input_file": "wheels/py3/certifi-2022.9.24-py3-none-any.whl"
+                "input_file": "wheels/py3/certifi-2022.12.7-py3-none-any.whl"
             },
             {
                 "module": "charset_normalizer",
@@ -2473,7 +2473,7 @@
             },
             {
                 "module": "pytz",
-                "input_file": "wheels/shared/pytz-2022.6-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/pytz-2022.7-py2.py3-none-any.whl"
             },
             {
                 "module": "requests",
@@ -2489,7 +2489,7 @@
             },
             {
                 "module": "urllib3",
-                "input_file": "wheels/shared/urllib3-1.26.12-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/urllib3-1.26.13-py2.py3-none-any.whl"
             }
         ]
     }
