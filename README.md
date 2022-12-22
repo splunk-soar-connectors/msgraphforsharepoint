@@ -2,11 +2,11 @@
 # MS Graph for SharePoint
 
 Publisher: Splunk  
-Connector Version: 1\.1\.0  
+Connector Version: 1\.2\.0  
 Product Vendor: Microsoft  
 Product Name: SharePoint  
 Product Version Supported (regex): "\.\*"  
-Minimum Product Version: 5\.3\.0  
+Minimum Product Version: 5\.3\.5  
 
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
 
@@ -55,14 +55,24 @@ below to do this:
 
     -   Under the **Microsoft API** section, select **Microsoft Graph** .
 
-    -   Provide the following Application and Delegated permissions to the app.
+    -   There are two ways to gives the Application and Delegated permissions to the app.
 
           
 
-        -   Sites.Read.All
-        -   Files.Read.All
-        -   Files.ReadWrite.All
-        -   Sites.ReadWrite.All
+        1.  Permissive mode
+            -   Sites.Read.All
+            -   Files.Read.All
+            -   Files.ReadWrite.All
+            -   Sites.ReadWrite.All
+        2.  Restrictive mode
+            -   Sites.Selected (only Application permission)
+
+            The user will have to configure permissions for each of the sites that they are working
+            with. You can find more information
+            [here](https://devblogs.microsoft.com/microsoft365dev/controlling-app-access-on-specific-sharepoint-site-collections/)
+            . Also, while using this mode 'list sites' action will return the empty list.  
+            **Note:** You need **Sites.FullControl.All** Application permission while using the site
+            permission endpoint.
 
     -   After making these changes, click **Add permissions** at the bottom of the screen.
 
@@ -139,6 +149,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
 **tenant\_id** |  required  | string | Tenant ID
 **site\_id** |  optional  | string | SharePoint Site ID
+**endpoint\_test\_connectivity** |  optional  | string | Endpoint for test connectivity
 **admin\_consent** |  optional  | boolean | Admin Consent Already Provided
 **client\_id** |  required  | string | Client/Application ID
 **client\_secret** |  required  | password | Client Secret
@@ -528,7 +539,7 @@ summary\.total\_objects\_successful | numeric |
 Retrieves a file from a SharePoint site
 
 Type: **generic**  
-Read only: **True**
+Read only: **False**
 
 The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site\. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter\.
 
