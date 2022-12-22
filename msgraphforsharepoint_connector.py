@@ -224,8 +224,10 @@ class MsGraphForSharepointConnector(BaseConnector):
         :return: error message
         """
 
-        error_code = MS_SHAREPOINT_ERR_CODE_MSG
-        error_msg = MS_SHAREPOINT_ERR_MSG
+        error_code = None
+        error_msg = MS_SHAREPOINT_ERROR_MSG
+
+        self.error_print("Error Occurred.", e)
         try:
             if hasattr(e, "args"):
                 if len(e.args) > 1:
@@ -304,10 +306,10 @@ class MsGraphForSharepointConnector(BaseConnector):
         try:
             resp_json = r.json()
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
+            error_message = self._get_error_message_from_exception(e)
             return RetVal(
                 action_result.set_status(
-                    phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(error_msg)
+                    phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(error_message)
                 ), None
             )
 
@@ -429,9 +431,9 @@ class MsGraphForSharepointConnector(BaseConnector):
             else:
                 r = request_func(endpoint, json=json, data=data, headers=headers, verify=verify, params=params)
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
+            error_message = self._get_error_message_from_exception(e)
             return RetVal(action_result.set_status(phantom.APP_ERROR,
-                                                   "Error Connecting to server. Details: {0}".format(error_msg)), resp_json)
+                                                   "Error Connecting to server. Details: {0}".format(error_message)), resp_json)
 
         return self._process_response(r, action_result)
 
@@ -537,8 +539,8 @@ class MsGraphForSharepointConnector(BaseConnector):
         try:
             resp_json = r.json()
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return action_result.set_status(phantom.APP_ERROR, "Error processing response JSON. Error: {}".format(error_msg)), None
+            error_message = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, "Error processing response JSON. Error: {}".format(error_message)), None
 
         return phantom.APP_SUCCESS, resp_json
 
@@ -659,7 +661,11 @@ class MsGraphForSharepointConnector(BaseConnector):
                 self.save_progress("Test Connectivity Failed")
                 return action_result.get_status()
 
-        ret_val, _ = self._make_rest_call_helper(MS_TEST_CONNECTIVITY_ENDPOINT, action_result, is_force=True)
+        endpoint = self._endpoint_test_connectivity
+        if endpoint[0] != "/":
+            endpoint = "/{}".format(endpoint)
+
+        ret_val, _ = self._make_rest_call_helper(endpoint, action_result, is_force=True)
         if phantom.is_fail(ret_val):
             self._state = {
                     "app_version": self.get_app_json().get('app_version')
@@ -774,7 +780,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._site_id:
-            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERR_MISSING_SITE_ID.format('retrieving lists information'))
+            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format('retrieving lists information'))
 
         ret_val, limit = self._validate_integer(action_result, param.get(MS_SHAREPOINT_JSON_LIMIT), MS_SHAREPOINT_LIMIT_KEY, False)
         if phantom.is_fail(ret_val):
@@ -797,7 +803,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._site_id:
-            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERR_MISSING_SITE_ID.format('retrieving a list'))
+            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format('retrieving a list'))
 
         ret_val, limit = self._validate_integer(action_result, param.get(MS_SHAREPOINT_JSON_LIMIT), MS_SHAREPOINT_LIMIT_KEY, False)
         if phantom.is_fail(ret_val):
@@ -827,7 +833,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._site_id:
-            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERR_MISSING_SITE_ID.format('retrieving a file'))
+            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format('retrieving a file'))
 
         sp_path = param[MS_SHAREPOINT_JSON_FILE_PATH].strip("/")
         sp_file = param[MS_SHAREPOINT_JSON_FILE_NAME]
@@ -853,9 +859,9 @@ class MsGraphForSharepointConnector(BaseConnector):
             if not success:
                 return action_result.set_status(phantom.APP_ERROR, message)
         except Exception as e:
-            error_msg = "Unable to add file to the vault for attachment name: {0}. Error: {1}".format(
+            error_message = "Unable to add file to the vault for attachment name: {0}. Error: {1}".format(
                 sp_file, self._get_error_message_from_exception(e))
-            return action_result.set_status(phantom.APP_ERROR, error_msg)
+            return action_result.set_status(phantom.APP_ERROR, error_message)
 
         action_result.add_data(file_meta)
         summary = action_result.update_summary({})
@@ -868,7 +874,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._site_id:
-            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERR_MISSING_SITE_ID.format('removing a file'))
+            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format('removing a file'))
 
         sp_path = param[MS_SHAREPOINT_JSON_FILE_PATH].rstrip("/")
         sp_file = param[MS_SHAREPOINT_JSON_FILE_NAME]
@@ -912,7 +918,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         # Load the state and check the format
         self._state = self.load_state()
         if not isinstance(self._state, dict):
-            self.debug_print("Resetting the state file with the default format")
+            self.debug_print(MS_SHAREPOINT_ERROR_STATE_FILE_CORRUPT)
             self._state = {
                 "app_version": self.get_app_json().get('app_version')
             }
@@ -925,12 +931,13 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._client_secret = config[MS_SHAREPOINT_CONFIG_CLIENT_SECRET]
         self._site_id = config.get('site_id')
         self._admin_consent = config.get('admin_consent')
+        self._endpoint_test_connectivity = config.get('endpoint_test_connectivity', MS_TEST_CONNECTIVITY_ENDPOINT)
         self._access_token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN, None)
         if self._state.get(MS_SHAREPOINT_STATE_IS_ENCRYPTED) and self._access_token:
             try:
                 self._access_token = self.decrypt_state(self._access_token, "access")
             except Exception as e:
-                self.debug_print("{}: {}".format(MS_SHAREPOINT_DECRYPTION_ERR, e))
+                self.error_print(MS_SHAREPOINT_DECRYPTION_ERROR, e)
                 self._access_token = None
 
         self._base_url = MS_GRAPH_BASE_URL
@@ -944,8 +951,8 @@ class MsGraphForSharepointConnector(BaseConnector):
                 self._state[MS_SHAREPOINT_JSON_TOKEN][MS_SHAREPOINT_JSON_ACCESS_TOKEN] = self.encrypt_state(self._access_token, "access")
                 self._state[MS_SHAREPOINT_STATE_IS_ENCRYPTED] = True
         except Exception as e:
-            self.debug_print("{}: {}".format(MS_SHAREPOINT_ENCRYPTION_ERR, e))
-            return self.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ENCRYPTION_ERR)
+            self.error_print(MS_SHAREPOINT_ENCRYPTION_ERROR, e)
+            return self.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ENCRYPTION_ERROR)
         # Save the state, this data is saved across actions and app upgrades
         self.save_state(self._state)
         return phantom.APP_SUCCESS
