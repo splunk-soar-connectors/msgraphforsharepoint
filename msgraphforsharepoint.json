@@ -11,20 +11,20 @@
     "product_version_regex": ".*",
     "publisher": "Splunk",
     "license": "Copyright (c) 2022 Splunk Inc.",
-    "app_version": "1.1.0",
+    "app_version": "1.2.0",
     "utctime_updated": "2022-02-11T08:37:12.891220Z",
     "package_name": "phantom_msgraphforsharepoint",
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
     "fips_compliant": true,
-    "min_phantom_version": "5.3.0",
+    "min_phantom_version": "5.3.5",
     "contributors": [
         {
             "name": "import-au"
         }
     ],
     "latest_tested_versions": [
-        "SharePoint Cloud: 17 August, 2022"
+        "SharePoint Cloud: 15 November, 2022"
     ],
     "app_wizard_version": "1.0.0",
     "configuration": {
@@ -39,13 +39,15 @@
             "data_type": "string",
             "order": 1
         },
+        "endpoint_test_connectivity": {
+            "description": "Endpoint for test connectivity",
+            "data_type": "string",
+            "order": 2,
+            "default": "/sites/root"
+        },
         "admin_consent": {
             "description": "Admin Consent Already Provided",
             "data_type": "boolean",
-            "order": 2
-        },
-        "ph": {
-            "data_type": "ph",
             "order": 3
         },
         "client_id": {
@@ -157,7 +159,7 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/search"
+                        "https://test-tenant-name.sharepoint.com/search"
                     ],
                     "contains": [
                         "url"
@@ -245,7 +247,7 @@
                     "data_path": "action_result.data.*.createdBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -310,7 +312,7 @@
                     "data_path": "action_result.data.*.lastModifiedBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -371,7 +373,7 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/SiteName/Lists/ListName"
+                        "https://test-tenant-name.sharepoint.com/sites/SiteName/Lists/ListName"
                     ],
                     "contains": [
                         "url"
@@ -470,7 +472,7 @@
                     "data_path": "action_result.data.*.@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/lists/$entity"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists/$entity"
                     ],
                     "contains": [
                         "url"
@@ -704,7 +706,7 @@
                     "data_path": "action_result.data.*.columns@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/columns"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/columns"
                     ],
                     "contains": [
                         "url"
@@ -721,7 +723,7 @@
                     "data_path": "action_result.data.*.createdBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -807,7 +809,7 @@
                     "data_path": "action_result.data.*.items.*.createdBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -1111,7 +1113,7 @@
                     "data_path": "action_result.data.*.items.*.fields@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items('1')/fields/$entity"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items('1')/fields/$entity"
                     ],
                     "contains": [
                         "url"
@@ -1149,7 +1151,7 @@
                     "data_path": "action_result.data.*.items.*.lastModifiedBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -1187,7 +1189,7 @@
                     "data_path": "action_result.data.*.items.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name/1_.000"
+                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name/1_.000"
                     ],
                     "contains": [
                         "url"
@@ -1197,7 +1199,7 @@
                     "data_path": "action_result.data.*.items@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items"
                     ],
                     "contains": [
                         "url"
@@ -1214,7 +1216,7 @@
                     "data_path": "action_result.data.*.lastModifiedBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -1275,7 +1277,7 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name"
+                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name"
                     ],
                     "contains": [
                         "url"
@@ -2042,7 +2044,7 @@
             "description": "Retrieves a file from a SharePoint site",
             "verbose": "The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
             "type": "generic",
-            "read_only": true,
+            "read_only": false,
             "parameters": {
                 "file_name": {
                     "description": "File name to retrieve",
@@ -2084,7 +2086,7 @@
                     "data_path": "action_result.data.*.@microsoft.graph.downloadUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/TestSiteName/_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0"
+                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0"
                     ],
                     "contains": [
                         "url"
@@ -2094,7 +2096,7 @@
                     "data_path": "action_result.data.*.@odata.context",
                     "data_type": "string",
                     "example_values": [
-                        "https://graph.microsoft.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/drive/root/$entity"
+                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/drive/root/$entity"
                     ],
                     "contains": [
                         "url"
@@ -2120,7 +2122,7 @@
                     "data_path": "action_result.data.*.createdBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -2197,7 +2199,7 @@
                     "data_path": "action_result.data.*.lastModifiedBy.user.email",
                     "data_type": "string",
                     "example_values": [
-                        "test_user@tenant-name.onmicrosoft.com"
+                        "test_user@tenant-name.ontest.com"
                     ],
                     "contains": [
                         "email"
@@ -2263,7 +2265,7 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "example_values": [
-                        "https://tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt"
+                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt"
                     ],
                     "contains": [
                         "url"
@@ -2395,7 +2397,7 @@
         "wheel": [
             {
                 "module": "Django",
-                "input_file": "wheels/py3/Django-3.2.15-py3-none-any.whl"
+                "input_file": "wheels/py3/Django-3.2.16-py3-none-any.whl"
             },
             {
                 "module": "asgiref",
@@ -2407,7 +2409,7 @@
             },
             {
                 "module": "certifi",
-                "input_file": "wheels/py3/certifi-2022.6.15-py3-none-any.whl"
+                "input_file": "wheels/py3/certifi-2022.12.7-py3-none-any.whl"
             },
             {
                 "module": "charset_normalizer",
@@ -2415,11 +2417,11 @@
             },
             {
                 "module": "idna",
-                "input_file": "wheels/py3/idna-3.3-py3-none-any.whl"
+                "input_file": "wheels/py3/idna-3.4-py3-none-any.whl"
             },
             {
                 "module": "pytz",
-                "input_file": "wheels/shared/pytz-2022.2.1-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/pytz-2022.7-py2.py3-none-any.whl"
             },
             {
                 "module": "requests",
@@ -2431,7 +2433,7 @@
             },
             {
                 "module": "sqlparse",
-                "input_file": "wheels/py3/sqlparse-0.4.2-py3-none-any.whl"
+                "input_file": "wheels/py3/sqlparse-0.4.3-py3-none-any.whl"
             },
             {
                 "module": "typing_extensions",
@@ -2439,7 +2441,7 @@
             },
             {
                 "module": "urllib3",
-                "input_file": "wheels/shared/urllib3-1.26.12-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/urllib3-1.26.13-py2.py3-none-any.whl"
             }
         ]
     },
@@ -2447,11 +2449,11 @@
         "wheel": [
             {
                 "module": "Django",
-                "input_file": "wheels/py3/Django-3.2.15-py3-none-any.whl"
+                "input_file": "wheels/py3/Django-3.2.16-py3-none-any.whl"
             },
             {
                 "module": "asgiref",
-                "input_file": "wheels/py3/asgiref-3.5.2-py3-none-any.whl"
+                "input_file": "wheels/py3/asgiref-3.6.0-py3-none-any.whl"
             },
             {
                 "module": "beautifulsoup4",
@@ -2459,7 +2461,7 @@
             },
             {
                 "module": "certifi",
-                "input_file": "wheels/py3/certifi-2022.6.15-py3-none-any.whl"
+                "input_file": "wheels/py3/certifi-2022.12.7-py3-none-any.whl"
             },
             {
                 "module": "charset_normalizer",
@@ -2467,11 +2469,11 @@
             },
             {
                 "module": "idna",
-                "input_file": "wheels/py3/idna-3.3-py3-none-any.whl"
+                "input_file": "wheels/py3/idna-3.4-py3-none-any.whl"
             },
             {
                 "module": "pytz",
-                "input_file": "wheels/shared/pytz-2022.2.1-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/pytz-2022.7-py2.py3-none-any.whl"
             },
             {
                 "module": "requests",
@@ -2483,11 +2485,11 @@
             },
             {
                 "module": "sqlparse",
-                "input_file": "wheels/py3/sqlparse-0.4.2-py3-none-any.whl"
+                "input_file": "wheels/py3/sqlparse-0.4.3-py3-none-any.whl"
             },
             {
                 "module": "urllib3",
-                "input_file": "wheels/shared/urllib3-1.26.12-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/urllib3-1.26.13-py2.py3-none-any.whl"
             }
         ]
     }

@@ -48,10 +48,9 @@ STATE_FILE_PATH = '{0}/{1}_state.json'
 MS_SHAREPOINT_PER_PAGE_COUNT = 1000
 
 # Status/Progress Messages
-MS_SHAREPOINT_ERR_CODE_MSG = 'Error code unavailable'
-MS_SHAREPOINT_ERR_MSG = 'Unknown error occurred. Please check the asset configuration and|or action parameters'
-MS_SHAREPOINT_ERR_MISSING_SITE_ID = "The asset configuration parameter 'Sharepoint Site ID' is required for {0} from specific site"
-MS_SHAREPOINT_ERR_STATE_FILE_CORRUPT = 'Error occurred while loading the state file due to its unexpected format. ' \
+MS_SHAREPOINT_ERROR_MSG = 'Unknown error occurred. Please check the asset configuration and|or action parameters'
+MS_SHAREPOINT_ERROR_MISSING_SITE_ID = "The asset configuration parameter 'Sharepoint Site ID' is required for {0} from specific site"
+MS_SHAREPOINT_ERROR_STATE_FILE_CORRUPT = 'Error occurred while loading the state file due to its unexpected format. ' \
                                        'Resetting the state file with the default format. Please try again.'
 MS_SHAREPOINT_VALID_INTEGER_MSG = "Please provide a valid integer value in the {}"
 MS_SHAREPOINT_NON_NEGATIVE_INTEGER_MSG = "Please provide a valid non-zero positive integer value in the {}"
@@ -62,5 +61,5 @@ MS_SHAREPOINT_LIMIT_KEY = "'limit' action parameter"
 MS_SHAREPOINT_STATE_IS_ENCRYPTED = 'is_encrypted'
 MS_SHAREPOINT_ENCRYPT_TOKEN = "Encrypting the {} token"
 MS_SHAREPOINT_DECRYPT_TOKEN = "Decrypting the {} token"
-MS_SHAREPOINT_ENCRYPTION_ERR = "Error occurred while encrypting the state file"
-MS_SHAREPOINT_DECRYPTION_ERR = "Error occurred while decrypting the state file"
+MS_SHAREPOINT_ENCRYPTION_ERROR = "Error occurred while encrypting the state file"
+MS_SHAREPOINT_DECRYPTION_ERROR = "Error occurred while decrypting the state file"
