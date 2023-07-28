@@ -11,7 +11,7 @@ Minimum Product Version: 5.3.5
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
 
 [comment]: # "File: README.md"
-[comment]: # "Copyright (c) 2023 Splunk Inc."
+[comment]: # "Copyright (c) 2022-2023 Splunk Inc."
 [comment]: # ""
 [comment]: # "Licensed under the Apache License, Version 2.0 (the 'License');"
 [comment]: # "you may not use this file except in compliance with the License."
