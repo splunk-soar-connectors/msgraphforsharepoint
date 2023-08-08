@@ -191,12 +191,12 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 **source_item_id** | required | ID for item that needs to be copied | string | `sharepoint item id` 
 **dest_drive_id** | required | Drive ID of folder that holds item to be copied | string | `sharepoint drive id` 
 **dest_folder_id** | required | Drive ID of folder to copy item into. If left blank will copy into source folder | string | `sharepoint drive id` 
-**file_name** | optional | Optional new file name for the copied item. If not provided will use orginal file name. | string | 
+**file_name** | optional | Optional new file name for the copied item. If not provided will use orginal file name | string | 
 
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string |   |   success  failed   
+action_result.status | string |   |   success  failed  
 
 ### action: 'create folder'
 Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID
