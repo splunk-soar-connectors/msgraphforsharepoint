@@ -196,7 +196,7 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string |  |   success  failed   
+action_result.status | string |   |   success  failed   
 
 ### action: 'create folder'
 Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID
