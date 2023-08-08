@@ -156,9 +156,9 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions  
 [test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration  
-[copy item](#copy-item) - Asynchronously creates a copy of an driveItem (including any children), under a new parent item or with a new name  
-[create folder](#create-folder) - Create a new folder or DriveItem in a Drive with a specified parent item or path  
-[list drive children](#list-drive-children) - Return a collection of DriveItems in the children relationship of a DriveItem  
+[copy item](#action-copy-item) - Asynchronously creates a copy of an driveItem (including any children), under a new parent item or with a new name  
+[create folder](#action-create-folder) - Create a new folder or DriveItem in a Drive with a specified parent item or path  
+[list drive children](#action-list-drive-children) - Return a collection of DriveItems in the children relationship of a DriveItem  
 [list sites](#action-list-sites) - Fetch the details of the SharePoint sites  
 [list lists](#action-list-lists) - Fetch the available lists under a SharePoint site  
 [get list](#action-get-list) - Retrieves a list from a SharePoint Site  
@@ -213,8 +213,8 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.parameter.folder_name | string |  | 
-action_result.data.\*.id | string | item id | 
+action_result.parameter.folder_name | string |  |  
+action_result.data.\*.id | string | item id |  
 action_result.data.\*.webUrl | string | url |   
 
 ### action: 'list drive children'
@@ -231,8 +231,8 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.data.\*.id | string | item id | `sharepoint item id` 
-action_result.data.\*.name | string |  | 
+action_result.data.\*.id | string | item id | `sharepoint item id`  
+action_result.data.\*.name | string |  |  
 action_result.data.\*.webUrl | string | url |   
 
 ## action: 'list sites'
