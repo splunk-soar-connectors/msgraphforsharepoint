@@ -182,7 +182,7 @@ No Output
 ## action: 'copy item'
 Asynchronously creates a copy of an driveItem (including any children), under a new parent item or with a new name
 
-Type: **generic**   
+Type: **generic**  
 Read only: **False**
 
 ### Action Parameters
@@ -196,12 +196,12 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string |  |   success  failed  
+action_result.status | string |  |   success  failed   
 
 ### action: 'create folder'
 Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID
 
-Type: **generic**
+Type: **generic**  
 Read only: **False**
 
 ### Action Parameters
@@ -215,12 +215,12 @@ DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
 action_result.parameter.folder_name | string |  | 
 action_result.data.\*.id | string | item id | 
-action_result.data.\*.webUrl | string | url |  
+action_result.data.\*.webUrl | string | url |   
 
 ### action: 'list drive children'
 Return a collection of DriveItems in the children relationship of a DriveItem
 
-Type: **investigate**
+Type: **investigate**  
 Read only: **True**
 
 ### Action Parameters
@@ -233,7 +233,7 @@ DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
 action_result.data.\*.id | string | item id | `sharepoint item id` 
 action_result.data.\*.name | string |  | 
-action_result.data.\*.webUrl | string | url |  
+action_result.data.\*.webUrl | string | url |   
 
 ## action: 'list sites'
 Fetch the details of the SharePoint sites
