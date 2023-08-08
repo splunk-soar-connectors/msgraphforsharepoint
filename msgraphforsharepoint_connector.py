@@ -933,23 +933,18 @@ class MsGraphForSharepointConnector(BaseConnector):
             self._site_id
         ) + MS_DRIVE_COPY_ITEM_ENDPOINT.format(param["source_item_id"])
 
-        source_drive_id = param.get("source_drive_id")
-        dest_drive_id = param.get("dest_drive_id")
+        dest_drive_id = param.get("dest_drive_id", "")
+        dest_folder_id = param.get("dest_folder_id", "")
         file_name = param.get("file_name", "")
-
-        if dest_drive_id:
-            driveId = dest_drive_id
-        else:
-            driveId = source_drive_id
 
         if file_name:
             data = {
-                "parentReference": {"driveId": driveId, "id": param["dest_item_id"]},
+                "parentReference": {"driveId": dest_drive_id, "id": dest_folder_id},
                 "name": file_name,
             }
         else:
             data = {
-                "parentReference": {"driveId": driveId, "id": param["dest_item_id"]}
+                "parentReference": {"driveId": dest_folder_id, "id": dest_folder_id}
             }
 
         payload = json.dumps(data)

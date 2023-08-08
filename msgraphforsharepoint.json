@@ -11,7 +11,7 @@
     "product_version_regex": ".*",
     "publisher": "Splunk",
     "license": "Copyright (c) 2022 Splunk Inc.",
-    "app_version": "1.2.2",
+    "app_version": "1.2.3",
     "utctime_updated": "2022-02-11T08:37:12.891220Z",
     "package_name": "phantom_msgraphforsharepoint",
     "main_module": "msgraphforsharepoint_connector.py",
@@ -20,7 +20,8 @@
     "min_phantom_version": "5.3.1",
     "contributors": [
         {
-            "name": "import-au"
+            "name": "import-au",
+            "name": "Chris Hutto"
         }
     ],
     "latest_tested_versions": [
@@ -87,29 +88,23 @@
                     "required": true,
                     "order": 0
                 },
-                "source_drive_id": {
-                    "description": "Source Drive ID of folder that holds item to be copied.",
+                "dest_drive_id": {
+                    "description": "Drive ID that contains target folder to copy item to",
                     "data_type": "string",
                     "required": true,
                     "order": 1
                 },
-                "dest_item_id": {
-                    "description": "ID of folder to copy into.",
+                "dest_folder_id": {
+                    "description": "ID of target folder to copy item to",
                     "data_type": "string",
                     "required": true,
                     "order": 2
                 },
                 "file_name": {
-                    "description": "File name for copied file. File extension such as .xlxs is needed!",
+                    "description": "Optional new file name for the copy. If not provided will use original",
                     "data_type": "string",
                     "required": false,
                     "order": 3
-                },
-                "dest_drive_id": {
-                    "description": "Only needed if copying file to seperate drive. If left blank, will default to value in source_drive_id.",
-                    "data_type": "string",
-                    "required": false,
-                    "order": 4
                 }
             },
             "output": [
