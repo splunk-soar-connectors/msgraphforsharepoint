@@ -17,7 +17,7 @@
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
     "fips_compliant": true,
-    "min_phantom_version": "5.3.5",
+    "min_phantom_version": "6.1.0",
     "contributors": [
         {
             "name": "import-au"
