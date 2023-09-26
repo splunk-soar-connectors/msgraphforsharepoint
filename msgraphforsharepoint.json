@@ -11,20 +11,20 @@
     "product_version_regex": ".*",
     "publisher": "Splunk",
     "license": "Copyright (c) 2022-2023 Splunk Inc.",
-    "app_version": "1.2.1",
+    "app_version": "1.3.0",
     "utctime_updated": "2022-02-11T08:37:12.891220Z",
     "package_name": "phantom_msgraphforsharepoint",
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
     "fips_compliant": true,
-    "min_phantom_version": "5.3.5",
+    "min_phantom_version": "6.1.0",
     "contributors": [
         {
             "name": "import-au"
         }
     ],
     "latest_tested_versions": [
-        "SharePoint Cloud: 15 November, 2022"
+        "SharePoint Cloud: 20 September, 2023"
     ],
     "app_wizard_version": "1.0.0",
     "configuration": {

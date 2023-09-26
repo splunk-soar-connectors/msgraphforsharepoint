@@ -510,8 +510,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
 
         # If token is expired, generate a new token
-        msg = action_result.get_message()
-        if msg and any(failure_message in msg for failure_message in MS_AUTH_FAILURE_MSGS):
+        message = action_result.get_message()
+        self.debug_print(f'message: {message}')
+        if message and ('token' in message and 'expired' in message):
             self.save_progress("Bad token, generating a new one")
             ret_val = self._get_token(action_result)
             if phantom.is_fail(ret_val):
