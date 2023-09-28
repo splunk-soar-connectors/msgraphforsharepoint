@@ -2,11 +2,11 @@
 # MS Graph for SharePoint
 
 Publisher: Splunk  
-Connector Version: 1.2.1  
+Connector Version: 1.3.0  
 Product Vendor: Microsoft  
 Product Name: SharePoint  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 5.3.5  
+Minimum Product Version: 6.1.0  
 
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
 
