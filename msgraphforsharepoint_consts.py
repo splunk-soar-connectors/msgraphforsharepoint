@@ -37,6 +37,16 @@ MS_LIST_LISTS_ENDPOINT = '/sites/{0}/lists'
 MS_GET_LIST_ENDPOINT = '/sites/{0}/lists/{1}'
 MS_GET_FILE_METADATA_ENDPOINT = '/sites/{0}/drive/root:/{1}/{2}'
 MS_GET_FILE_CONTENT_ENDPOINT = '{0}:/content'
+MS_DRIVE_ROOT_ENDPOINT = "/sites/{0}/drive"
+MS_DRIVES_ROOT_ENDPOINT = "/sites/{0}/drives"
+MS_DRIVE_CREATE_FOLDER_ENDPOINT = "/items/{0}/children"
+MS_DRIVE_COPY_ITEM_ENDPOINT = "/items/{0}/copy"
+MS_AUTH_FAILURE_MSGS = [
+    "token is invalid",
+    "token has expired",
+    "ExpiredAuthenticationToken",
+    "AuthenticationFailed",
+]
 
 # Splunk SOAR Endpoints
 SOAR_SYS_INFO_URL = "{url}rest/system_info"
