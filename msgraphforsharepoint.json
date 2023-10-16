@@ -10,22 +10,21 @@
     "python_version": "3",
     "product_version_regex": ".*",
     "publisher": "Splunk",
-    "license": "Copyright (c) 2022 Splunk Inc.",
-    "app_version": "1.2.3",
+    "license": "Copyright (c) 2022-2023 Splunk Inc.",
+    "app_version": "1.3.0",
     "utctime_updated": "2022-02-11T08:37:12.891220Z",
     "package_name": "phantom_msgraphforsharepoint",
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
     "fips_compliant": true,
-    "min_phantom_version": "5.3.1",
+    "min_phantom_version": "6.1.0",
     "contributors": [
         {
-            "name": "import-au",
-            "name": "Chris Hutto"
+            "name": "import-au"
         }
     ],
     "latest_tested_versions": [
-        "SharePoint Cloud: 15 November, 2022"
+        "SharePoint Cloud: 20 September, 2023"
     ],
     "app_wizard_version": "1.0.0",
     "configuration": {
@@ -73,135 +72,6 @@
             "type": "test",
             "output": [],
             "read_only": true,
-            "versions": "EQ(*)"
-        },
-        {
-            "action": "copy item",
-            "identifier": "copy_item",
-            "description": "Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values.",
-            "type": "generic",
-            "read_only": false,
-            "parameters": {
-                "source_item_id": {
-                    "description": "ID for item that needs to be copied",
-                    "data_type": "string",
-                    "required": true,
-                    "order": 0
-                },
-                "dest_drive_id": {
-                    "description": "Drive ID that contains target folder to copy item to",
-                    "data_type": "string",
-                    "required": true,
-                    "order": 1
-                },
-                "dest_folder_id": {
-                    "description": "ID of target folder to copy item to",
-                    "data_type": "string",
-                    "required": true,
-                    "order": 2
-                },
-                "file_name": {
-                    "description": "Optional new file name for the copy. If not provided will use original",
-                    "data_type": "string",
-                    "required": false,
-                    "order": 3
-                }
-            },
-            "output": [
-                {
-                    "data_path": "action_result.status",
-                    "data_type": "string",
-                    "column_name": "Status",
-                    "column_order": 0
-                }
-            ],
-            "render": {
-                "type": "table"
-            },
-            "versions": "EQ(*)"
-        },
-        {
-            "action": "create folder",
-            "identifier": "create_folder",
-            "description": "Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID.",
-            "type": "generic",
-            "read_only": false,
-            "parameters": {
-                "item_id": {
-                    "description": "Parent Item ID",
-                    "data_type": "string",
-                    "required": true,
-                    "order": 0
-                },
-                "folder_name": {
-                    "description": "Name of newly created folder",
-                    "data_type": "string",
-                    "required": true,
-                    "order": 1
-                }
-            },
-            "output": [
-                {
-                    "data_path": "action_result.parameter.folder_name",
-                    "data_type": "string",
-                    "column_name": "created folder name",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.data.*.id",
-                    "data_type": "string",
-                    "column_name": "created item id",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.data.*.webUrl",
-                    "data_type": "string",
-                    "column_name": "web url",
-                    "column_order": 2
-                }
-            ],
-            "render": {
-                "type": "table"
-            },
-            "versions": "EQ(*)"
-        },
-        {
-            "action": "list drive children",
-            "identifier": "list_drive_children",
-            "description": "List the items in a drive folder by drive ID or search for a specific file name if provided.",
-            "type": "generic",
-            "read_only": true,
-            "parameters": {
-                "drive_id": {
-                    "description": "ID of drive to list",
-                    "data_type": "string",
-                    "required": true,
-                    "order": 0
-                }
-            },
-            "output": [
-                {
-                    "data_path": "action_result.data.*.id",
-                    "data_type": "string",
-                    "column_name": "item id",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.data.*.name",
-                    "data_type": "string",
-                    "column_name": "item name",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.data.*.webUrl",
-                    "data_type": "string",
-                    "column_name": "web url",
-                    "column_order": 2
-                }
-            ],
-            "render": {
-                "type": "table"
-            },
             "versions": "EQ(*)"
         },
         {
@@ -2522,5 +2392,29 @@
             },
             "versions": "EQ(*)"
         }
-    ]
+    ],
+    "pip_dependencies": {
+        "wheel": [
+            {
+                "module": "beautifulsoup4",
+                "input_file": "wheels/py3/beautifulsoup4-4.10.0-py3-none-any.whl"
+            },
+            {
+                "module": "soupsieve",
+                "input_file": "wheels/py3/soupsieve-2.3.2.post1-py3-none-any.whl"
+            }
+        ]
+    },
+    "pip39_dependencies": {
+        "wheel": [
+            {
+                "module": "beautifulsoup4",
+                "input_file": "wheels/py3/beautifulsoup4-4.10.0-py3-none-any.whl"
+            },
+            {
+                "module": "soupsieve",
+                "input_file": "wheels/py3/soupsieve-2.4.1-py3-none-any.whl"
+            }
+        ]
+    }
 }
