@@ -27,6 +27,7 @@ MS_SHAREPOINT_JSON_VAULT_ID = 'vault_id'
 MS_SHAREPOINT_JSON_SITES_COUNT = 'sites_count'
 MS_SHAREPOINT_JSON_LISTS_COUNT = 'lists_count'
 MS_SHAREPOINT_JSON_ITEM_COUNT = 'item_count'
+MS_SHAREPOINT_JSON_DRIVE_CHILDREN_COUNT = 'drive_children_count'
 
 # URLs and Endpoints
 MS_GRAPH_BASE_URL = 'https://graph.microsoft.com/v1.0'

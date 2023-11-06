@@ -771,6 +771,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         for child in children:
             action_result.add_data(child)
 
+        summary = action_result.update_summary({})
+        summary[MS_SHAREPOINT_JSON_DRIVE_CHILDREN_COUNT] = action_result.get_data_size()
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_copy_item(self, param):
@@ -791,7 +794,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             }
         else:
             data = {
-                "parentReference": {"driveId": dest_folder_id, "id": dest_folder_id}
+                "parentReference": {"driveId": dest_drive_id, "id": dest_folder_id}
             }
 
         payload = json.dumps(data)
@@ -808,7 +811,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         action_result.add_data(response)
 
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully copied an item")
 
     def _handle_create_folder(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
@@ -836,7 +839,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         action_result.add_data(response)
 
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully created a folder")
 
     def _handle_list_sites(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
