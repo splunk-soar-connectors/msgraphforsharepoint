@@ -400,7 +400,9 @@
                     ],
                     "contains": [
                         "sharepoint drive id"
-                    ]
+                    ],
+                    "column_name": "Drive ID",
+                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.parentReference.driveType",
@@ -720,7 +722,9 @@
                     ],
                     "contains": [
                         "sharepoint drive id"
-                    ]
+                    ],
+                    "column_name": "Drive ID",
+                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.parentReference.driveType",
@@ -3001,7 +3005,9 @@
                     ],
                     "contains": [
                         "sharepoint drive id"
-                    ]
+                    ],
+                    "column_name": "Drive ID",
+                    "column_order": 3
                 },
                 {
                     "data_path": "action_result.data.*.parentReference.driveType",
