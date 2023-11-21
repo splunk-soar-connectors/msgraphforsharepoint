@@ -419,7 +419,7 @@ class MsGraphForSharepointConnector(BaseConnector):
                 if hasattr(Vault, 'get_vault_tmp_dir'):
                     fd, tmp_file_path = tempfile.mkstemp(dir=Vault.get_vault_tmp_dir())
                 else:
-                    vault_tmp = os.path.join(paths.PHANTOM_VAULT, "/tmp")
+                    vault_tmp = os.path.join(paths.PHANTOM_VAULT, "tmp")
                     fd, tmp_file_path = tempfile.mkstemp(dir=vault_tmp)
                 os.close(fd)
 
