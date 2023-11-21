@@ -29,6 +29,7 @@ from django.http import HttpResponse
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
 from phantom.vault import Vault
+from phantom_common import paths
 
 from msgraphforsharepoint_consts import *
 
@@ -418,7 +419,8 @@ class MsGraphForSharepointConnector(BaseConnector):
                 if hasattr(Vault, 'get_vault_tmp_dir'):
                     fd, tmp_file_path = tempfile.mkstemp(dir=Vault.get_vault_tmp_dir())
                 else:
-                    fd, tmp_file_path = tempfile.mkstemp(dir='/opt/phantom/vault/tmp')
+                    vault_tmp = os.path.join(paths.PHANTOM_VAULT, "/tmp")
+                    fd, tmp_file_path = tempfile.mkstemp(dir=vault_tmp)
                 os.close(fd)
 
                 r = request_func(endpoint, json=json, data=data, headers=headers, params=params, stream=True)
