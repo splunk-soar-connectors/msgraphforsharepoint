@@ -820,7 +820,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         endpoint = MS_DRIVE_ROOT_ENDPOINT.format(
             self._site_id
-        ) + MS_DRIVE_CREATE_FOLDER_ENDPOINT.format(param["item_id"])
+        ) + MS_DRIVE_CREATE_FOLDER_ENDPOINT.format(param["parent_item_id"])
 
         data = {
             "name": param["folder_name"],

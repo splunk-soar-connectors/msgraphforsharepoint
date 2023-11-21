@@ -224,7 +224,7 @@
             "type": "generic",
             "read_only": false,
             "parameters": {
-                "item_id": {
+                "parent_item_id": {
                     "description": "Parent Item ID",
                     "data_type": "string",
                     "required": true,
@@ -355,7 +355,10 @@
                     "data_path": "action_result.data.*.id",
                     "data_type": "string",
                     "column_name": "Created Item ID",
-                    "column_order": 1
+                    "column_order": 1,
+                    "contains": [
+                        "sharepoint item id"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.lastModifiedBy.application.displayName",
