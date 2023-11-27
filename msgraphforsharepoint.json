@@ -78,19 +78,19 @@
             "versions": "EQ(*)"
         },
         {
-            "action": "copy item",
-            "identifier": "copy_item",
+            "action": "copy drive item",
+            "identifier": "copy_drive_item",
             "description": "Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values",
             "type": "generic",
             "read_only": false,
             "parameters": {
                 "source_item_id": {
-                    "description": "ID for item that needs to be copied",
+                    "description": "ID for drive item that needs to be copied",
                     "data_type": "string",
                     "required": true,
                     "order": 0,
                     "contains": [
-                        "sharepoint item id"
+                        "sharepoint drive item id"
                     ],
                     "primary": true
                 },
@@ -105,12 +105,12 @@
                     ]
                 },
                 "dest_folder_id": {
-                    "description": "ID of target folder to copy item to",
+                    "description": "ID of target folder to copy drive item to",
                     "data_type": "string",
                     "required": true,
                     "order": 2,
                     "contains": [
-                        "sharepoint item id"
+                        "sharepoint drive item id"
                     ],
                     "primary": true
                 },
@@ -148,7 +148,7 @@
                         "01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62"
                     ],
                     "contains": [
-                        "sharepoint item id"
+                        "sharepoint drive item id"
                     ]
                 },
                 {
@@ -165,7 +165,7 @@
                         "01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62"
                     ],
                     "contains": [
-                        "sharepoint item id"
+                        "sharepoint drive item id"
                     ]
                 },
                 {
@@ -225,12 +225,12 @@
             "read_only": false,
             "parameters": {
                 "parent_item_id": {
-                    "description": "Parent Item ID",
+                    "description": "Parent Drive Item ID",
                     "data_type": "string",
                     "required": true,
                     "order": 0,
                     "contains": [
-                        "sharepoint item id"
+                        "sharepoint drive item id"
                     ],
                     "primary": true
                 },
@@ -257,13 +257,13 @@
                     "column_order": 0
                 },
                 {
-                    "data_path": "action_result.parameter.item_id",
+                    "data_path": "action_result.parameter.parent_item_id",
                     "data_type": "string",
                     "example_values": [
                         "01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62"
                     ],
                     "contains": [
-                        "sharepoint item id"
+                        "sharepoint drive item id"
                     ]
                 },
                 {
@@ -354,10 +354,10 @@
                 {
                     "data_path": "action_result.data.*.id",
                     "data_type": "string",
-                    "column_name": "Created Item ID",
+                    "column_name": "Created Drive Item ID",
                     "column_order": 1,
                     "contains": [
-                        "sharepoint item id"
+                        "sharepoint drive item id"
                     ]
                 },
                 {
@@ -666,8 +666,11 @@
                 {
                     "data_path": "action_result.data.*.id",
                     "data_type": "string",
-                    "column_name": "Item ID",
-                    "column_order": 0
+                    "column_name": "Drive Item ID",
+                    "column_order": 0,
+                    "contains": [
+                        "sharepoint drive item id"
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.lastModifiedBy.application.displayName",

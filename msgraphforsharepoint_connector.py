@@ -778,7 +778,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
-    def _handle_copy_item(self, param):
+    def _handle_copy_drive_item(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         endpoint = MS_DRIVE_ROOT_ENDPOINT.format(
@@ -1008,8 +1008,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_list_drive_children(param)
         elif action_id == "create_folder":
             ret_val = self._handle_create_folder(param)
-        elif action_id == "copy_item":
-            ret_val = self._handle_copy_item(param)
+        elif action_id == "copy_drive_item":
+            ret_val = self._handle_copy_drive_item(param)
 
         return ret_val
 
