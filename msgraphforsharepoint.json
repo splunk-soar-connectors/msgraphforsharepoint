@@ -2960,7 +2960,10 @@
                     "example_values": [
                         "01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX"
                     ],
-                    "column_name": "Item ID",
+                    "contains": [
+                        "sharepoint drive item id"
+                    ],
+                    "column_name": "Drive Item ID",
                     "column_order": 0
                 },
                 {
