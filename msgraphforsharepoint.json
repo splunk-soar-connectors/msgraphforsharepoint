@@ -17,7 +17,7 @@
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
     "fips_compliant": true,
-    "min_phantom_version": "6.1.0",
+    "min_phantom_version": "6.1.1",
     "contributors": [
         {
             "name": "import-au"
@@ -27,7 +27,7 @@
         }
     ],
     "latest_tested_versions": [
-        "SharePoint Cloud: 20 November, 2023"
+        "SharePoint Cloud: 18 December, 2023"
     ],
     "app_wizard_version": "1.0.0",
     "configuration": {
@@ -43,7 +43,7 @@
             "order": 1
         },
         "endpoint_test_connectivity": {
-            "description": "Endpoint for test connectivity",
+            "description": "Endpoint for test connectivity (Valid format: /sites/{hostname}:/{site-server-relative-url})",
             "data_type": "string",
             "order": 2,
             "default": "/sites/root"
@@ -254,7 +254,10 @@
                     "data_path": "action_result.parameter.folder_name",
                     "data_type": "string",
                     "column_name": "Created Folder Name",
-                    "column_order": 0
+                    "column_order": 0,
+                    "example_values": [
+                        "Test_folder"
+                    ]
                 },
                 {
                     "data_path": "action_result.parameter.parent_item_id",
@@ -419,6 +422,9 @@
                     "data_type": "string",
                     "example_values": [
                         "01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N"
+                    ],
+                    "contains": [
+                        "sharepoint drive item id"
                     ]
                 },
                 {
@@ -454,6 +460,9 @@
                     "data_type": "string",
                     "example_values": [
                         "https://test.sharepoint.com/sites/TestSite"
+                    ],
+                    "contains": [
+                        "url"
                     ]
                 },
                 {
@@ -488,7 +497,10 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "column_name": "Web URL",
-                    "column_order": 2
+                    "column_order": 2,
+                    "contains": [
+                        "url"
+                    ]
                 },
                 {
                     "data_path": "action_result.summary",
@@ -563,6 +575,23 @@
                     "data_type": "string",
                     "example_values": [
                         "https://test.sharepoint.com/sites/Test/_layouts/15/download.aspx?UniqueId=d5bfdd47-e0e8-4a7e-99a3-c96f30191b12&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvcGhhbnRvbWVuZ2luZWVyaW5nMi5zaGFyZXBvaW50LmNvbUAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJpc3MiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAiLCJuYmYiOiIxNjk5MjU1NDY4IiwiZXhwIjoiMTY5OTI1OTA2OCIsImVuZHBvaW50dXJsIjoiM1hObzdUK3U4YnFXUU1DTko0OXdiQXVDZ01ad0FNRDh3ckZvVC9yWkxKbz0iLCJlbmRwb2ludHVybExlbmd0aCI6IjE0OCIsImlzbG9vcGJhY2siOiJUcnVlIiwiY2lkIjoiUS9ZVVdDcFQvMEsrQThFOWtxeEIvQT09IiwidmVyIjoiaGFzaGVkcHJvb2Z0b2tlbiIsInNpdGVpZCI6IlpHTTJaalF6WlRrdE5UUm1ZUzAwWVRNNUxUZzNPRE10TXpFMFpUTmlZbUpsWkRReCIsImFwcF9kaXNwbGF5bmFtZSI6ImlnaGVsYW5pX3NoYXJlcG9pbnRfdGVzdCIsIm5hbWVpZCI6IjcxYjMwN2FmLTFkY2ItNGUzOS05NjQwLTUxMjlhZmM4MzE2MkAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJyb2xlcyI6ImFsbGZpbGVzLndyaXRlIHNlbGVjdGVkc2l0ZXMgZ3JvdXAucmVhZCBhbGxzaXRlcy5yZWFkIGFsbHNpdGVzLndyaXRlIGdyb3VwLndyaXRlIGFsbGZpbGVzLnJlYWQgYWxsc2l0ZXMuZnVsbGNvbnRyb2wgYWxscHJvZmlsZXMucmVhZCIsInR0IjoiMSIsImlwYWRkciI6IjQwLjEyNi40LjQwIn0.y13AkyxdRPgziPhIV8_FFBGjtZGHgNpgkW0GU7MMUfA&ApiVersion=2.0"
+                    ],
+                    "contains": [
+                        "url"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.image.width",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1752
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.image.height",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1244
                     ]
                 },
                 {
@@ -744,6 +773,9 @@
                     "data_type": "string",
                     "example_values": [
                         "01WJINUWV6Y2GOVW7725BZO354PWSELRRZ"
+                    ],
+                    "contains": [
+                        "sharepoint drive item id"
                     ]
                 },
                 {
@@ -792,7 +824,10 @@
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
                     "column_name": "Web URL",
-                    "column_order": 2
+                    "column_order": 2,
+                    "contains": [
+                        "url"
+                    ]
                 },
                 {
                     "data_path": "action_result.summary.drive_children_count",
@@ -2195,7 +2230,11 @@
                 },
                 {
                     "data_path": "action_result.data.*.fields.Attachments",
-                    "data_type": "numeric"
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.fields.AuthorLookupId",
@@ -2577,7 +2616,11 @@
                 },
                 {
                     "data_path": "action_result.data.*.fields.Attachments",
-                    "data_type": "numeric"
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
                 },
                 {
                     "data_path": "action_result.data.*.fields.AuthorLookupId",
@@ -2880,6 +2923,20 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.data.*.image.width",
+                    "data_type": "numeric",
+                    "example_values": [
+                        256
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.image.height",
+                    "data_type": "numeric",
+                    "example_values": [
+                        266
+                    ]
+                },
+                {
                     "data_path": "action_result.data.*.cTag",
                     "data_type": "string",
                     "example_values": [
@@ -3030,6 +3087,9 @@
                     "data_type": "string",
                     "example_values": [
                         "01SNFLYIRDSQLQVWP7EVDKSL3YYUNW6I4G"
+                    ],
+                    "contains": [
+                        "sharepoint drive item id"
                     ]
                 },
                 {
