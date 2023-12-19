@@ -42,12 +42,6 @@ MS_DRIVE_ROOT_ENDPOINT = "/sites/{0}/drive"
 MS_DRIVES_ROOT_ENDPOINT = "/sites/{0}/drives"
 MS_DRIVE_CREATE_FOLDER_ENDPOINT = "/items/{0}/children"
 MS_DRIVE_COPY_ITEM_ENDPOINT = "/items/{0}/copy"
-MS_AUTH_FAILURE_MSGS = [
-    "token is invalid",
-    "token has expired",
-    "ExpiredAuthenticationToken",
-    "AuthenticationFailed",
-]
 
 # Splunk SOAR Endpoints
 SOAR_SYS_INFO_URL = "{url}rest/system_info"

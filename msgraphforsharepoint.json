@@ -537,7 +537,7 @@
             "action": "list drive children",
             "identifier": "list_drive_children",
             "description": "List the items in a drive folder by drive ID or search for a specific file name if provided",
-            "type": "generic",
+            "type": "investigate",
             "read_only": true,
             "parameters": {
                 "drive_id": {
