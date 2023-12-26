@@ -81,6 +81,7 @@
             "action": "copy drive item",
             "identifier": "copy_drive_item",
             "description": "Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values",
+            "verbose": "While copying the file if file_name is provided without file extension, the copied file will not have any extension.",
             "type": "generic",
             "read_only": false,
             "parameters": {
@@ -115,7 +116,7 @@
                     "primary": true
                 },
                 "file_name": {
-                    "description": "Optional new file name for the copy. If not provided will use original",
+                    "description": "Optional new folder/file name for the copy. If not provided will use the original name",
                     "data_type": "string",
                     "order": 3
                 }
