@@ -27,6 +27,7 @@ MS_SHAREPOINT_JSON_VAULT_ID = 'vault_id'
 MS_SHAREPOINT_JSON_SITES_COUNT = 'sites_count'
 MS_SHAREPOINT_JSON_LISTS_COUNT = 'lists_count'
 MS_SHAREPOINT_JSON_ITEM_COUNT = 'item_count'
+MS_SHAREPOINT_JSON_DRIVE_CHILDREN_COUNT = 'drive_children_count'
 
 # URLs and Endpoints
 MS_GRAPH_BASE_URL = 'https://graph.microsoft.com/v1.0'
@@ -37,6 +38,10 @@ MS_LIST_LISTS_ENDPOINT = '/sites/{0}/lists'
 MS_GET_LIST_ENDPOINT = '/sites/{0}/lists/{1}'
 MS_GET_FILE_METADATA_ENDPOINT = '/sites/{0}/drive/root:/{1}/{2}'
 MS_GET_FILE_CONTENT_ENDPOINT = '{0}:/content'
+MS_DRIVE_ROOT_ENDPOINT = "/sites/{0}/drive"
+MS_DRIVES_ROOT_ENDPOINT = "/sites/{0}/drives"
+MS_DRIVE_CREATE_FOLDER_ENDPOINT = "/items/{0}/children"
+MS_DRIVE_COPY_ITEM_ENDPOINT = "/items/{0}/copy"
 
 # Splunk SOAR Endpoints
 SOAR_SYS_INFO_URL = "{url}rest/system_info"

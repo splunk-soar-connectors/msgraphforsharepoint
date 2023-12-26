@@ -156,6 +156,9 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions  
 [test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration  
+[copy item](#action-copy-item) - Asynchronously creates a copy of an driveItem (including any children), under a new parent item or with a new name  
+[create folder](#action-create-folder) - Create a new folder or DriveItem in a Drive with a specified parent item or path  
+[list drive children](#action-list-drive-children) - Return a collection of DriveItems in the children relationship of a DriveItem  
 [list sites](#action-list-sites) - Fetch the details of the SharePoint sites  
 [list lists](#action-list-lists) - Fetch the available lists under a SharePoint site  
 [get list](#action-get-list) - Retrieves a list from a SharePoint Site  
@@ -175,6 +178,62 @@ No parameters are required for this action
 
 #### Action Output
 No Output  
+
+## action: 'copy item'
+Asynchronously creates a copy of an driveItem (including any children), under a new parent item or with a new name
+
+Type: **generic**  
+Read only: **False**
+
+### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**source_item_id** | required | ID for item that needs to be copied | string | `sharepoint item id` 
+**dest_drive_id** | required | Drive ID of folder that holds item to be copied | string | `sharepoint drive id` 
+**dest_folder_id** | required | Drive ID of folder to copy item into. If left blank will copy into source folder | string | `sharepoint drive id` 
+**file_name** | optional | Optional new file name for the copied item. If not provided will use orginal file name | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |   |   success  failed  
+
+### action: 'create folder'
+Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID
+
+Type: **generic**  
+Read only: **False**
+
+### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**item_id** | required | Parent item ID to create folder in | string | `item id` 
+**folder_name** | required | Name of newly created folder | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.parameter.folder_name | string |  |  
+action_result.data.\*.id | string | item id |  
+action_result.data.\*.webUrl | string | url |   
+
+### action: 'list drive children'
+Return a collection of DriveItems in the children relationship of a DriveItem
+
+Type: **investigate**  
+Read only: **True**
+
+### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**drive_id** | required | ID of the Drive to list children of | string | `sharepoint drive id` 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.data.\*.id | string | item id | `sharepoint item id`  
+action_result.data.\*.name | string |  |  
+action_result.data.\*.webUrl | string | url |   
 
 ## action: 'list sites'
 Fetch the details of the SharePoint sites

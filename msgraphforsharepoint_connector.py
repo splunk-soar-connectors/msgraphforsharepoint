@@ -29,6 +29,7 @@ from django.http import HttpResponse
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
 from phantom.vault import Vault
+from phantom_common import paths
 
 from msgraphforsharepoint_consts import *
 
@@ -271,7 +272,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         return phantom.APP_SUCCESS, parameter
 
     def _process_empty_response(self, response, action_result):
-        if response.status_code in [200, 204]:
+        if response.status_code in [200, 202, 204]:
             return RetVal(phantom.APP_SUCCESS, {})
 
         return RetVal(
@@ -418,7 +419,8 @@ class MsGraphForSharepointConnector(BaseConnector):
                 if hasattr(Vault, 'get_vault_tmp_dir'):
                     fd, tmp_file_path = tempfile.mkstemp(dir=Vault.get_vault_tmp_dir())
                 else:
-                    fd, tmp_file_path = tempfile.mkstemp(dir='/opt/phantom/vault/tmp')
+                    vault_tmp = os.path.join(paths.PHANTOM_VAULT, "tmp")
+                    fd, tmp_file_path = tempfile.mkstemp(dir=vault_tmp)
                 os.close(fd)
 
                 r = request_func(endpoint, json=json, data=data, headers=headers, params=params, stream=True)
@@ -756,15 +758,106 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
-    def _handle_list_sites(self, param):
-
+    def _handle_list_drive_children(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        ret_val, limit = self._validate_integer(action_result, param.get(MS_SHAREPOINT_JSON_LIMIT), MS_SHAREPOINT_LIMIT_KEY, False)
+        endpoint = MS_DRIVES_ROOT_ENDPOINT.format(
+            self._site_id
+        ) + "/{0}/items/root/children".format(param["drive_id"])
+
+        ret_val, children = self._paginator(action_result, endpoint)
+
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        ret_val, sites = self._paginator(action_result, MS_LIST_SITES_ENDPOINT, limit=limit)
+        for child in children:
+            action_result.add_data(child)
+
+        summary = action_result.update_summary({})
+        summary[MS_SHAREPOINT_JSON_DRIVE_CHILDREN_COUNT] = action_result.get_data_size()
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_copy_drive_item(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        endpoint = MS_DRIVE_ROOT_ENDPOINT.format(
+            self._site_id
+        ) + MS_DRIVE_COPY_ITEM_ENDPOINT.format(param["source_item_id"])
+
+        dest_drive_id = param.get("dest_drive_id", "")
+        dest_folder_id = param.get("dest_folder_id", "")
+        file_name = param.get("file_name", "")
+
+        if file_name:
+            data = {
+                "parentReference": {"driveId": dest_drive_id, "id": dest_folder_id},
+                "name": file_name,
+            }
+        else:
+            data = {
+                "parentReference": {"driveId": dest_drive_id, "id": dest_folder_id}
+            }
+
+        payload = json.dumps(data)
+
+        ret_val, response = self._make_rest_call_helper(
+            method="post",
+            endpoint=endpoint,
+            data=payload,
+            action_result=action_result,
+        )
+
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        action_result.add_data(response)
+
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully copied an item")
+
+    def _handle_create_folder(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        endpoint = MS_DRIVE_ROOT_ENDPOINT.format(
+            self._site_id
+        ) + MS_DRIVE_CREATE_FOLDER_ENDPOINT.format(param["parent_item_id"])
+
+        data = {
+            "name": param["folder_name"],
+            "folder": {},
+            "@microsoft.graph.conflictBehavior": "rename",
+        }
+
+        payload = json.dumps(data)
+
+        ret_val, response = self._make_rest_call_helper(
+            method="post",
+            endpoint=endpoint,
+            data=payload,
+            action_result=action_result,
+        )
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        action_result.add_data(response)
+
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully created a folder")
+
+    def _handle_list_sites(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        ret_val, limit = self._validate_integer(
+            action_result,
+            param.get(MS_SHAREPOINT_JSON_LIMIT),
+            MS_SHAREPOINT_LIMIT_KEY,
+            False,
+        )
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        ret_val, sites = self._paginator(
+            action_result, MS_LIST_SITES_ENDPOINT, limit=limit
+        )
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -911,6 +1004,12 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_add_item(param)
         elif action_id == "update_item":
             ret_val = self._handle_update_item(param)
+        elif action_id == "list_drive_children":
+            ret_val = self._handle_list_drive_children(param)
+        elif action_id == "create_folder":
+            ret_val = self._handle_create_folder(param)
+        elif action_id == "copy_drive_item":
+            ret_val = self._handle_copy_drive_item(param)
 
         return ret_val
 
