@@ -2,11 +2,11 @@
 # MS Graph for SharePoint
 
 Publisher: Splunk  
-Connector Version: 1.3.0  
+Connector Version: 1.4.0  
 Product Vendor: Microsoft  
 Product Name: SharePoint  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 6.1.0  
+Minimum Product Version: 6.1.1  
 
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
 
@@ -149,13 +149,16 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
 **tenant_id** |  required  | string | Tenant ID
 **site_id** |  optional  | string | SharePoint Site ID
-**endpoint_test_connectivity** |  optional  | string | Endpoint for test connectivity
+**endpoint_test_connectivity** |  optional  | string | Endpoint for test connectivity (Valid format: /sites/{hostname}:/{site-server-relative-url})
 **admin_consent** |  optional  | boolean | Admin Consent Already Provided
 **client_id** |  required  | string | Client/Application ID
 **client_secret** |  required  | password | Client Secret
 
 ### Supported Actions  
 [test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration  
+[copy drive item](#action-copy-drive-item) - Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values  
+[create folder](#action-create-folder) - Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID  
+[list drive children](#action-list-drive-children) - List the items in a drive folder by drive ID or search for a specific file name if provided  
 [list sites](#action-list-sites) - Fetch the details of the SharePoint sites  
 [list lists](#action-list-lists) - Fetch the available lists under a SharePoint site  
 [get list](#action-get-list) - Retrieves a list from a SharePoint Site  
@@ -175,6 +178,148 @@ No parameters are required for this action
 
 #### Action Output
 No Output  
+
+## action: 'copy drive item'
+Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values
+
+Type: **generic**  
+Read only: **False**
+
+While copying the file if file_name is provided without file extension, the copied file will not have any extension.
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**source_item_id** |  required  | ID for drive item that needs to be copied | string |  `sharepoint drive item id` 
+**dest_drive_id** |  required  | Drive ID that contains target folder to copy item to | string |  `sharepoint drive id` 
+**dest_folder_id** |  required  | ID of target folder to copy drive item to | string |  `sharepoint drive item id` 
+**file_name** |  optional  | Optional new folder/file name for the copy. If not provided will use the original name | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.parameter.dest_drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
+action_result.parameter.dest_folder_id | string |  `sharepoint drive item id`  |   01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62 
+action_result.parameter.file_name | string |  |   test_file_name 
+action_result.parameter.source_item_id | string |  `sharepoint drive item id`  |   01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62 
+action_result.data | string |  |  
+action_result.summary | string |  |  
+action_result.message | string |  |   Successfully copied an item 
+summary.total_objects | numeric |  |   1 
+summary.total_objects | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1   
+
+## action: 'create folder'
+Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID
+
+Type: **generic**  
+Read only: **False**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**parent_item_id** |  required  | Parent Drive Item ID | string |  `sharepoint drive item id` 
+**folder_name** |  required  | Name of newly created folder | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.parameter.folder_name | string |  |   Test_folder 
+action_result.parameter.parent_item_id | string |  `sharepoint drive item id`  |   01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62 
+action_result.data.\*.@odata.context | string |  |   https://test.microsoft.com/v1.0/$metadata#sites('test.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/drive/items('01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N')/children/$entity 
+action_result.data.\*.@odata.etag | string |  |   "{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},1" 
+action_result.data.\*.cTag | string |  |   "c:{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},0" 
+action_result.data.\*.commentSettings.commentingDisabled.isDisabled | boolean |  |   True  False 
+action_result.data.\*.createdBy.application.displayName | string |  |   sharepoint_test 
+action_result.data.\*.createdBy.application.id | string |  |   71b307af-1dcb-4e39-9640-5129afc83162 
+action_result.data.\*.createdBy.user.displayName | string |  |   SharePoint App 
+action_result.data.\*.createdDateTime | string |  |   2023-10-25T08:55:48Z 
+action_result.data.\*.eTag | string |  |   "{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},1" 
+action_result.data.\*.fileSystemInfo.createdDateTime | string |  |   2023-10-25T08:55:48Z 
+action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string |  |   2023-10-25T08:55:48Z 
+action_result.data.\*.folder.childCount | numeric |  |   0 
+action_result.data.\*.id | string |  `sharepoint drive item id`  |  
+action_result.data.\*.lastModifiedBy.application.displayName | string |  |   sharepoint_test 
+action_result.data.\*.lastModifiedBy.application.id | string |  |   71b307af-1dcb-4e39-9640-5129afc83162 
+action_result.data.\*.lastModifiedBy.user.displayName | string |  |   SharePoint App 
+action_result.data.\*.lastModifiedDateTime | string |  |   2023-10-25T08:55:48Z 
+action_result.data.\*.name | string |  |   test2 
+action_result.data.\*.parentReference.driveId | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
+action_result.data.\*.parentReference.driveType | string |  |   documentLibrary 
+action_result.data.\*.parentReference.id | string |  `sharepoint drive item id`  |   01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N 
+action_result.data.\*.parentReference.path | string |  |   /drives/b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi/root:/SizeTest-Playbook-Don't Delete 
+action_result.data.\*.parentReference.sharepointIds.listId | string |  |   498fd15d-ef79-4c0b-8ac4-c4ea27ed8be2 
+action_result.data.\*.parentReference.sharepointIds.listItemUniqueId | string |  |   916162a1-5e65-41c9-9ebe-a4bb86d8d76d 
+action_result.data.\*.parentReference.sharepointIds.siteId | string |  |   dc6f43e9-54fa-4a39-8783-314e3bbbed41 
+action_result.data.\*.parentReference.sharepointIds.siteUrl | string |  `url`  |   https://test.sharepoint.com/sites/TestSite 
+action_result.data.\*.parentReference.sharepointIds.tenantId | string |  |   140fe46d-819d-4b6d-b7ef-1c0a8270f4f0 
+action_result.data.\*.parentReference.sharepointIds.webId | string |  |   c42b48c4-59b9-48f1-b96e-e8145b5539fa 
+action_result.data.\*.shared.scope | string |  |   unknown 
+action_result.data.\*.size | numeric |  |   0 
+action_result.data.\*.webUrl | string |  `url`  |  
+action_result.summary | string |  |  
+action_result.message | string |  |   Successfully created a folder 
+summary.total_objects | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1   
+
+## action: 'list drive children'
+List the items in a drive folder by drive ID or search for a specific file name if provided
+
+Type: **investigate**  
+Read only: **True**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**drive_id** |  required  | ID of drive to list | string |  `sharepoint drive id` 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.parameter.drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
+action_result.data.\*.@microsoft.graph.downloadUrl | string |  `url`  |   https://test.sharepoint.com/sites/Test/_layouts/15/download.aspx?UniqueId=d5bfdd47-e0e8-4a7e-99a3-c96f30191b12&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvcGhhbnRvbWVuZ2luZWVyaW5nMi5zaGFyZXBvaW50LmNvbUAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJpc3MiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAiLCJuYmYiOiIxNjk5MjU1NDY4IiwiZXhwIjoiMTY5OTI1OTA2OCIsImVuZHBvaW50dXJsIjoiM1hObzdUK3U4YnFXUU1DTko0OXdiQXVDZ01ad0FNRDh3ckZvVC9yWkxKbz0iLCJlbmRwb2ludHVybExlbmd0aCI6IjE0OCIsImlzbG9vcGJhY2siOiJUcnVlIiwiY2lkIjoiUS9ZVVdDcFQvMEsrQThFOWtxeEIvQT09IiwidmVyIjoiaGFzaGVkcHJvb2Z0b2tlbiIsInNpdGVpZCI6IlpHTTJaalF6WlRrdE5UUm1ZUzAwWVRNNUxUZzNPRE10TXpFMFpUTmlZbUpsWkRReCIsImFwcF9kaXNwbGF5bmFtZSI6ImlnaGVsYW5pX3NoYXJlcG9pbnRfdGVzdCIsIm5hbWVpZCI6IjcxYjMwN2FmLTFkY2ItNGUzOS05NjQwLTUxMjlhZmM4MzE2MkAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJyb2xlcyI6ImFsbGZpbGVzLndyaXRlIHNlbGVjdGVkc2l0ZXMgZ3JvdXAucmVhZCBhbGxzaXRlcy5yZWFkIGFsbHNpdGVzLndyaXRlIGdyb3VwLndyaXRlIGFsbGZpbGVzLnJlYWQgYWxsc2l0ZXMuZnVsbGNvbnRyb2wgYWxscHJvZmlsZXMucmVhZCIsInR0IjoiMSIsImlwYWRkciI6IjQwLjEyNi40LjQwIn0.y13AkyxdRPgziPhIV8_FFBGjtZGHgNpgkW0GU7MMUfA&ApiVersion=2.0 
+action_result.data.\*.image.width | numeric |  |   1752 
+action_result.data.\*.image.height | numeric |  |   1244 
+action_result.data.\*.cTag | string |  |   "c:{E1E93D43-F034-489F-8304-BAF7F064A30D},0" 
+action_result.data.\*.createdBy.application.displayName | string |  |   Yammer 
+action_result.data.\*.createdBy.application.id | string |  |   00000005-0000-0ff1-ce00-000000000000 
+action_result.data.\*.createdBy.user.displayName | string |  |   SharePoint App 
+action_result.data.\*.createdBy.user.email | string |  |   test@gmail.com 
+action_result.data.\*.createdBy.user.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
+action_result.data.\*.createdDateTime | string |  |   2020-07-28T20:15:33Z 
+action_result.data.\*.decorator.iconColor | string |  |   darkGreen 
+action_result.data.\*.eTag | string |  |   "{E1E93D43-F034-489F-8304-BAF7F064A30D},1" 
+action_result.data.\*.file.hashes.quickXorHash | string |  |   8JpxaQB3wX1/FkQ5Gt3prUbUUFU= 
+action_result.data.\*.file.mimeType | string |  |   application/vnd.ms-excel 
+action_result.data.\*.fileSystemInfo.createdDateTime | string |  |   2020-07-28T20:15:33Z 
+action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string |  |   2020-07-28T20:15:33Z 
+action_result.data.\*.folder.childCount | numeric |  |   1 
+action_result.data.\*.id | string |  `sharepoint drive item id`  |  
+action_result.data.\*.lastModifiedBy.application.displayName | string |  |   Yammer 
+action_result.data.\*.lastModifiedBy.application.id | string |  |   00000005-0000-0ff1-ce00-000000000000 
+action_result.data.\*.lastModifiedBy.user.displayName | string |  |   SharePoint App 
+action_result.data.\*.lastModifiedBy.user.email | string |  |   test@gmail.com 
+action_result.data.\*.lastModifiedBy.user.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
+action_result.data.\*.lastModifiedDateTime | string |  |   2020-07-28T20:15:33Z 
+action_result.data.\*.name | string |  |  
+action_result.data.\*.parentReference.driveId | string |  `sharepoint drive id`  |   b!P_PLxcYmjkiP68Fx-chtHkdhtZd0TeZPokKrsyopCWbKblNpI0pzRa5Mk398L4cc 
+action_result.data.\*.parentReference.driveType | string |  |   documentLibrary 
+action_result.data.\*.parentReference.id | string |  `sharepoint drive item id`  |   01WJINUWV6Y2GOVW7725BZO354PWSELRRZ 
+action_result.data.\*.parentReference.name | string |  |   Shared Documents 
+action_result.data.\*.parentReference.path | string |  |   /drives/b!P_PLxcYmjkiP68Fx-chtHkdhtZd0TeZPokKrsyopCWbKblNpI0pzRa5Mk398L4cc/root: 
+action_result.data.\*.parentReference.siteId | string |  |   c5cbf33f-26c6-488e-8feb-c171f9c86d1e 
+action_result.data.\*.shared.scope | string |  |   users 
+action_result.data.\*.size | numeric |  |   775 
+action_result.data.\*.specialFolder.name | string |  |   apps 
+action_result.data.\*.webUrl | string |  `url`  |  
+action_result.summary.drive_children_count | numeric |  |   2 
+action_result.message | string |  |   Drive children count: 2 
+summary.total_objects | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1   
 
 ## action: 'list sites'
 Fetch the details of the SharePoint sites
@@ -197,6 +342,7 @@ action_result.parameter.limit | numeric |  |   500
 action_result.data.\*.createdDateTime | string |  |   2016-10-31T20:25:06Z 
 action_result.data.\*.displayName | string |  |   Test Site Name 
 action_result.data.\*.id | string |  |   tenant-name.sharepoint.com,595384ee-13aa-49d1-814b-00ed3e024cde,70abfe37-8aa1-4168-b83e-41b6e9721509 
+action_result.data.\*.isPersonalSite | boolean |  |   True  False 
 action_result.data.\*.lastModifiedDateTime | string |  |   2022-02-16T12:12:25.9162131Z 
 action_result.data.\*.name | string |  |   Test Site Name 
 action_result.data.\*.siteCollection.hostname | string |  `host name`  |   tenant-name.sharepoint.com 
@@ -413,8 +559,9 @@ action_result.data.\*.eTag | string |  |
 action_result.data.\*.fields.@odata.etag | string |  |  
 action_result.data.\*.fields.AppAuthorLookupId | string |  |  
 action_result.data.\*.fields.AppEditorLookupId | string |  |  
+action_result.data.\*.fields.Approved | boolean |  |   True  False 
 action_result.data.\*.fields.AssetType | string |  |   Laptop 
-action_result.data.\*.fields.Attachments | numeric |  |  
+action_result.data.\*.fields.Attachments | boolean |  |   True  False 
 action_result.data.\*.fields.AuthorLookupId | string |  |  
 action_result.data.\*.fields.Color | string |  |   Color of the Asset 
 action_result.data.\*.fields.Complete | boolean |  |   False 
@@ -440,6 +587,7 @@ action_result.data.\*.fields.PurchasePrice | numeric |  |   1
 action_result.data.\*.fields.SerialNumber | string |  |   Test-SerialNumber-Asset 
 action_result.data.\*.fields.Status | string |  |   Status of the Asset 
 action_result.data.\*.fields.Title | string |  |   Test Title 
+action_result.data.\*.fields.TravelDuration | string |  |   0 
 action_result.data.\*.fields._ComplianceFlags | string |  |  
 action_result.data.\*.fields._ComplianceTag | string |  |  
 action_result.data.\*.fields._ComplianceTagUserId | string |  |  
@@ -491,7 +639,7 @@ action_result.data.\*.fields.@odata.etag | string |  |
 action_result.data.\*.fields.AppAuthorLookupId | string |  |  
 action_result.data.\*.fields.AppEditorLookupId | string |  |  
 action_result.data.\*.fields.AssetType | string |  |   Mobile 
-action_result.data.\*.fields.Attachments | numeric |  |  
+action_result.data.\*.fields.Attachments | boolean |  |   True  False 
 action_result.data.\*.fields.AuthorLookupId | string |  |  
 action_result.data.\*.fields.Color | string |  |   Red 
 action_result.data.\*.fields.ConditionNotes | string |  |   Note for the Updated Asset 
@@ -557,6 +705,8 @@ action_result.parameter.file_name | string |  |   test_file_name.txt
 action_result.parameter.file_path | string |  |   /test_folder_name/ 
 action_result.data.\*.@microsoft.graph.downloadUrl | string |  `url`  |   https://test-tenant-name.sharepoint.com/sites/TestSiteName/_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0 
 action_result.data.\*.@odata.context | string |  `url`  |   https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/drive/root/$entity 
+action_result.data.\*.image.width | numeric |  |   256 
+action_result.data.\*.image.height | numeric |  |   266 
 action_result.data.\*.cTag | string |  |   "c:{C743B2E0-36EB-4C9A-9CE0-190C2FD4DD97},1" 
 action_result.data.\*.createdBy.user.displayName | string |  |   Test User 
 action_result.data.\*.createdBy.user.email | string |  `email`  |   test_user@tenant-name.ontest.com 
@@ -567,16 +717,19 @@ action_result.data.\*.file.hashes.quickXorHash | string |  |   EIDYEgye8dEx3XhA7
 action_result.data.\*.file.mimeType | string |  |   text/plain 
 action_result.data.\*.fileSystemInfo.createdDateTime | string |  |   2022-02-10T15:25:21Z 
 action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string |  |   2022-02-10T15:25:21Z 
-action_result.data.\*.id | string |  |   01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX 
+action_result.data.\*.id | string |  `sharepoint drive item id`  |   01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX 
 action_result.data.\*.lastModifiedBy.user.displayName | string |  |   Test User 
 action_result.data.\*.lastModifiedBy.user.email | string |  `email`  |   test_user@tenant-name.ontest.com 
 action_result.data.\*.lastModifiedBy.user.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
 action_result.data.\*.lastModifiedDateTime | string |  |   2022-02-10T15:25:21Z 
 action_result.data.\*.name | string |  |   test_file_name.txt 
-action_result.data.\*.parentReference.driveId | string |  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
+action_result.data.\*.parentReference.driveId | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
 action_result.data.\*.parentReference.driveType | string |  |   documentLibrary 
-action_result.data.\*.parentReference.id | string |  |   01SNFLYIRDSQLQVWP7EVDKSL3YYUNW6I4G 
+action_result.data.\*.parentReference.id | string |  `sharepoint drive item id`  |   01SNFLYIRDSQLQVWP7EVDKSL3YYUNW6I4G 
+action_result.data.\*.parentReference.name | string |  |   Playbook-Folder 
 action_result.data.\*.parentReference.path | string |  |   /drive/root:/test_folder_name 
+action_result.data.\*.parentReference.siteId | string |  |   dc6f43e9-54fa-4a39-8783-314e3bbbed41 
+action_result.data.\*.shared.scope | string |  |   users 
 action_result.data.\*.size | numeric |  |   1422 
 action_result.data.\*.webUrl | string |  `url`  |   https://test-tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt 
 action_result.summary.vault_id | string |  `sha1`  `vault id`  |   8b11ac28c0e276a4f9fa8a2fd2a17b499a415786 
