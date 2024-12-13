@@ -1,6 +1,6 @@
 # File: msgraphforsharepoint_connector.py
 #
-# Copyright (c) 2022-2023 Splunk Inc.
+# Copyright (c) 2022-2024 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -950,10 +950,10 @@ class MsGraphForSharepointConnector(BaseConnector):
         if not self._site_id:
             return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format('retrieving a file'))
 
-        sp_path = param[MS_SHAREPOINT_JSON_FILE_PATH].strip("/")
-        sp_file = param[MS_SHAREPOINT_JSON_FILE_NAME]
+        sp_path = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_PATH].strip("/"))
+        sp_file = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_NAME])
         sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
-        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(urllib.parse.quote(sp_path), urllib.parse.quote(sp_file))}"
+        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(sp_path, sp_file)}"
 
         # Get the file metadata
         ret_val, file_meta = self._make_rest_call_helper(endpoint, action_result)
@@ -992,10 +992,10 @@ class MsGraphForSharepointConnector(BaseConnector):
         if not self._site_id:
             return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format('removing a file'))
 
-        sp_path = param[MS_SHAREPOINT_JSON_FILE_PATH].rstrip("/")
-        sp_file = param[MS_SHAREPOINT_JSON_FILE_NAME]
+        sp_path = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_PATH].rstrip("/"))
+        sp_file = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_NAME])
         sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
-        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(urllib.parse.quote(sp_path), urllib.parse.quote(sp_file))}"
+        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(sp_path, sp_file)}"
 
         ret_val, _ = self._make_rest_call_helper(endpoint, action_result, method="delete")
         if phantom.is_fail(ret_val):

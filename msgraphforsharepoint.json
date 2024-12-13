@@ -17,7 +17,7 @@
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
     "fips_compliant": true,
-    "min_phantom_version": "6.1.1",
+    "min_phantom_version": "6.3.0",
     "contributors": [
         {
             "name": "import-au"
@@ -268,7 +268,7 @@
                 "drive_id": {
                     "description": "ID of drive to create folder in. If no id is specified the default drive will be used",
                     "data_type": "string",
-                    "order": 0,
+                    "order": 2,
                     "primary": true,
                     "contains": [
                         "sharepoint drive id"
@@ -615,8 +615,6 @@
                 {
                     "data_path": "action_result.status",
                     "data_type": "string",
-                    "column_name": "Status",
-                    "column_order": 0,
                     "example_values": [
                         "success",
                         "failed"
@@ -3888,13 +3886,13 @@
                     "description": "Folder path on site",
                     "data_type": "string",
                     "required": true,
-                    "order": 1
+                    "order": 0
                 },
                 "drive_id": {
                     "description": "The file is searched in this drive. If no drive is specified, the default drive will be used",
                     "data_type": "string",
                     "required": false,
-                    "order": 2
+                    "order": 1
                 }
             },
             "output": [
@@ -3909,14 +3907,7 @@
                     "column_order": 0
                 },
                 {
-                    "data_path": "action_result.parameter.file_name",
-                    "data_type": "string",
-                    "example_values": [
-                        "test_file_name.txt"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.file_path",
+                    "data_path": "action_result.parameter.folder_path",
                     "data_type": "string",
                     "example_values": [
                         "/test_folder_name/"
