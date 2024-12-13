@@ -24,6 +24,7 @@ MS_SHAREPOINT_JSON_FILE_NAME = 'file_name'
 MS_SHAREPOINT_JSON_LIST = 'list'
 MS_SHAREPOINT_JSON_LIMIT = 'limit'
 MS_SHAREPOINT_JSON_VAULT_ID = 'vault_id'
+MS_SHAREPOINT_JSON_DRIVE_ID = 'drive_id'
 MS_SHAREPOINT_JSON_SITES_COUNT = 'sites_count'
 MS_SHAREPOINT_JSON_LISTS_COUNT = 'lists_count'
 MS_SHAREPOINT_JSON_ITEM_COUNT = 'item_count'
@@ -36,12 +37,15 @@ MS_TEST_CONNECTIVITY_ENDPOINT = '/sites/root'
 MS_LIST_SITES_ENDPOINT = '/sites'
 MS_LIST_LISTS_ENDPOINT = '/sites/{0}/lists'
 MS_GET_LIST_ENDPOINT = '/sites/{0}/lists/{1}'
-MS_GET_FILE_METADATA_ENDPOINT = '/sites/{0}/drive/root:/{1}/{2}'
+MS_GET_FILE_METADATA_ENDPOINT = '/root:/{0}/{1}'
 MS_GET_FILE_CONTENT_ENDPOINT = '{0}:/content'
 MS_DRIVE_ROOT_ENDPOINT = "/sites/{0}/drive"
+MS_NON_DEFAULT_DRIVE_ROOT_ENDPOINT = "/sites/{0}/drives/{1}"
 MS_DRIVES_ROOT_ENDPOINT = "/sites/{0}/drives"
 MS_DRIVE_CREATE_FOLDER_ENDPOINT = "/items/{0}/children"
 MS_DRIVE_COPY_ITEM_ENDPOINT = "/items/{0}/copy"
+MS_FOLDER_ENDPOINT = "/root:/{0}"
+MS_GET_FOLDER_ITEMS_ENDPOINT = "/root:/{0}:/children"
 
 # Splunk SOAR Endpoints
 SOAR_SYS_INFO_URL = "{url}rest/system_info"

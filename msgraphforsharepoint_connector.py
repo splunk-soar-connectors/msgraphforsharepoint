@@ -761,9 +761,9 @@ class MsGraphForSharepointConnector(BaseConnector):
     def _handle_list_drive_children(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        endpoint = MS_DRIVES_ROOT_ENDPOINT.format(
-            self._site_id
-        ) + "/{0}/items/root/children".format(param["drive_id"])
+        drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
+
+        endpoint = f"{self.build_drive_endpoint(drive_id)}/items/root/children"
 
         ret_val, children = self._paginator(action_result, endpoint)
 
@@ -781,23 +781,22 @@ class MsGraphForSharepointConnector(BaseConnector):
     def _handle_copy_drive_item(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        endpoint = MS_DRIVE_ROOT_ENDPOINT.format(
-            self._site_id
-        ) + MS_DRIVE_COPY_ITEM_ENDPOINT.format(param["source_item_id"])
+        source_drive_id = param.get("source_drive_id", "")
+        source_item_id = param["source_item_id"]
+
+        endpoint = f"{self.build_drive_endpoint(source_drive_id)}{MS_DRIVE_COPY_ITEM_ENDPOINT.format(source_item_id)}"
 
         dest_drive_id = param.get("dest_drive_id", "")
         dest_folder_id = param.get("dest_folder_id", "")
         file_name = param.get("file_name", "")
 
+        parent_reference = {"id": dest_folder_id}
+        if dest_drive_id:
+            parent_reference["driveId"] = dest_drive_id
+        data = {"parentReference": parent_reference}
+
         if file_name:
-            data = {
-                "parentReference": {"driveId": dest_drive_id, "id": dest_folder_id},
-                "name": file_name,
-            }
-        else:
-            data = {
-                "parentReference": {"driveId": dest_drive_id, "id": dest_folder_id}
-            }
+            data["name"] = file_name
 
         payload = json.dumps(data)
 
@@ -817,10 +816,9 @@ class MsGraphForSharepointConnector(BaseConnector):
 
     def _handle_create_folder(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
-
-        endpoint = MS_DRIVE_ROOT_ENDPOINT.format(
-            self._site_id
-        ) + MS_DRIVE_CREATE_FOLDER_ENDPOINT.format(param["parent_item_id"])
+        drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
+        parent_item_id = param["parent_item_id"]
+        endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_DRIVE_CREATE_FOLDER_ENDPOINT.format(parent_item_id)}"
 
         data = {
             "name": param["folder_name"],
@@ -892,6 +890,29 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _handle_list_drives(self, param):
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        if not self._site_id:
+            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format('retrieving drives information'))
+
+        ret_val, limit = self._validate_integer(action_result, param.get(MS_SHAREPOINT_JSON_LIMIT), MS_SHAREPOINT_LIMIT_KEY, False)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        ret_val, drives = self._paginator(action_result, MS_DRIVES_ROOT_ENDPOINT.format(self._site_id), limit=limit)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        for drive_info in drives:
+            action_result.add_data(drive_info)
+
+        summary = action_result.update_summary({})
+        summary["drives_count"] = action_result.get_data_size()
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _handle_get_list(self, param):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
@@ -931,7 +952,8 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         sp_path = param[MS_SHAREPOINT_JSON_FILE_PATH].strip("/")
         sp_file = param[MS_SHAREPOINT_JSON_FILE_NAME]
-        endpoint = MS_GET_FILE_METADATA_ENDPOINT.format(self._site_id, urllib.parse.quote(sp_path), urllib.parse.quote(sp_file))
+        sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
+        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(urllib.parse.quote(sp_path), urllib.parse.quote(sp_file))}"
 
         # Get the file metadata
         ret_val, file_meta = self._make_rest_call_helper(endpoint, action_result)
@@ -972,13 +994,57 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         sp_path = param[MS_SHAREPOINT_JSON_FILE_PATH].rstrip("/")
         sp_file = param[MS_SHAREPOINT_JSON_FILE_NAME]
-        endpoint = MS_GET_FILE_METADATA_ENDPOINT.format(self._site_id, urllib.parse.quote(sp_path), urllib.parse.quote(sp_file))
+        sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
+        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(urllib.parse.quote(sp_path), urllib.parse.quote(sp_file))}"
 
         ret_val, _ = self._make_rest_call_helper(endpoint, action_result, method="delete")
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully deleted file")
+
+    def _handle_list_folder_items(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        if not self._site_id:
+            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format('removing a file'))
+
+        drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
+        folder_path = param["folder_path"].strip("/")
+
+        endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_GET_FOLDER_ITEMS_ENDPOINT.format(folder_path)}"
+
+        ret_val, children = self._paginator(action_result, endpoint)
+
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        for child in children:
+            action_result.add_data(child)
+
+        summary = action_result.update_summary({})
+        summary["items_count"] = action_result.get_data_size()
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _handle_remove_folder(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        if not self._site_id:
+            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format('removing a file'))
+
+        drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
+        folder_path = param["folder_path"].strip("/")
+
+        endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_FOLDER_ENDPOINT.format(folder_path)}"
+
+        ret_val, _ = self._make_rest_call_helper(endpoint, action_result, method="delete")
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully deleted folder")
+
+    def build_drive_endpoint(self, drive_id: str = ""):
+        return MS_NON_DEFAULT_DRIVE_ROOT_ENDPOINT.format(self._site_id, drive_id) if drive_id else MS_DRIVE_ROOT_ENDPOINT.format(self._site_id)
 
     def handle_action(self, param):
 
@@ -1010,6 +1076,12 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_create_folder(param)
         elif action_id == "copy_drive_item":
             ret_val = self._handle_copy_drive_item(param)
+        elif action_id == "list_drives":
+            ret_val = self._handle_list_drives(param)
+        elif action_id == "list_folder_items":
+            ret_val = self._handle_list_folder_items(param)
+        elif action_id == "remove_folder":
+            ret_val = self._handle_remove_folder(param)
 
         return ret_val
 
