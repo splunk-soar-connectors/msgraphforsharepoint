@@ -6,12 +6,12 @@ Connector Version: 1.4.0
 Product Vendor: Microsoft  
 Product Name: SharePoint  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 6.1.1  
+Minimum Product Version: 6.3.0  
 
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
 
 [comment]: # "File: README.md"
-[comment]: # "Copyright (c) 2022-2023 Splunk Inc."
+[comment]: # "Copyright (c) 2022-2024 Splunk Inc."
 [comment]: # ""
 [comment]: # "Licensed under the Apache License, Version 2.0 (the 'License');"
 [comment]: # "you may not use this file except in compliance with the License."
@@ -889,8 +889,7 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
 action_result.status | string |  |   success  failed 
-action_result.parameter.file_name | string |  |   test_file_name.txt 
-action_result.parameter.file_path | string |  |   /test_folder_name/ 
+action_result.parameter.folder_path | string |  |   /test_folder_name/ 
 action_result.parameter.drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
 action_result.data | string |  |  
 action_result.summary | string |  |  

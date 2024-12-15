@@ -278,7 +278,8 @@ class MsGraphForSharepointConnector(BaseConnector):
         return RetVal(
             action_result.set_status(
                 phantom.APP_ERROR, "Status Code: {}. Empty response and no information in the header.".format(response.status_code)
-            ), None
+            ),
+            None,
         )
 
     def _process_html_response(self, response, action_result):
@@ -372,7 +373,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         # There is a high chance of a PROXY in between phantom and the rest of
         # world, in case of errors, PROXY's return HTML, this function parses
         # the error and adds it to the action_result.
-        if 'html' in r.headers.get('Content-Type', ''):
+        if "html" in r.headers.get("Content-Type", ""):
             return self._process_html_response(r, action_result)
 
         # it's not content-type that is to be parsed, handle an empty response
@@ -381,7 +382,6 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         # everything else is actually an error at this point
         message = "Can't process response from server. Status Code: {0} Data from server: {1}".format(
-            r.status_code,
             r.status_code, r.text.replace("{", "{{").replace("}", "}}")
         )
 
@@ -447,7 +447,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             "client_id": self._client_id,
             "client_secret": self._client_secret,
             "grant_type": "client_credentials",
-            "scope": "https://graph.microsoft.com/.default"
+            "scope": "https://graph.microsoft.com/.default",
         }
 
         req_url = MS_SERVER_TOKEN_URL.format(self._tenant)
@@ -509,7 +509,7 @@ class MsGraphForSharepointConnector(BaseConnector):
                 return action_result.get_status(), None
 
         headers.update(
-            {"Authorization": "***".format(self._access_token), "Accept": "application/json", "Content-Type": "application/json"}
+            {"Authorization": "Bearer {0}".format(self._access_token), "Accept": "application/json", "Content-Type": "application/json"}
         )
 
         self.save_progress("Connecting to endpoint {}".format(endpoint))
@@ -1094,9 +1094,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         self._state = self.load_state()
         if not isinstance(self._state, dict):
             self.debug_print(MS_SHAREPOINT_ERROR_STATE_FILE_CORRUPT)
-            self._state = {
-                "app_version": self.get_app_json().get("app_version")
-            }
+            self._state = {"app_version": self.get_app_json().get("app_version")}
 
         # get the asset config
         config = self.get_config()
@@ -1154,6 +1152,7 @@ def main():
 
         # User specified a username but not a password, so ask
         import getpass
+
         password = getpass.getpass("Password: ")
 
     if username and password:
