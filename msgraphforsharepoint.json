@@ -11,8 +11,8 @@
     "product_version_regex": ".*",
     "publisher": "Splunk",
     "license": "Copyright (c) 2022-2024 Splunk Inc.",
-    "app_version": "1.4.0",
-    "utctime_updated": "2022-02-11T08:37:12.891220Z",
+    "app_version": "1.4.1",
+    "utctime_updated": "2024-12-16T20:50:56.000000Z",
     "package_name": "phantom_msgraphforsharepoint",
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
@@ -1080,7 +1080,6 @@
                         "2022-03-03T13:43:06Z"
                     ]
                 },
-                
                 {
                     "data_path": "action_result.data.*.webUrl",
                     "data_type": "string",
@@ -3467,7 +3466,6 @@
                         "sharepoint drive id"
                     ]
                 }
-
             },
             "output": [
                 {
