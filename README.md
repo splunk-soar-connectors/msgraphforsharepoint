@@ -6,12 +6,12 @@ Connector Version: 1.4.0
 Product Vendor: Microsoft  
 Product Name: SharePoint  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 6.1.1  
+Minimum Product Version: 6.3.0  
 
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
 
 [comment]: # "File: README.md"
-[comment]: # "Copyright (c) 2022-2023 Splunk Inc."
+[comment]: # "Copyright (c) 2022-2024 Splunk Inc."
 [comment]: # ""
 [comment]: # "Licensed under the Apache License, Version 2.0 (the 'License');"
 [comment]: # "you may not use this file except in compliance with the License."
@@ -142,8 +142,8 @@ default ports used by Splunk SOAR.
 |         https        | tcp                | 443  |
 
 
-### Configuration Variables
-The below configuration variables are required for this Connector to operate.  These variables are specified when configuring a SharePoint asset in SOAR.
+### Configuration variables
+This table lists the configuration variables required to operate MS Graph for SharePoint. These variables are specified when configuring a SharePoint asset in Splunk SOAR.
 
 VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
@@ -158,6 +158,8 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration  
 [copy drive item](#action-copy-drive-item) - Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values  
 [create folder](#action-create-folder) - Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID  
+[list folder items](#action-list-folder-items) - List items in a folder  
+[list drives](#action-list-drives) - Fetch the available drives (libraries) under a SharePoint site  
 [list drive children](#action-list-drive-children) - List the items in a drive folder by drive ID or search for a specific file name if provided  
 [list sites](#action-list-sites) - Fetch the details of the SharePoint sites  
 [list lists](#action-list-lists) - Fetch the available lists under a SharePoint site  
@@ -166,6 +168,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [update item](#action-update-item) - Update an item in a list on a SharePoint Site  
 [get file](#action-get-file) - Retrieves a file from a SharePoint site  
 [remove file](#action-remove-file) - Removes a file from a SharePoint site  
+[remove folder](#action-remove-folder) - Removes a folder from a SharePoint site  
 
 ## action: 'test connectivity'
 Validate the asset configuration for connectivity using supplied configuration
@@ -191,7 +194,8 @@ While copying the file if file_name is provided without file extension, the copi
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
 **source_item_id** |  required  | ID for drive item that needs to be copied | string |  `sharepoint drive item id` 
-**dest_drive_id** |  required  | Drive ID that contains target folder to copy item to | string |  `sharepoint drive id` 
+**source_drive_id** |  optional  | Drive ID that contains the source item to copy. If no id is specified the default drive will be used | string |  `sharepoint drive id` 
+**dest_drive_id** |  optional  | Drive ID that contains target folder to copy item to. If no id is specified the default drive will be used | string |  `sharepoint drive id` 
 **dest_folder_id** |  required  | ID of target folder to copy drive item to | string |  `sharepoint drive item id` 
 **file_name** |  optional  | Optional new folder/file name for the copy. If not provided will use the original name | string | 
 
@@ -202,6 +206,7 @@ action_result.status | string |  |   success  failed
 action_result.parameter.dest_drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
 action_result.parameter.dest_folder_id | string |  `sharepoint drive item id`  |   01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62 
 action_result.parameter.file_name | string |  |   test_file_name 
+action_result.parameter.source_drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
 action_result.parameter.source_item_id | string |  `sharepoint drive item id`  |   01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62 
 action_result.data | string |  |  
 action_result.summary | string |  |  
@@ -222,11 +227,13 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
 **parent_item_id** |  required  | Parent Drive Item ID | string |  `sharepoint drive item id` 
 **folder_name** |  required  | Name of newly created folder | string | 
+**drive_id** |  optional  | ID of drive to create folder in. If no id is specified the default drive will be used | string |  `sharepoint drive id` 
 
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
 action_result.status | string |  |   success  failed 
+action_result.parameter.drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
 action_result.parameter.folder_name | string |  |   Test_folder 
 action_result.parameter.parent_item_id | string |  `sharepoint drive item id`  |   01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62 
 action_result.data.\*.@odata.context | string |  |   https://test.microsoft.com/v1.0/$metadata#sites('test.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/drive/items('01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N')/children/$entity 
@@ -265,6 +272,105 @@ action_result.message | string |  |   Successfully created a folder
 summary.total_objects | numeric |  |   1 
 summary.total_objects_successful | numeric |  |   1   
 
+## action: 'list folder items'
+List items in a folder
+
+Type: **investigate**  
+Read only: **True**
+
+List all direct children in a folder.
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**drive_id** |  optional  | ID for drive that folder lives in. If no id is specified the default drive will be used | string |  `sharepoint drive id` 
+**folder_path** |  required  | Path of the folder to query | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.parameter.folder_path | string |  |   library/test 
+action_result.parameter.drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
+action_result.data.\*.id | string |  |   01SNFLYIQZLCKT6RR4OJEYA47OGVIKB7DB 
+action_result.data.\*.cTag | string |  |   'c:{3F967819-3D56-4972-8073-EF3550A1TC34},1' 
+action_result.data.\*.eTag | string |  |   '{3F967819-3D56-4972-8073-EF3550A1TC34},1' 
+action_result.data.\*.file.mimeType | string |  |   video/mp4 
+action_result.data.\*.folder.childCount | numeric |  |   5 
+action_result.data.\*.name | string |  |   example.mp4 
+action_result.data.\*.size | numeric |  |   157000 
+action_result.data.\*.shared.scope | string |  |   users 
+action_result.data.\*.shared.webUrl | string |  |   https://test-tenant-name.sharepoint.com/sites/SiteName/documents/example.mp4 
+action_result.data.\*.parentReference.driveType | string |  |   documentLibrary 
+action_result.data.\*.parentReference.id | string |  `sharepoint drive item id`  |   01WJINUWV6Y2GOVW7725BZO354PWSELRRZ 
+action_result.data.\*.parentReference.name | string |  |   Shared Documents 
+action_result.data.\*.parentReference.path | string |  |   /drives/b!P_PLxcYmjkiP68Fx-chtHkdhtZd0TeZPokKrsyopCWbKblNpI0pzRa5Mk398L4cc/root: 
+action_result.data.\*.parentReference.siteId | string |  |   c5cbf33f-26c6-488e-8feb-c171f9c86d1e 
+action_result.data.\*.fileSystemInfo.createdDateTime | string |  |   2020-07-28T20:15:33Z 
+action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string |  |   2020-07-28T20:15:33Z 
+action_result.data.\*.createdBy.user.email | string |  `email`  |   test_user@tenant-name.ontest.com 
+action_result.data.\*.createdBy.user.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
+action_result.data.\*.createdBy.user.displayName | string |  |   Test User 
+action_result.data.\*.lastModifiedBy.user.displayName | string |  |   Test User 
+action_result.data.\*.lastModifiedBy.user.email | string |  `email`  |   test_user@tenant-name.ontest.com 
+action_result.data.\*.lastModifiedBy.user.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
+action_result.data.\*.createdDateTime | string |  |   2022-02-24T05:38:53Z 
+action_result.data.\*.@microsoft.graph.downloadUrl | string |  `url`  |   https://test.sharepoint.com/sites/Test/_layouts/15/download.aspx?UniqueId=d5bfdd47-e0e8-4a7e-99a3-c96f30191b12&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvcGhhbnRvbWVuZ2luZWVyaW5nMi5zaGFyZXBvaW50LmNvbUAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJpc3MiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAiLCJuYmYiOiIxNjk5MjU1NDY4IiwiZXhwIjoiMTY5OTI1OTA2OCIsImVuZHBvaW50dXJsIjoiM1hObzdUK3U4YnFXUU1DTko0OXdiQXVDZ01ad0FNRDh3ckZvVC9yWkxKbz0iLCJlbmRwb2ludHVybExlbmd0aCI6IjE0OCIsImlzbG9vcGJhY2siOiJUcnVlIiwiY2lkIjoiUS9ZVVdDcFQvMEsrQThFOWtxeEIvQT09IiwidmVyIjoiaGFzaGVkcHJvb2Z0b2tlbiIsInNpdGVpZCI6IlpHTTJaalF6WlRrdE5UUm1ZUzAwWVRNNUxUZzNPRE10TXpFMFpUTmlZbUpsWkRReCIsImFwcF9kaXNwbGF5bmFtZSI6ImlnaGVsYW5pX3NoYXJlcG9pbnRfdGVzdCIsIm5hbWVpZCI6IjcxYjMwN2FmLTFkY2ItNGUzOS05NjQwLTUxMjlhZmM4MzE2MkAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJyb2xlcyI6ImFsbGZpbGVzLndyaXRlIHNlbGVjdGVkc2l0ZXMgZ3JvdXAucmVhZCBhbGxzaXRlcy5yZWFkIGFsbHNpdGVzLndyaXRlIGdyb3VwLndyaXRlIGFsbGZpbGVzLnJlYWQgYWxsc2l0ZXMuZnVsbGNvbnRyb2wgYWxscHJvZmlsZXMucmVhZCIsInR0IjoiMSIsImlwYWRkciI6IjQwLjEyNi40LjQwIn0.y13AkyxdRPgziPhIV8_FFBGjtZGHgNpgkW0GU7MMUfA&ApiVersion=2.0 
+action_result.data.\*.lastModifiedDateTime | string |  |   2020-07-28T20:15:33Z 
+action_result.summary | string |  |  
+action_result.summary.item_count | numeric |  |   25 
+action_result.message | string |  |   Item count: 25 
+action_result.message | string |  |   Successfully copied an item 
+summary.total_objects | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1   
+
+## action: 'list drives'
+Fetch the available drives (libraries) under a SharePoint site
+
+Type: **investigate**  
+Read only: **True**
+
+The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**limit** |  optional  | Maximum number of drives to return | numeric | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.parameter.limit | numeric |  |   500 
+action_result.data.\*.id | string |  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpuWT-s6xSLQ6CTR3DzR9nz 
+action_result.data.\*.name | string |  |   Custom Library 
+action_result.data.\*.owner.user.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
+action_result.data.\*.owner.user.email | string |  `email`  |   test_user@tenant-name.ontest.com 
+action_result.data.\*.owner.user.displayName | string |  |   Test User 
+action_result.data.\*.owner.group.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
+action_result.data.\*.owner.group.email | string |  `email`  |   test_group@tenant-name.ontest.com 
+action_result.data.\*.owner.group.displayName | string |  |   Test Group 
+action_result.data.\*.quota.used | numeric |  |   8546734 
+action_result.data.\*.quota.state | string |  |   normal 
+action_result.data.\*.quota.total | numeric |  |   274877685 
+action_result.data.\*.quota.deleted | numeric |  |   0 
+action_result.data.\*.quota.remaining | numeric |  |   266330951 
+action_result.data.\*.createdBy.user.email | string |  `email`  |   test_user@tenant-name.ontest.com 
+action_result.data.\*.createdBy.user.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
+action_result.data.\*.createdBy.user.displayName | string |  |   Test User 
+action_result.data.\*.createdDateTime | string |  |   2022-02-24T05:38:53Z 
+action_result.data.\*.description | string |  |   Test List Description 
+action_result.data.\*.driveType | string |  |   documentLibrary 
+action_result.data.\*.lastModifiedBy.user.displayName | string |  |   Test User 
+action_result.data.\*.lastModifiedBy.user.email | string |  `email`  |   test_user@tenant-name.ontest.com 
+action_result.data.\*.lastModifiedBy.user.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
+action_result.data.\*.lastModifiedDateTime | string |  |   2022-03-03T13:43:06Z 
+action_result.data.\*.webUrl | string |  `url`  |   https://test-tenant-name.sharepoint.com/sites/SiteName/Lists/ListName 
+action_result.summary.drive_count | numeric |  |   25 
+action_result.message | string |  |   Drive count: 25 
+summary.total_objects | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1   
+
 ## action: 'list drive children'
 List the items in a drive folder by drive ID or search for a specific file name if provided
 
@@ -274,7 +380,7 @@ Read only: **True**
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
-**drive_id** |  required  | ID of drive to list | string |  `sharepoint drive id` 
+**drive_id** |  optional  | ID of drive to list. If no id is specified the default drive will be queried | string |  `sharepoint drive id` 
 
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
@@ -285,8 +391,6 @@ action_result.data.\*.@microsoft.graph.downloadUrl | string |  `url`  |   https:
 action_result.data.\*.image.width | numeric |  |   1752 
 action_result.data.\*.image.height | numeric |  |   1244 
 action_result.data.\*.cTag | string |  |   "c:{E1E93D43-F034-489F-8304-BAF7F064A30D},0" 
-action_result.data.\*.createdBy.application.displayName | string |  |   Yammer 
-action_result.data.\*.createdBy.application.id | string |  |   00000005-0000-0ff1-ce00-000000000000 
 action_result.data.\*.createdBy.user.displayName | string |  |   SharePoint App 
 action_result.data.\*.createdBy.user.email | string |  |   test@gmail.com 
 action_result.data.\*.createdBy.user.id | string |  |   eeb3645f-df19-47a1-8e8c-fcd234cb5f6f 
@@ -696,6 +800,7 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
 **file_name** |  required  | File name to retrieve | string | 
 **file_path** |  required  | Folder path on site | string | 
+**drive_id** |  optional  | The file is searched in this drive. If no drive is specified, the default drive will be used | string |  `sharepoint drive id` 
 
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
@@ -703,6 +808,7 @@ DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 action_result.status | string |  |   success  failed 
 action_result.parameter.file_name | string |  |   test_file_name.txt 
 action_result.parameter.file_path | string |  |   /test_folder_name/ 
+action_result.parameter.drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
 action_result.data.\*.@microsoft.graph.downloadUrl | string |  `url`  |   https://test-tenant-name.sharepoint.com/sites/TestSiteName/_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0 
 action_result.data.\*.@odata.context | string |  `url`  |   https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/drive/root/$entity 
 action_result.data.\*.image.width | numeric |  |   256 
@@ -750,6 +856,7 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
 **file_name** |  required  | File name to remove | string | 
 **file_path** |  required  | Folder path on site | string | 
+**drive_id** |  optional  | The file is searched in this drive. If no drive is specified, the default drive will be used | string | 
 
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
@@ -757,8 +864,35 @@ DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 action_result.status | string |  |   success  failed 
 action_result.parameter.file_name | string |  |   test_file_name.txt 
 action_result.parameter.file_path | string |  |   /test_folder_name/ 
+action_result.parameter.drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
 action_result.data | string |  |  
 action_result.summary | string |  |  
 action_result.message | string |  |   Successfully deleted file 
+summary.total_objects | numeric |  |   1 
+summary.total_objects_successful | numeric |  |   1   
+
+## action: 'remove folder'
+Removes a folder from a SharePoint site
+
+Type: **generic**  
+Read only: **False**
+
+The 'folder path' parameter will be considered from the root of the document library specified in drive_id.
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**folder_path** |  required  | Folder path on site | string | 
+**drive_id** |  optional  | The file is searched in this drive. If no drive is specified, the default drive will be used | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.parameter.folder_path | string |  |   /test_folder_name/ 
+action_result.parameter.drive_id | string |  `sharepoint drive id`  |   b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi 
+action_result.data | string |  |  
+action_result.summary | string |  |  
+action_result.message | string |  |   Successfully deleted folder 
 summary.total_objects | numeric |  |   1 
 summary.total_objects_successful | numeric |  |   1 
