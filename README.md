@@ -2,7 +2,7 @@
 # MS Graph for SharePoint
 
 Publisher: Splunk  
-Connector Version: 1.4.0  
+Connector Version: 1.4.1  
 Product Vendor: Microsoft  
 Product Name: SharePoint  
 Product Version Supported (regex): ".\*"  
