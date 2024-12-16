@@ -733,7 +733,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
         item = param.get("item")
-        endpoint = "{}/items".format(MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])))
+        endpoint = "{}/items".format(MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])))
         ret_val, item = self._make_rest_call_helper(method="post", endpoint=endpoint, data=item.encode("utf-8"), action_result=action_result)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
@@ -751,7 +751,8 @@ class MsGraphForSharepointConnector(BaseConnector):
         item = param.get("item")
         item_id = param.get("item_id")
 
-        endpoint = "{}/items/{}".format(MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])), item_id)
+        list_endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        endpoint = "{}/items/{}".format(list_endpoint, item_id)
 
         ret_val, item = self._make_rest_call_helper(method="patch", endpoint=endpoint, data=item.encode("utf-8"), action_result=action_result)
         if phantom.is_fail(ret_val):
@@ -790,7 +791,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         source_drive_id = param.get("source_drive_id", "")
         source_item_id = param["source_item_id"]
 
-        endpoint = f"{self.build_drive_endpoint(source_drive_id)}{MS_DRIVE_COPY_ITEM_ENDPOINT.format(source_item_id)}"
+        endpoint = f"{self.build_drive_endpoint(source_drive_id)}{MS_DRIVE_COPY_ITEM_ENDPOINT.format(item_id=source_item_id)}"
 
         dest_drive_id = param.get("dest_drive_id", "")
         dest_folder_id = param.get("dest_folder_id", "")
@@ -824,7 +825,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
         drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
         parent_item_id = param["parent_item_id"]
-        endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_DRIVE_CREATE_FOLDER_ENDPOINT.format(parent_item_id)}"
+        endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_DRIVE_CREATE_FOLDER_ENDPOINT.format(parent_id=parent_item_id)}"
 
         data = {
             "name": param["folder_name"],
@@ -882,7 +883,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        ret_val, lists = self._paginator(action_result, MS_LIST_LISTS_ENDPOINT.format(self._site_id), limit=limit)
+        ret_val, lists = self._paginator(action_result, MS_LIST_LISTS_ENDPOINT.format(site_id=self._site_id), limit=limit)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -905,7 +906,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        ret_val, drives = self._paginator(action_result, MS_DRIVES_ROOT_ENDPOINT.format(self._site_id), limit=limit)
+        ret_val, drives = self._paginator(action_result, MS_DRIVES_ROOT_ENDPOINT.format(site_id=self._site_id), limit=limit)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
@@ -928,7 +929,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        endpoint = MS_GET_LIST_ENDPOINT.format(self._site_id, urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
         params = {"expand": "columns"}
         ret_val, response = self._make_rest_call_helper(endpoint, action_result, params=params)
         if phantom.is_fail(ret_val):
@@ -957,7 +958,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         sp_path = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_PATH].strip("/"))
         sp_file = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_NAME])
         sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
-        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(sp_path, sp_file)}"
+        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(path=sp_path, file=sp_file)}"
 
         # Get the file metadata
         ret_val, file_meta = self._make_rest_call_helper(endpoint, action_result)
@@ -998,7 +999,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         sp_path = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_PATH].rstrip("/"))
         sp_file = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_NAME])
         sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
-        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(sp_path, sp_file)}"
+        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(path=sp_path, file=sp_file)}"
 
         ret_val, _ = self._make_rest_call_helper(endpoint, action_result, method="delete")
         if phantom.is_fail(ret_val):
@@ -1015,7 +1016,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
         folder_path = param["folder_path"].strip("/")
 
-        endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_GET_FOLDER_ITEMS_ENDPOINT.format(folder_path)}"
+        endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_GET_FOLDER_ITEMS_ENDPOINT.format(folder_path=folder_path)}"
 
         ret_val, children = self._paginator(action_result, endpoint)
 
@@ -1038,7 +1039,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
         folder_path = param["folder_path"].strip("/")
 
-        endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_FOLDER_ENDPOINT.format(folder_path)}"
+        endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_FOLDER_ENDPOINT.format(folder_path=folder_path)}"
 
         ret_val, _ = self._make_rest_call_helper(endpoint, action_result, method="delete")
         if phantom.is_fail(ret_val):
@@ -1047,7 +1048,11 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully deleted folder")
 
     def build_drive_endpoint(self, drive_id: str = ""):
-        return MS_NON_DEFAULT_DRIVE_ROOT_ENDPOINT.format(self._site_id, drive_id) if drive_id else MS_DRIVE_ROOT_ENDPOINT.format(self._site_id)
+        return (
+            MS_CUSTOM_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id, drive_id=drive_id)
+            if drive_id
+            else MS_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id)
+        )
 
     def handle_action(self, param):
 
