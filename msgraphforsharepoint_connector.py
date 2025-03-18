@@ -1,6 +1,6 @@
 # File: msgraphforsharepoint_connector.py
 #
-# Copyright (c) 2022-2024 Splunk Inc.
+# Copyright (c) 2022-2025 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ from msgraphforsharepoint_consts import *
 
 
 class RetVal(tuple):
-
     def __new__(cls, val1, val2=None):
         return tuple.__new__(RetVal, (val1, val2))
 
@@ -64,15 +63,15 @@ def _load_app_state(asset_id, app_connector=None):
 
     state = {}
     try:
-        with open(real_state_file_path, "r") as state_file_obj:
+        with open(real_state_file_path) as state_file_obj:
             state_file_data = state_file_obj.read()
             state = json.loads(state_file_data)
     except Exception as e:
         if app_connector:
-            app_connector.debug_print("In _load_app_state: {}".format(str(e)))
+            app_connector.debug_print(f"In _load_app_state: {e!s}")
 
     if app_connector:
-        app_connector.debug_print("Loaded state: {}".format(state))
+        app_connector.debug_print(f"Loaded state: {state}")
 
     return state
 
@@ -102,14 +101,14 @@ def _save_app_state(state, asset_id, app_connector=None):
         return phantom.APP_ERROR
 
     if app_connector:
-        app_connector.debug_print("Saving state: {}".format(state))
+        app_connector.debug_print(f"Saving state: {state}")
 
     try:
         with open(real_state_file_path, "w+") as state_file_obj:
             state_file_obj.write(json.dumps(state))
     except Exception as e:
         if app_connector:
-            app_connector.debug_print("Unable to save state file. Error: {}".format(str(e)))
+            app_connector.debug_print(f"Unable to save state file. Error: {e!s}")
         return phantom.APP_ERROR
 
     return phantom.APP_SUCCESS
@@ -142,7 +141,7 @@ def _remove_app_state(asset_id, app_connector=None):
         os.remove(state_file)
     except Exception as e:
         if app_connector:
-            app_connector.debug_print("Unable to remove state file. Error: {}".format(str(e)))
+            app_connector.debug_print(f"Unable to remove state file. Error: {e!s}")
         return phantom.APP_ERROR
 
 
@@ -169,11 +168,10 @@ def handle_request(request, path_parts):
 
         return _return_response(asset_id, "You can now close this page", 200, False)
     except Exception as e:
-        return _return_response(asset_id, "Error handling request: {}".format(str(e)), 400)
+        return _return_response(asset_id, f"Error handling request: {e!s}", 400)
 
 
 def _get_dir_name_from_app_name(app_name):
-
     app_name = "".join([x for x in app_name if x.isalnum()])
     app_name = app_name.lower()
 
@@ -184,11 +182,9 @@ def _get_dir_name_from_app_name(app_name):
 
 
 class MsGraphForSharepointConnector(BaseConnector):
-
     def __init__(self):
-
         # Call the BaseConnectors init first
-        super(MsGraphForSharepointConnector, self).__init__()
+        super().__init__()
 
         self._client_id = None
         self._client_secret = None
@@ -239,7 +235,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         except Exception:
             self.debug_print("Error occurred while retrieving exception information")
 
-        return "Error Code: {0}. Error Message: {1}".format(error_code, error_msg)
+        return f"Error Code: {error_code}. Error Message: {error_msg}"
 
     def _validate_integer(self, action_result, parameter, key, allow_zero=True):
         """
@@ -277,7 +273,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         return RetVal(
             action_result.set_status(
-                phantom.APP_ERROR, "Status Code: {}. Empty response and no information in the header.".format(response.status_code)
+                phantom.APP_ERROR, f"Status Code: {response.status_code}. Empty response and no information in the header."
             ),
             None,
         )
@@ -298,7 +294,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         except Exception:
             error_text = "Cannot parse error details"
 
-        message = "Status Code: {0}. Data from server: {1}".format(status_code, error_text)
+        message = f"Status Code: {status_code}. Data from server: {error_text}"
 
         message = message.replace("{", "{{").replace("}", "}}")
         return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
@@ -309,7 +305,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             resp_json = r.json()
         except Exception as e:
             error_message = self._get_error_message_from_exception(e)
-            return RetVal(action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON response. Error: {0}".format(error_message)), None)
+            return RetVal(action_result.set_status(phantom.APP_ERROR, f"Unable to parse JSON response. Error: {error_message}"), None)
 
         # Please specify the status codes here
         if 200 <= r.status_code < 399:
@@ -341,10 +337,10 @@ class MsGraphForSharepointConnector(BaseConnector):
                     error_text = "Cannot parse error details"
 
             if error_code:
-                error_text = "{}. {}".format(error_code, error_text)
+                error_text = f"{error_code}. {error_text}"
 
             if error_desc:
-                error_text = "{}. {}".format(error_desc, error_text)
+                error_text = f"{error_desc}. {error_text}"
 
             if not error_text:
                 error_text = r.text.replace("{", "{{").replace("}", "}}")
@@ -352,7 +348,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             error_text = r.text.replace("{", "{{").replace("}", "}}")
 
         # You should process the error returned in the json
-        message = "Error from server. Status Code: {0} Data from server: {1}".format(r.status_code, error_text)
+        message = f"Error from server. Status Code: {r.status_code} Data from server: {error_text}"
 
         return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
 
@@ -381,7 +377,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             return self._process_empty_response(r, action_result)
 
         # everything else is actually an error at this point
-        message = "Can't process response from server. Status Code: {0} Data from server: {1}".format(
+        message = "Can't process response from server. Status Code: {} Data from server: {}".format(
             r.status_code, r.text.replace("{", "{{").replace("}", "}}")
         )
 
@@ -409,7 +405,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         try:
             request_func = getattr(requests, method)
         except AttributeError:
-            return RetVal(action_result.set_status(phantom.APP_ERROR, "Invalid method: {0}".format(method)), resp_json)
+            return RetVal(action_result.set_status(phantom.APP_ERROR, f"Invalid method: {method}"), resp_json)
 
         try:
             if download:
@@ -426,14 +422,12 @@ class MsGraphForSharepointConnector(BaseConnector):
                         for chunk in r.iter_content(chunk_size=10 * 1024 * 1024):
                             fp.write(chunk)
                     return RetVal(phantom.APP_SUCCESS, tmp_file_path)
-                self.debug_print("Error while downloading file. StatusCode: {}, text: {}".format(r.status_code, r.text))
+                self.debug_print(f"Error while downloading file. StatusCode: {r.status_code}, text: {r.text}")
             else:
                 r = request_func(endpoint, json=json, data=data, headers=headers, verify=verify, params=params)
         except Exception as e:
             error_message = self._get_error_message_from_exception(e)
-            return RetVal(
-                action_result.set_status(phantom.APP_ERROR, "Error Connecting to server. Details: {0}".format(error_message)), resp_json
-            )
+            return RetVal(action_result.set_status(phantom.APP_ERROR, f"Error Connecting to server. Details: {error_message}"), resp_json)
 
         return self._process_response(r, action_result)
 
@@ -496,7 +490,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         if next_link:
             url = next_link
         else:
-            url = "{0}{1}".format(self._base_url, endpoint)
+            url = f"{self._base_url}{endpoint}"
 
         if headers is None:
             headers = {}
@@ -508,11 +502,9 @@ class MsGraphForSharepointConnector(BaseConnector):
             if phantom.is_fail(ret_val):
                 return action_result.get_status(), None
 
-        headers.update(
-            {"Authorization": "Bearer {0}".format(self._access_token), "Accept": "application/json", "Content-Type": "application/json"}
-        )
+        headers.update({"Authorization": f"Bearer {self._access_token}", "Accept": "application/json", "Content-Type": "application/json"})
 
-        self.save_progress("Connecting to endpoint {}".format(endpoint))
+        self.save_progress(f"Connecting to endpoint {endpoint}")
         ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
 
         # If token is expired, generate a new token
@@ -524,9 +516,9 @@ class MsGraphForSharepointConnector(BaseConnector):
             if phantom.is_fail(ret_val):
                 return action_result.get_status(), None
 
-            headers.update({"Authorization": "Bearer {0}".format(self._access_token)})
+            headers.update({"Authorization": f"Bearer {self._access_token}"})
 
-            self.save_progress("Connecting to endpoint {}".format(endpoint))
+            self.save_progress(f"Connecting to endpoint {endpoint}")
             ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
 
         if phantom.is_fail(ret_val):
@@ -535,24 +527,22 @@ class MsGraphForSharepointConnector(BaseConnector):
         return phantom.APP_SUCCESS, resp_json
 
     def _make_rest_calls_to_phantom(self, url, action_result, verify=False):
-
         r = requests.get(url, verify=verify, timeout=DEFAULT_REQUEST_TIMEOUT)
         if not r:
-            message = "Status Code: {0}".format(r.status_code)
+            message = f"Status Code: {r.status_code}"
             if r.text:
                 message = "{} Error from Server: {}".format(message, r.text.replace("{", "{{").replace("}", "}}"))
-            return action_result.set_status(phantom.APP_ERROR, "Error retrieving system info, {0}".format(message)), None
+            return action_result.set_status(phantom.APP_ERROR, f"Error retrieving system info, {message}"), None
 
         try:
             resp_json = r.json()
         except Exception as e:
             error_message = self._get_error_message_from_exception(e)
-            return action_result.set_status(phantom.APP_ERROR, "Error processing response JSON. Error: {}".format(error_message)), None
+            return action_result.set_status(phantom.APP_ERROR, f"Error processing response JSON. Error: {error_message}"), None
 
         return phantom.APP_SUCCESS, resp_json
 
     def _get_asset_name(self, action_result):
-
         asset_id = self.get_asset_id()
         rest_endpoint = SOAR_ASSET_INFO_URL.format(url=self.get_phantom_base_url(), asset_id=asset_id)
         ret_val, resp_json = self._make_rest_calls_to_phantom(rest_endpoint, action_result)
@@ -561,12 +551,11 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         asset_name = resp_json.get("name")
         if not asset_name:
-            return action_result.set_status(phantom.APP_ERROR, "Asset Name for ID: {0} not found".format(asset_id)), None
+            return action_result.set_status(phantom.APP_ERROR, f"Asset Name for ID: {asset_id} not found"), None
 
         return phantom.APP_SUCCESS, asset_name
 
     def _get_phantom_base_url(self, action_result):
-
         ret_val, resp_json = self._make_rest_calls_to_phantom(SOAR_SYS_INFO_URL.format(url=self.get_phantom_base_url()), action_result)
         if phantom.is_fail(ret_val):
             return ret_val, None
@@ -583,7 +572,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         return phantom.APP_SUCCESS, phantom_base_url
 
     def _get_url_to_app_rest(self, action_result=None):
-
         if not action_result:
             action_result = ActionResult()
 
@@ -597,18 +585,17 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status(), None
 
-        self.save_progress("Using Phantom base URL as: {0}".format(phantom_base_url))
+        self.save_progress(f"Using Phantom base URL as: {phantom_base_url}")
 
         app_json = self.get_app_json()
         app_name = app_json["name"]
         app_dir_name = _get_dir_name_from_app_name(app_name)
 
-        url_to_app_rest = "{0}/rest/handler/{1}_{2}/{3}".format(phantom_base_url, app_dir_name, app_json["appid"], asset_name)
+        url_to_app_rest = "{}/rest/handler/{}_{}/{}".format(phantom_base_url, app_dir_name, app_json["appid"], asset_name)
 
         return phantom.APP_SUCCESS, url_to_app_rest
 
     def _get_admin_consent(self, action_result):
-
         self.save_progress("Getting App REST endpoint URL")
 
         # Get the URL to the app's REST Endpoint, this is the url that the TC dialog
@@ -616,7 +603,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         ret_val, app_rest_url = self._get_url_to_app_rest(action_result)
         app_state = {}
         if phantom.is_fail(ret_val):
-            self.save_progress("Unable to get the URL to the app's REST Endpoint. Error: {0}".format(action_result.get_message()))
+            self.save_progress(f"Unable to get the URL to the app's REST Endpoint. Error: {action_result.get_message()}")
             return action_result.set_status(phantom.APP_ERROR)
 
         app_state["redirect_uri"] = app_rest_url
@@ -624,16 +611,14 @@ class MsGraphForSharepointConnector(BaseConnector):
         self.save_progress("Using OAuth Redirect URL as:")
         self.save_progress(app_rest_url)
 
-        admin_consent_url = "https://login.microsoftonline.com/{0}/adminconsent?client_id={1}&redirect_uri={2}&state={3}".format(
-            self._tenant, self._client_id, app_rest_url, self.get_asset_id()
-        )
+        admin_consent_url = f"https://login.microsoftonline.com/{self._tenant}/adminconsent?client_id={self._client_id}&redirect_uri={app_rest_url}&state={self.get_asset_id()}"
         self.save_progress("Please connect to the following URL from a different tab to continue the connectivity process")
         self.save_progress(admin_consent_url)
         self.save_progress("Waiting for Admin Consent to complete")
 
         for i in range(0, 60):
             time.sleep(5)
-            self.send_progress("{0}".format("." * (i % 10)))
+            self.send_progress("{}".format("." * (i % 10)))
 
             state = _load_app_state(self.get_asset_id(), self)
             if not state:
@@ -662,7 +647,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_ERROR)
 
     def _handle_test_connectivity(self, param):
-
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._admin_consent:
@@ -674,7 +658,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         endpoint = self._endpoint_test_connectivity
         if endpoint[0] != "/":
-            endpoint = "/{}".format(endpoint)
+            endpoint = f"/{endpoint}"
 
         ret_val, _ = self._make_rest_call_helper(endpoint, action_result, is_force=True)
         if phantom.is_fail(ret_val):
@@ -730,10 +714,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         return phantom.APP_SUCCESS, list_items
 
     def _handle_add_item(self, param):
-
         action_result = self.add_action_result(ActionResult(dict(param)))
         item = param.get("item")
-        endpoint = "{}/items".format(MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST])))
+        endpoint = f"{MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))}/items"
         ret_val, item = self._make_rest_call_helper(method="post", endpoint=endpoint, data=item.encode("utf-8"), action_result=action_result)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
@@ -746,13 +729,12 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_update_item(self, param):
-
         action_result = self.add_action_result(ActionResult(dict(param)))
         item = param.get("item")
         item_id = param.get("item_id")
 
         list_endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
-        endpoint = "{}/items/{}".format(list_endpoint, item_id)
+        endpoint = f"{list_endpoint}/items/{item_id}"
 
         ret_val, item = self._make_rest_call_helper(method="patch", endpoint=endpoint, data=item.encode("utf-8"), action_result=action_result)
         if phantom.is_fail(ret_val):
@@ -873,7 +855,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_lists(self, param):
-
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._site_id:
@@ -896,7 +877,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_list_drives(self, param):
-
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._site_id:
@@ -919,7 +899,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_list(self, param):
-
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._site_id:
@@ -936,7 +915,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             return action_result.get_status()
 
         params = {"expand": "fields"}
-        endpoint = "{}/items".format(endpoint)
+        endpoint = f"{endpoint}/items"
         ret_val, list_items = self._paginator(action_result, endpoint, params=params, limit=limit)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
@@ -949,7 +928,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_file(self, param):
-
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._site_id:
@@ -978,9 +956,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             if not success:
                 return action_result.set_status(phantom.APP_ERROR, message)
         except Exception as e:
-            error_message = "Unable to add file to the vault for attachment name: {0}. Error: {1}".format(
-                sp_file, self._get_error_message_from_exception(e)
-            )
+            error_message = f"Unable to add file to the vault for attachment name: {sp_file}. Error: {self._get_error_message_from_exception(e)}"
             return action_result.set_status(phantom.APP_ERROR, error_message)
 
         action_result.add_data(file_meta)
@@ -990,7 +966,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_remove_file(self, param):
-
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         if not self._site_id:
@@ -1055,7 +1030,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         )
 
     def handle_action(self, param):
-
         ret_val = phantom.APP_SUCCESS
 
         # Get the action that we are supposed to execute for this App Run
@@ -1094,7 +1068,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         return ret_val
 
     def initialize(self):
-
         # Load the state and check the format
         self._state = self.load_state()
         if not isinstance(self._state, dict):
@@ -1123,7 +1096,6 @@ class MsGraphForSharepointConnector(BaseConnector):
         return phantom.APP_SUCCESS
 
     def finalize(self):
-
         try:
             if self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}).get(MS_SHAREPOINT_JSON_ACCESS_TOKEN):
                 self._state[MS_SHAREPOINT_JSON_TOKEN][MS_SHAREPOINT_JSON_ACCESS_TOKEN] = self.encrypt_state(self._access_token, "access")
@@ -1154,7 +1126,6 @@ def main():
     verify = args.verify
 
     if username is not None and password is None:
-
         # User specified a username but not a password, so ask
         import getpass
 
@@ -1162,7 +1133,7 @@ def main():
 
     if username and password:
         try:
-            login_url = "{}/login".format(MsGraphForSharepointConnector._get_phantom_base_url())
+            login_url = f"{MsGraphForSharepointConnector._get_phantom_base_url()}/login"
 
             print("Accessing the Login page")
             r = requests.get(login_url, verify=verify, timeout=DEFAULT_REQUEST_TIMEOUT)
@@ -1174,14 +1145,14 @@ def main():
             data["csrfmiddlewaretoken"] = csrftoken
 
             headers = dict()
-            headers["Cookie"] = "csrftoken={}".format(csrftoken)
+            headers["Cookie"] = f"csrftoken={csrftoken}"
             headers["Referer"] = login_url
 
             print("Logging into Platform to get the session id")
             r2 = requests.post(login_url, verify=verify, data=data, headers=headers, timeout=DEFAULT_REQUEST_TIMEOUT)
             session_id = r2.cookies["sessionid"]
         except Exception as e:
-            print("Unable to get session id from the platform. Error: {}".format(str(e)))
+            print(f"Unable to get session id from the platform. Error: {e!s}")
             sys.exit(1)
 
     with open(args.input_test_json) as f:
