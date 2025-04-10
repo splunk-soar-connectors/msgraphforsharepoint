@@ -1,11 +1,2 @@
-Splunk SOAR MS Graph for SharePoint
-Copyright (c) 2023 Splunk Inc.
-
-Third-party Software Attributions:
-
-Library: beautifulsoup4
-Version: 4.10.0
-License: MIT
-Copyright 2004-2017 Leonard Richardson
-Copyright 2004-2019 Leonard Richardson
-Copyright 2018 Isaac Muse
+Splunk SOAR App: MS Graph for SharePoint
+Copyright (c) 2022-2025 Splunk Inc.
