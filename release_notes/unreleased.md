@@ -4,3 +4,4 @@
 * Update Python dependencies for Python 3.13 support
 * Update NOTICE file with updated dependencies
 * Apply pre-commit fixes
+* Resolved app issues related to Python 3.13 upgrade
