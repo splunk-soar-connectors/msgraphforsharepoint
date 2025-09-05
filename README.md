@@ -1,9 +1,9 @@
 # MS Graph for SharePoint
 
-Publisher: Splunk \
-Connector Version: 1.5.0 \
-Product Vendor: Microsoft \
-Product Name: SharePoint \
+Publisher: Splunk <br>
+Connector Version: 1.5.0 <br>
+Product Vendor: Microsoft <br>
+Product Name: SharePoint <br>
 Minimum Product Version: 6.3.0
 
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
@@ -136,26 +136,26 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions
 
-[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration \
-[copy drive item](#action-copy-drive-item) - Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values \
-[create folder](#action-create-folder) - Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID \
-[list folder items](#action-list-folder-items) - List items in a folder \
-[list drives](#action-list-drives) - Fetch the available drives (libraries) under a SharePoint site \
-[list drive children](#action-list-drive-children) - List the items in a drive folder by drive ID or search for a specific file name if provided \
-[list sites](#action-list-sites) - Fetch the details of the SharePoint sites \
-[list lists](#action-list-lists) - Fetch the available lists under a SharePoint site \
-[get list](#action-get-list) - Retrieves a list from a SharePoint Site \
-[add item](#action-add-item) - Add an item to a list on a SharePoint Site \
-[update item](#action-update-item) - Update an item in a list on a SharePoint Site \
-[get file](#action-get-file) - Retrieves a file from a SharePoint site \
-[remove file](#action-remove-file) - Removes a file from a SharePoint site \
+[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration <br>
+[copy drive item](#action-copy-drive-item) - Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values <br>
+[create folder](#action-create-folder) - Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID <br>
+[list folder items](#action-list-folder-items) - List items in a folder <br>
+[list drives](#action-list-drives) - Fetch the available drives (libraries) under a SharePoint site <br>
+[list drive children](#action-list-drive-children) - List the items in a drive folder by drive ID or search for a specific file name if provided <br>
+[list sites](#action-list-sites) - Fetch the details of the SharePoint sites <br>
+[list lists](#action-list-lists) - Fetch the available lists under a SharePoint site <br>
+[get list](#action-get-list) - Retrieves a list from a SharePoint Site <br>
+[add item](#action-add-item) - Add an item to a list on a SharePoint Site <br>
+[update item](#action-update-item) - Update an item in a list on a SharePoint Site <br>
+[get file](#action-get-file) - Retrieves a file from a SharePoint site <br>
+[remove file](#action-remove-file) - Removes a file from a SharePoint site <br>
 [remove folder](#action-remove-folder) - Removes a folder from a SharePoint site
 
 ## action: 'test connectivity'
 
 Validate the asset configuration for connectivity using supplied configuration
 
-Type: **test** \
+Type: **test** <br>
 Read only: **True**
 
 #### Action Parameters
@@ -170,7 +170,7 @@ No Output
 
 Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 While copying the file if file_name is provided without file extension, the copied file will not have any extension.
@@ -207,7 +207,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 #### Action Parameters
@@ -266,7 +266,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 List items in a folder
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 List all direct children in a folder.
@@ -321,7 +321,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Fetch the available drives (libraries) under a SharePoint site
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
@@ -371,7 +371,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 List the items in a drive folder by drive ID or search for a specific file name if provided
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 #### Action Parameters
@@ -428,7 +428,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Fetch the details of the SharePoint sites
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
@@ -462,7 +462,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Fetch the available lists under a SharePoint site
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
@@ -507,7 +507,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Retrieves a list from a SharePoint Site
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
@@ -647,7 +647,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Add an item to a list on a SharePoint Site
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 #### Action Parameters
@@ -727,7 +727,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Update an item in a list on a SharePoint Site
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 #### Action Parameters
@@ -805,7 +805,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Retrieves a file from a SharePoint site
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.
@@ -864,7 +864,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Removes a file from a SharePoint site
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.
@@ -895,7 +895,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Removes a folder from a SharePoint site
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 The 'folder path' parameter will be considered from the root of the document library specified in drive_id.
