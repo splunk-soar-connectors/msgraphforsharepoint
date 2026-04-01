@@ -14,6 +14,7 @@
 # and limitations under the License.
 
 import json
+import math
 import os
 import sys
 import tempfile
@@ -669,6 +670,20 @@ class MsGraphForSharepointConnector(BaseConnector):
         self.save_progress("Test Connectivity Passed")
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _sanitize_non_finite_floats(self, data):
+        """Recursively replace non-finite float values (Infinity, -Infinity, NaN) with None.
+
+        PostgreSQL's JSONB type rejects these values because they are not valid JSON.
+        The MS Graph API can return them in column metadata (e.g., "maximum": Infinity).
+        """
+        if isinstance(data, dict):
+            return {k: self._sanitize_non_finite_floats(v) for k, v in data.items()}
+        if isinstance(data, list):
+            return [self._sanitize_non_finite_floats(item) for item in data]
+        if isinstance(data, float) and not math.isfinite(data):
+            return None
+        return data
+
     def _paginator(self, action_result, endpoint, limit=None, params=None):
         """
         This action is used to create an iterator that will paginate through responses from called methods.
@@ -921,7 +936,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             return action_result.get_status()
 
         response["items"] = list_items
-        action_result.add_data(response)
+        action_result.add_data(self._sanitize_non_finite_floats(response))
         summary = action_result.update_summary({})
         summary[MS_SHAREPOINT_JSON_ITEM_COUNT] = len(response.get("items", []))
 
