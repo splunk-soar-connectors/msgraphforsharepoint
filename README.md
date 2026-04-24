@@ -1,7 +1,7 @@
 # MS Graph for SharePoint
 
 Publisher: Splunk <br>
-Connector Version: 1.5.2 <br>
+Connector Version: 1.5.3 <br>
 Product Vendor: Microsoft <br>
 Product Name: SharePoint <br>
 Minimum Product Version: 6.3.0
