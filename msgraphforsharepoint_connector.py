@@ -308,6 +308,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             error_message = self._get_error_message_from_exception(e)
             return RetVal(action_result.set_status(phantom.APP_ERROR, f"Unable to parse JSON response. Error: {error_message}"), None)
 
+        resp_json = self._sanitize_non_finite_floats(resp_json)
+
         # Please specify the status codes here
         if 200 <= r.status_code < 399:
             return RetVal(phantom.APP_SUCCESS, resp_json)
@@ -936,7 +938,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             return action_result.get_status()
 
         response["items"] = list_items
-        action_result.add_data(self._sanitize_non_finite_floats(response))
+        action_result.add_data(response)
         summary = action_result.update_summary({})
         summary[MS_SHAREPOINT_JSON_ITEM_COUNT] = len(response.get("items", []))
 
