@@ -11,7 +11,7 @@ below to do this:
 
 - At the top of the middle section, select **New registration**
 
-- On the next page, give your application a name and click **Register**
+- On the next page, give your application a name and select **Register**
 
 - Once the app is created, the below steps need to be taken on the next page:
 
