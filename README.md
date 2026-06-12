@@ -1,7 +1,7 @@
 # MS Graph for SharePoint
 
 Publisher: Splunk <br>
-Connector Version: 1.5.3 <br>
+Connector Version: 1.5.4 <br>
 Product Vendor: Microsoft <br>
 Product Name: SharePoint <br>
 Minimum Product Version: 6.3.0
@@ -149,7 +149,8 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [update item](#action-update-item) - Update an item in a list on a SharePoint Site <br>
 [get file](#action-get-file) - Retrieves a file from a SharePoint site <br>
 [remove file](#action-remove-file) - Removes a file from a SharePoint site <br>
-[remove folder](#action-remove-folder) - Removes a folder from a SharePoint site
+[remove folder](#action-remove-folder) - Removes a folder from a SharePoint site <br>
+[search file](#action-search-file) - Search for files/folders in a SharePoint drive by name or content
 
 ## action: 'test connectivity'
 
@@ -808,57 +809,35 @@ Retrieves a file from a SharePoint site
 Type: **generic** <br>
 Read only: **False**
 
-The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.
+Download a file from a SharePoint site and add it to the vault.
 
 #### Action Parameters
 
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
-**file_name** | required | File name to retrieve | string | |
-**file_path** | required | Folder path on site | string | |
-**drive_id** | optional | The file is searched in this drive. If no drive is specified, the default drive will be used | string | `sharepoint drive id` |
+**drive_id** | required | SharePoint Drive ID | string | |
+**item_id** | required | Item ID of the file | string | |
+**force_infected_download** | optional | Download the file even if Microsoft flagged it as infected/malicious (sends 'Prefer: forceInfectedDownload'). Use for malware investigation | boolean | |
+**file_path** | optional | Path to file relative to drive root | string | |
 
 #### Action Output
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.file_name | string | | test_file_name.txt |
-action_result.parameter.file_path | string | | /test_folder_name/ |
-action_result.parameter.drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
-action_result.data.\*.@microsoft.graph.downloadUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/TestSiteName/\_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0 |
-action_result.data.\*.@odata.context | string | `url` | https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/drive/root/$entity |
-action_result.data.\*.image.width | numeric | | 256 |
-action_result.data.\*.image.height | numeric | | 266 |
-action_result.data.\*.cTag | string | | "c:{C743B2E0-36EB-4C9A-9CE0-190C2FD4DD97},1" |
-action_result.data.\*.createdBy.user.displayName | string | | Test User |
-action_result.data.\*.createdBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
-action_result.data.\*.createdBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
-action_result.data.\*.createdDateTime | string | | 2022-02-10T15:25:21Z |
-action_result.data.\*.eTag | string | | "{C743B2E0-36EB-4C9A-9CE0-190C2FD4DD97},1" |
-action_result.data.\*.file.hashes.quickXorHash | string | | EIDYEgye8dEx3XhA7xc12GqSwxk= |
-action_result.data.\*.file.mimeType | string | | text/plain |
-action_result.data.\*.fileSystemInfo.createdDateTime | string | | 2022-02-10T15:25:21Z |
-action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string | | 2022-02-10T15:25:21Z |
-action_result.data.\*.id | string | `sharepoint drive item id` | 01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX |
-action_result.data.\*.lastModifiedBy.user.displayName | string | | Test User |
-action_result.data.\*.lastModifiedBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
-action_result.data.\*.lastModifiedBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
-action_result.data.\*.lastModifiedDateTime | string | | 2022-02-10T15:25:21Z |
-action_result.data.\*.name | string | | test_file_name.txt |
-action_result.data.\*.parentReference.driveId | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
-action_result.data.\*.parentReference.driveType | string | | documentLibrary |
-action_result.data.\*.parentReference.id | string | `sharepoint drive item id` | 01SNFLYIRDSQLQVWP7EVDKSL3YYUNW6I4G |
-action_result.data.\*.parentReference.name | string | | Playbook-Folder |
-action_result.data.\*.parentReference.path | string | | /drive/root:/test_folder_name |
-action_result.data.\*.parentReference.siteId | string | | dc6f43e9-54fa-4a39-8783-314e3bbbed41 |
-action_result.data.\*.shared.scope | string | | users |
-action_result.data.\*.size | numeric | | 1422 |
-action_result.data.\*.webUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt |
+action_result.parameter.drive_id | string | `sharepoint drive id` |
+action_result.parameter.item_id | string | `sharepoint item id` |
+action_result.parameter.file_path | string | |
+action_result.parameter.force_infected_download | boolean | |
+action_result.data.*.vault_id | string | `sha1` `vault id` | 8b11ac28c0e276a4f9fa8a2fd2a17b499a415786 |
+action_result.data.*.file_name | string | `file name` |
+action_result.data.*.file_size | numeric | |
+action_result.data.*.malware_flagged | boolean | |
+action_result.data.*.force_infected_download | boolean | |
 action_result.summary.vault_id | string | `sha1` `vault id` | 8b11ac28c0e276a4f9fa8a2fd2a17b499a415786 |
-action_result.message | string | | Vault id: 8b11ac28c0e276a4f9fa8a2fd2a17b499a415786 |
-summary.total_objects | numeric | | 1 |
-summary.total_objects_successful | numeric | | 1 |
+action_result.summary.file_name | string | `file name` | |
+action_result.summary.malware_flagged | boolean | |
+action_result.status | string | |
+action_result.message | string | |
 
 ## action: 'remove file'
 
@@ -920,6 +899,47 @@ action_result.message | string | | Successfully deleted folder |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
+
+## action: 'search file'
+
+Search for files/folders in a SharePoint drive by name or content
+
+Type: **generic** <br>
+Read only: **True**
+
+
+#### Action Parameters
+
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**drive_id** | required | Drive ID to search within | string | |
+**search_text** | required | Text to search for (matches file/folder names and content) | string | |
+**folder_id** | optional | Optional: limit search to a specific folder item ID | string | |
+**max_results** | optional | Maximum number of results to return (default 100) | string | |
+
+#### Action Output
+
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.parameter.drive_id | string | `sharepoint drive id` |
+action_result.parameter.search_text | string | |
+action_result.parameter.folder_id | string | `sharepoint item id` |
+action_result.parameter.max_results | numeric | |
+action_result.data.*.id | string | `sharepoint item id` |
+action_result.data.*.name | string | `file name` |
+action_result.data.*.drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
+action_result.data.*.size | numeric | |
+action_result.data.*.is_folder | boolean | |
+action_result.data.*.web_url | string | `url` |
+action_result.data.*.mime_type | string | |
+action_result.data.*.sha256 | string | `sha256` |
+action_result.data.*.created_by | string | |
+action_result.data.*.last_modified_by | string | |
+action_result.data.*.last_modified_datetime | string | |
+action_result.data.*.created_datetime | string | |
+action_result.summary.total_items_found | numeric | |
+action_result.status | string | |
+action_result.message | string | |
 ______________________________________________________________________
 
 Auto-generated Splunk SOAR Connector documentation.

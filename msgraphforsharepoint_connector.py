@@ -573,6 +573,40 @@ class MsGraphForSharepointConnector(BaseConnector):
             )
 
         return phantom.APP_SUCCESS, phantom_base_url
+    
+    def _handle_get_drive_id(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        user_id = param.get("user_id")
+        if not user_id:
+            return action_result.set_status(
+                phantom.APP_ERROR,
+                "Missing required parameter: user_id"
+            )
+
+        user_id = urllib.parse.quote(user_id)
+        endpoint = f"/users/{user_id}/drive"
+
+        ret_val, response = self._make_rest_call_helper(
+            endpoint,
+            action_result,
+            method="get"
+        )
+
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        action_result.add_data(response)
+
+        summary = action_result.update_summary({})
+        summary["drive_id"] = response.get("id")
+        summary["drive_type"] = response.get("driveType")
+        summary["owner"] = response.get("owner", {}).get("user", {}).get("displayName")
+
+        return action_result.set_status(
+            phantom.APP_SUCCESS,
+            f"Successfully retrieved drive ID: {response.get('id')}"
+        )
 
     def _get_url_to_app_rest(self, action_result=None):
         if not action_result:
@@ -945,42 +979,180 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _handle_get_file(self, param):
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
-        if not self._site_id:
-            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format("retrieving a file"))
+        drive_id = param["drive_id"]
+        item_id = param["item_id"]
+        force_infected = param.get("force_infected_download", False)
 
-        sp_path = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_PATH].strip("/"))
-        sp_file = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_NAME])
-        sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
-        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(path=sp_path, file=sp_file)}"
-
-        # Get the file metadata
-        ret_val, file_meta = self._make_rest_call_helper(endpoint, action_result)
+        meta_endpoint = f"/drives/{drive_id}/items/{item_id}"
+        ret_val, meta = self._make_rest_call_helper(
+            meta_endpoint, action_result, method="get"
+        )
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        # Get the file content
-        ret_val, tmp_file_path = self._make_rest_call_helper(MS_GET_FILE_CONTENT_ENDPOINT.format(endpoint), action_result, download=True)
-        if phantom.is_fail(ret_val):
-            return action_result.get_status()
+        file_name = meta.get("name", "sharepoint_file")
+        file_size = meta.get("size", 0)
+        self.save_progress(f"Found file '{file_name}' ({file_size} bytes)")
 
-        # Save attachment file to the vault
-        try:
-            success, message, attachment_vault_id = ph_rules.vault_add(
-                container=self.get_container_id(), file_location=tmp_file_path, file_name=sp_file
+        # Surface Microsoft's malware verdict if present (the 'malware' facet)
+        is_flagged = "malware" in meta
+        if is_flagged:
+            self.save_progress(
+                "Microsoft has flagged this item with a malware facet"
             )
-            if not success:
-                return action_result.set_status(phantom.APP_ERROR, message)
+
+        download_headers = None
+        if force_infected:
+            self.save_progress(
+                "force_infected_download enabled — sending "
+                "'Prefer: forceInfectedDownload' header"
+            )
+            # The helper will .update() this onto its own headers dict
+            download_headers = {"Prefer": "forceInfectedDownload"}
+
+        content_endpoint = f"/drives/{drive_id}/items/{item_id}/content"
+        ret_val, tmp_file_path = self._make_rest_call_helper(
+            content_endpoint,
+            action_result,
+            method="get",
+            download=True,
+            headers=download_headers,
+        )
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        try:
+            success, message, vault_id = ph_rules.vault_add(
+                container=self.get_container_id(),
+                file_location=tmp_file_path,
+                file_name=file_name,
+            )
         except Exception as e:
-            error_message = f"Unable to add file to the vault for attachment name: {sp_file}. Error: {self._get_error_message_from_exception(e)}"
-            return action_result.set_status(phantom.APP_ERROR, error_message)
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Error adding file to vault: {e}"
+            )
 
-        action_result.add_data(file_meta)
+        if not success:
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Failed to add file to vault: {message}"
+            )
+
+        action_result.add_data({
+            "vault_id": vault_id,
+            "file_name": file_name,
+            "file_size": file_size,
+            "malware_flagged": is_flagged,
+            "force_infected_download": force_infected,
+        })
         summary = action_result.update_summary({})
-        summary[MS_SHAREPOINT_JSON_VAULT_ID] = attachment_vault_id
+        summary["vault_id"] = vault_id
+        summary["file_name"] = file_name
+        summary["malware_flagged"] = is_flagged
 
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(
+            phantom.APP_SUCCESS,
+            f"Successfully added '{file_name}' to vault (vault_id: {vault_id})"
+        )
+    
+    def _handle_search_file(self, param):
+
+        self.save_progress(f"In action handler for: {self.get_action_identifier()}")
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        drive_id = param["drive_id"]
+        search_text = param["search_text"]
+        folder_id = param.get("folder_id")
+        max_results = int(param.get("max_results", 100))
+
+        # Escape single quotes for the OData function, then URL-encode
+        safe_query = search_text.replace("'", "''")
+        encoded_query = urllib.parse.quote(safe_query)
+
+        if folder_id:
+            base = f"/drives/{drive_id}/items/{folder_id}/search(q='{encoded_query}')"
+        else:
+            base = f"/drives/{drive_id}/root/search(q='{encoded_query}')"
+
+        select_fields = (
+            "id,name,size,webUrl,createdDateTime,lastModifiedDateTime,"
+            "file,folder,parentReference,createdBy,lastModifiedBy"
+        )
+        page_size = min(max_results, 200)
+        endpoint = f"{base}?$select={select_fields}&$top={page_size}"
+
+        total_found = 0
+        next_link = None
+
+        while True:
+            if next_link:
+                # endpoint is ignored when next_link is passed; helper uses next_link as the full URL
+                ret_val, response = self._make_rest_call_helper(
+                    endpoint, action_result, method="get", next_link=next_link
+                )
+            else:
+                ret_val, response = self._make_rest_call_helper(
+                    endpoint, action_result, method="get"
+                )
+
+            if phantom.is_fail(ret_val):
+                return action_result.get_status()
+
+            if not isinstance(response, dict):
+                return action_result.set_status(
+                    phantom.APP_ERROR,
+                    f"Unexpected response type from Graph: {type(response)}"
+                )
+
+            for item in response.get("value", []):
+                if total_found >= max_results:
+                    break
+
+                is_folder = "folder" in item
+                result = {
+                    "id": item.get("id"),
+                    "name": item.get("name"),
+                    "size": item.get("size", 0),
+                    "web_url": item.get("webUrl"),
+                    "is_folder": is_folder,
+                    "created_datetime": item.get("createdDateTime"),
+                    "last_modified_datetime": item.get("lastModifiedDateTime"),
+                    "created_by": item.get("createdBy", {})
+                                    .get("user", {}).get("displayName"),
+                    "last_modified_by": item.get("lastModifiedBy", {})
+                                            .get("user", {}).get("displayName"),
+                    "drive_id": item.get("parentReference", {}).get("driveId", drive_id),
+                    "parent_path": item.get("parentReference", {}).get("path"),
+                }
+                file_facet = item.get("file")
+                if file_facet:
+                    result["mime_type"] = file_facet.get("mimeType")
+                    hashes = file_facet.get("hashes", {})
+                    result["sha256"] = hashes.get("sha256Hash")
+                    result["quick_xor_hash"] = hashes.get("quickXorHash")
+
+                action_result.add_data(result)
+                total_found += 1
+
+            next_link = response.get("@odata.nextLink")
+            if not next_link or total_found >= max_results:
+                break
+
+        summary = action_result.update_summary({})
+        summary["total_items_found"] = total_found
+
+        if total_found == 0:
+            return action_result.set_status(
+                phantom.APP_SUCCESS, f"No items found matching '{search_text}'"
+            )
+
+        return action_result.set_status(
+            phantom.APP_SUCCESS,
+            f"Found {total_found} item(s) matching '{search_text}'"
+        )
+
 
     def _handle_remove_file(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
@@ -1061,6 +1233,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_get_list(param)
         elif action_id == "get_file":
             ret_val = self._handle_get_file(param)
+        elif action_id == "search_file":
+            ret_val = self._handle_search_file(param)
         elif action_id == "remove_file":
             ret_val = self._handle_remove_file(param)
         elif action_id == "list_lists":
@@ -1079,6 +1253,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_list_drives(param)
         elif action_id == "list_folder_items":
             ret_val = self._handle_list_folder_items(param)
+        elif action_id == "get_drive_id":
+            ret_val = self._handle_get_drive_id(param)
         elif action_id == "remove_folder":
             ret_val = self._handle_remove_folder(param)
 
