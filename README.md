@@ -817,7 +817,7 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
 **drive_id** | required | SharePoint Drive ID | string | |
 **item_id** | required | Item ID of the file | string | |
-**force_infected_download** | optional | Download the file even if Microsoft flagged it as infected/malicious (sends 'Prefer: forceInfectedDownload'). Use for malware investigation | string | |
+**force_infected_download** | optional | Download the file even if Microsoft flagged it as infected/malicious (sends 'Prefer: forceInfectedDownload'). Use for malware investigation | boolean | |
 **file_path** | optional | Path to file relative to drive root | string | |
 
 #### Action Output
