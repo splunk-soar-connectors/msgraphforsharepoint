@@ -912,10 +912,10 @@ Read only: **True**
 
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
-**drive_id"** | required | Drive ID to search within | string | |
+**drive_id** | required | Drive ID to search within | string | |
 **search_text** | required | Text to search for (matches file/folder names and content) | string | |
-**folder_id"** | optional | Optional: limit search to a specific folder item ID | string | |
-**max_results"** | optional | Maximum number of results to return (default 100) | string | |
+**folder_id** | optional | Optional: limit search to a specific folder item ID | string | |
+**max_results** | optional | Maximum number of results to return (default 100) | string | |
 
 #### Action Output
 
