@@ -149,7 +149,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [update item](#action-update-item) - Update an item in a list on a SharePoint Site <br>
 [get file](#action-get-file) - Retrieves a file from a SharePoint site <br>
 [remove file](#action-remove-file) - Removes a file from a SharePoint site <br>
-[remove folder](#action-remove-folder) - Removes a folder from a SharePoint site
+[remove folder](#action-remove-folder) - Removes a folder from a SharePoint site <br>
 [search file](#action-search-file) - Search for files/folders in a SharePoint drive by name or content
 
 ## action: 'test connectivity'
@@ -902,7 +902,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 ## action: 'search file'
 
-Removes a folder from a SharePoint site
+Search for files/folders in a SharePoint drive by name or content
 
 Type: **generic** <br>
 Read only: **True**
