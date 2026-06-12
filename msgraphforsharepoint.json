@@ -11,7 +11,7 @@
     "product_version_regex": ".*",
     "publisher": "Splunk",
     "license": "Copyright (c) 2022-2026 Splunk Inc.",
-    "app_version": "1.5.3",
+    "app_version": "1.5.4",
     "utctime_updated": "2026-04-24T21:34:49.289896Z",
     "package_name": "phantom_msgraphforsharepoint",
     "main_module": "msgraphforsharepoint_connector.py",
@@ -234,6 +234,69 @@
                     "data_type": "numeric",
                     "example_values": [
                         1
+                    ]
+                }
+            ],
+            "render": {
+                "type": "table"
+            },
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "get drive id",
+            "identifier": "get_drive_id",
+            "description": "Get a user's OneDrive drive ID from Microsoft Graph",
+            "type": "investigate",
+            "read_only": true,
+            "parameters": {
+                "user_id": {
+                    "description": "User ID or user principal name",
+                    "data_type": "string",
+                    "required": true,
+                    "contains": [
+                        "azure user id",
+                        "email"
+                    ],
+                    "order": 0,
+                    "primary": true
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "contains": [
+                        "sharepoint drive id"
+                    ],
+                    "column_name": "Drive ID",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.driveType",
+                    "data_type": "string",
+                    "column_name": "Drive Type",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.owner.user.displayName",
+                    "data_type": "string",
+                    "column_name": "Owner",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.webUrl",
+                    "data_type": "string",
+                    "contains": [
+                        "url"
+                    ],
+                    "column_name": "Web URL",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.summary.drive_id",
+                    "data_type": "string",
+                    "contains": [
+                        "sharepoint drive id"
                     ]
                 }
             ],
@@ -1171,41 +1234,6 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.image.width",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1752
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.image.height",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1244
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.cTag",
-                    "data_type": "string",
-                    "example_values": [
-                        "\"c:{E1E93D43-F034-489F-8304-BAF7F064A30D},0\""
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.createdBy.user.displayName",
-                    "data_type": "string",
-                    "example_values": [
-                        "SharePoint App"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.createdBy.user.email",
-                    "data_type": "string",
-                    "example_values": [
-                        "test@gmail.com"
-                    ]
-                },
-                {
                     "data_path": "action_result.data.*.createdBy.user.id",
                     "data_type": "string",
                     "example_values": [
@@ -1217,27 +1245,6 @@
                     "data_type": "string",
                     "example_values": [
                         "2020-07-28T20:15:33Z"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.decorator.iconColor",
-                    "data_type": "string",
-                    "example_values": [
-                        "darkGreen"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.eTag",
-                    "data_type": "string",
-                    "example_values": [
-                        "\"{E1E93D43-F034-489F-8304-BAF7F064A30D},1\""
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.file.hashes.quickXorHash",
-                    "data_type": "string",
-                    "example_values": [
-                        "8JpxaQB3wX1/FkQ5Gt3prUbUUFU="
                     ]
                 },
                 {
@@ -3437,335 +3444,105 @@
         {
             "action": "get file",
             "identifier": "get_file",
-            "description": "Retrieves a file from a SharePoint site",
-            "verbose": "The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
-            "type": "generic",
+            "description": "Download a file from a SharePoint site and add it to the vault",
+            "verbose": "Retrieves a file from SharePoint via MS Graph and stores it in the SOAR vault for analysis.",
+            "type": "investigate",
             "read_only": false,
             "parameters": {
-                "file_name": {
-                    "description": "File name to retrieve",
+                "drive_id": {
+                    "description": "SharePoint Drive ID",
                     "data_type": "string",
                     "required": true,
-                    "order": 0
+                    "order": 0,
+                    "contains": [
+                        "sharepoint drive id"
+                    ]
+                },
+                "item_id": {
+                    "description": "Item ID of the file",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1,
+                    "contains": [
+                        "sharepoint item id"
+                    ]
+                },
+                "force_infected_download": {
+                    "description": "Download the file even if Microsoft flagged it as infected/malicious (sends 'Prefer: forceInfectedDownload'). Use for malware investigation.",
+                    "data_type": "boolean",
+                    "required": false,
+                    "default": false,
+                    "order": 2
                 },
                 "file_path": {
-                    "description": "Folder path on site",
-                    "data_type": "string",
-                    "required": true,
-                    "order": 1
-                },
-                "drive_id": {
-                    "description": "The file is searched in this drive. If no drive is specified, the default drive will be used",
+                    "description": "Path to file relative to drive root (alternative to item_id)",
                     "data_type": "string",
                     "required": false,
                     "order": 2,
-                    "example_values": [
-                        "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi"
-                    ],
                     "contains": [
-                        "sharepoint drive id"
+                        "file path"
                     ]
                 }
             },
             "output": [
                 {
-                    "data_path": "action_result.status",
+                    "data_path": "action_result.parameter.drive_id",
                     "data_type": "string",
-                    "example_values": [
-                        "success",
-                        "failed"
+                    "contains": [
+                        "sharepoint drive id"
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.file_name",
+                    "data_path": "action_result.parameter.item_id",
                     "data_type": "string",
-                    "example_values": [
-                        "test_file_name.txt"
+                    "contains": [
+                        "sharepoint item id"
                     ]
                 },
                 {
                     "data_path": "action_result.parameter.file_path",
                     "data_type": "string",
-                    "example_values": [
-                        "/test_folder_name/"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.drive_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi"
-                    ],
                     "contains": [
-                        "sharepoint drive id"
+                        "sharepoint file path id"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.@microsoft.graph.downloadUrl",
+                    "data_path": "action_result.parameter.force_infected_download",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.data.*.vault_id",
                     "data_type": "string",
-                    "example_values": [
-                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0"
-                    ],
                     "contains": [
-                        "url"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.@odata.context",
-                    "data_type": "string",
-                    "example_values": [
-                        "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/drive/root/$entity"
+                        "SOAR vault id"
                     ],
-                    "contains": [
-                        "url"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.image.width",
-                    "data_type": "numeric",
-                    "example_values": [
-                        256
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.image.height",
-                    "data_type": "numeric",
-                    "example_values": [
-                        266
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.cTag",
-                    "data_type": "string",
-                    "example_values": [
-                        "\"c:{C743B2E0-36EB-4C9A-9CE0-190C2FD4DD97},1\""
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.createdBy.user.displayName",
-                    "data_type": "string",
-                    "example_values": [
-                        "Test User"
-                    ],
-                    "column_name": "Created By",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.data.*.createdBy.user.email",
-                    "data_type": "string",
-                    "example_values": [
-                        "test_user@tenant-name.ontest.com"
-                    ],
-                    "contains": [
-                        "email"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.createdBy.user.id",
-                    "data_type": "string",
-                    "example_values": [
-                        "eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.createdDateTime",
-                    "data_type": "string",
-                    "example_values": [
-                        "2022-02-10T15:25:21Z"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.eTag",
-                    "data_type": "string",
-                    "example_values": [
-                        "\"{C743B2E0-36EB-4C9A-9CE0-190C2FD4DD97},1\""
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.file.hashes.quickXorHash",
-                    "data_type": "string",
-                    "example_values": [
-                        "EIDYEgye8dEx3XhA7xc12GqSwxk="
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.file.mimeType",
-                    "data_type": "string",
-                    "example_values": [
-                        "text/plain"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.fileSystemInfo.createdDateTime",
-                    "data_type": "string",
-                    "example_values": [
-                        "2022-02-10T15:25:21Z"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.fileSystemInfo.lastModifiedDateTime",
-                    "data_type": "string",
-                    "example_values": [
-                        "2022-02-10T15:25:21Z"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.id",
-                    "data_type": "string",
-                    "example_values": [
-                        "01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX"
-                    ],
-                    "contains": [
-                        "sharepoint drive item id"
-                    ],
-                    "column_name": "Drive Item ID",
+                    "column_name": "Vault ID",
                     "column_order": 0
                 },
                 {
-                    "data_path": "action_result.data.*.lastModifiedBy.user.displayName",
+                    "data_path": "action_result.data.*.file_name",
                     "data_type": "string",
-                    "example_values": [
-                        "Test User"
-                    ],
-                    "column_name": "Last Modified By",
-                    "column_order": 2
-                },
-                {
-                    "data_path": "action_result.data.*.lastModifiedBy.user.email",
-                    "data_type": "string",
-                    "example_values": [
-                        "test_user@tenant-name.ontest.com"
-                    ],
                     "contains": [
-                        "email"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.lastModifiedBy.user.id",
-                    "data_type": "string",
-                    "example_values": [
-                        "eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.lastModifiedDateTime",
-                    "data_type": "string",
-                    "example_values": [
-                        "2022-02-10T15:25:21Z"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.name",
-                    "data_type": "string",
-                    "example_values": [
-                        "test_file_name.txt"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.parentReference.driveId",
-                    "data_type": "string",
-                    "example_values": [
-                        "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi"
+                        "file name"
                     ],
-                    "contains": [
-                        "sharepoint drive id"
-                    ],
-                    "column_name": "Drive ID",
-                    "column_order": 3
+                    "column_name": "File Name",
+                    "column_order": 1
                 },
                 {
-                    "data_path": "action_result.data.*.parentReference.driveType",
-                    "data_type": "string",
-                    "example_values": [
-                        "documentLibrary"
-                    ]
+                    "data_path": "action_result.data.*.malware_flagged",
+                    "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.parentReference.id",
-                    "data_type": "string",
-                    "example_values": [
-                        "01SNFLYIRDSQLQVWP7EVDKSL3YYUNW6I4G"
-                    ],
-                    "contains": [
-                        "sharepoint drive item id"
-                    ]
+                    "data_path": "action_result.data.*.file_size",
+                    "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.parentReference.name",
-                    "data_type": "string",
-                    "example_values": [
-                        "Playbook-Folder"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.parentReference.path",
-                    "data_type": "string",
-                    "example_values": [
-                        "/drive/root:/test_folder_name"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.parentReference.siteId",
-                    "data_type": "string",
-                    "example_values": [
-                        "dc6f43e9-54fa-4a39-8783-314e3bbbed41"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.shared.scope",
-                    "data_type": "string",
-                    "example_values": [
-                        "users"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.size",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1422
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.webUrl",
-                    "data_type": "string",
-                    "example_values": [
-                        "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt"
-                    ],
-                    "contains": [
-                        "url"
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.vault_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "8b11ac28c0e276a4f9fa8a2fd2a17b499a415786"
-                    ],
-                    "contains": [
-                        "sha1",
-                        "vault id"
-                    ]
+                    "data_path": "action_result.status",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.message",
-                    "data_type": "string",
-                    "example_values": [
-                        "Vault id: 8b11ac28c0e276a4f9fa8a2fd2a17b499a415786"
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
+                    "data_type": "string"
                 }
             ],
             "render": {
@@ -3865,6 +3642,151 @@
                     "example_values": [
                         1
                     ]
+                }
+            ],
+            "render": {
+                "type": "table"
+            },
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "search file",
+            "identifier": "search_file",
+            "description": "Search for files/folders in a SharePoint drive by name or content",
+            "verbose": "Uses the MS Graph driveItem search API to find items matching a query string within a drive (or a specific folder). Returns drive_id and item id for use with the 'get file' action.",
+            "type": "investigate",
+            "read_only": true,
+            "parameters": {
+                "drive_id": {
+                    "description": "Drive ID to search within",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0,
+                    "contains": [
+                        "sharepoint drive id"
+                    ]
+                },
+                "search_text": {
+                    "description": "Text to search for (matches file/folder names and content)",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                },
+                "folder_id": {
+                    "description": "Optional: limit search to a specific folder item ID",
+                    "data_type": "string",
+                    "required": false,
+                    "order": 2,
+                    "contains": [
+                        "sharepoint item id"
+                    ]
+                },
+                "max_results": {
+                    "description": "Maximum number of results to return (default 100)",
+                    "data_type": "numeric",
+                    "required": false,
+                    "default": 100,
+                    "order": 3
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.drive_id",
+                    "data_type": "string",
+                    "contains": [
+                        "sharepoint drive id"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.search_text",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.folder_id",
+                    "data_type": "string",
+                    "contains": [
+                        "sharepoint item id"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.max_results",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "contains": [
+                        "sharepoint item id"
+                    ],
+                    "column_name": "Item ID",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string",
+                    "contains": [
+                        "file name"
+                    ],
+                    "column_name": "Name",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.drive_id",
+                    "data_type": "string",
+                    "contains": [
+                        "sharepoint drive id"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.size",
+                    "data_type": "numeric",
+                    "column_name": "Size",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.is_folder",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.data.*.web_url",
+                    "data_type": "string",
+                    "contains": [
+                        "url"
+                    ],
+                    "column_name": "Web URL",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.data.*.mime_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.created_by",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.last_modified_by",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.last_modified_datetime",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.created_datetime",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.total_items_found",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 }
             ],
             "render": {
