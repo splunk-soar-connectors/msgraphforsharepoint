@@ -35,6 +35,23 @@ from phantom_common import paths
 from msgraphforsharepoint_consts import *
 
 
+def _is_expected_graph_url(url):
+    """Return whether an absolute URL targets the Microsoft Graph origin."""
+    try:
+        candidate = urllib.parse.urlsplit(str(url))
+        expected = urllib.parse.urlsplit(MS_GRAPH_BASE_URL)
+        port = candidate.port
+    except ValueError:
+        return False
+    return (
+        candidate.scheme == "https"
+        and candidate.hostname == expected.hostname
+        and port is None
+        and not candidate.username
+        and not candidate.password
+    )
+
+
 class RetVal(tuple):
     def __new__(cls, val1, val2=None):
         return tuple.__new__(RetVal, (val1, val2))
@@ -697,6 +714,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         list_items = list()
         next_link = None
+        seen_links = set()
 
         # maximum page size
         page_size = MS_SHAREPOINT_PER_PAGE_COUNT
@@ -709,8 +727,13 @@ class MsGraphForSharepointConnector(BaseConnector):
         else:
             params = {"$top": page_size}
 
-        while True:
+        for _ in range(MS_SHAREPOINT_MAX_PAGINATION_PAGES):
             if next_link:
+                if not _is_expected_graph_url(next_link):
+                    return action_result.set_status(phantom.APP_ERROR, "Rejected pagination URL outside Microsoft Graph"), None
+                if next_link in seen_links:
+                    return action_result.set_status(phantom.APP_ERROR, "Rejected repeated Microsoft Graph pagination URL"), None
+                seen_links.add(next_link)
                 ret_val, response = self._make_rest_call_helper(endpoint, action_result, next_link=next_link)
             else:
                 ret_val, response = self._make_rest_call_helper(endpoint, action_result, params=params)
@@ -727,6 +750,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             next_link = response.get("@odata.nextLink", None)
             if not next_link:
                 break
+        else:
+            return action_result.set_status(phantom.APP_ERROR, "Microsoft Graph pagination exceeded its safety limit"), None
 
         return phantom.APP_SUCCESS, list_items
 
