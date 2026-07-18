@@ -1040,8 +1040,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully deleted folder")
 
     def build_drive_endpoint(self, drive_id: str = ""):
+        encoded_drive_id = urllib.parse.quote(str(drive_id), safe="")
         return (
-            MS_CUSTOM_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id, drive_id=drive_id)
+            MS_CUSTOM_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id, drive_id=encoded_drive_id)
             if drive_id
             else MS_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id)
         )
