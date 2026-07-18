@@ -52,6 +52,15 @@ def _is_expected_graph_url(url):
     )
 
 
+def _is_token_response(response):
+    """Return whether a response came from the OAuth token endpoint."""
+    try:
+        url = urllib.parse.urlsplit(str(response.url))
+    except (AttributeError, ValueError):
+        return False
+    return url.scheme == "https" and url.hostname == "login.microsoftonline.com" and url.path.rstrip("/").endswith("/oauth2/v2.0/token")
+
+
 class RetVal(tuple):
     def __new__(cls, val1, val2=None):
         return tuple.__new__(RetVal, (val1, val2))
@@ -376,8 +385,11 @@ class MsGraphForSharepointConnector(BaseConnector):
         # store the r_text in debug data, it will get dumped in the logs if the action fails
         if hasattr(action_result, "add_debug_data"):
             action_result.add_debug_data({"r_status_code": r.status_code})
-            action_result.add_debug_data({"r_text": r.text})
-            action_result.add_debug_data({"r_headers": r.headers})
+            if _is_token_response(r):
+                action_result.add_debug_data({"r_text": "<OAuth token response redacted>"})
+            else:
+                action_result.add_debug_data({"r_text": r.text})
+                action_result.add_debug_data({"r_headers": r.headers})
 
         # Process each 'Content-Type' of response separately
 
