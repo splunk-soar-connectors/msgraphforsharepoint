@@ -54,6 +54,7 @@ SOAR_ASSET_INFO_URL = "{url}rest/asset/{asset_id}"
 DEFAULT_REQUEST_TIMEOUT = 30  # in seconds
 STATE_FILE_PATH = "{0}/{1}_state.json"
 MS_SHAREPOINT_PER_PAGE_COUNT = 1000
+MS_SHAREPOINT_MAX_PAGINATION_PAGES = 1000
 
 # Status/Progress Messages
 MS_SHAREPOINT_ERROR_MSG = "Unknown error occurred. Please check the asset configuration and|or action parameters"
