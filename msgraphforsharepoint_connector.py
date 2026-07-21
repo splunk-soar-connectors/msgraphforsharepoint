@@ -35,6 +35,32 @@ from phantom_common import paths
 from msgraphforsharepoint_consts import *
 
 
+def _is_expected_graph_url(url):
+    """Return whether an absolute URL targets the Microsoft Graph origin."""
+    try:
+        candidate = urllib.parse.urlsplit(str(url))
+        expected = urllib.parse.urlsplit(MS_GRAPH_BASE_URL)
+        port = candidate.port
+    except ValueError:
+        return False
+    return (
+        candidate.scheme == "https"
+        and candidate.hostname == expected.hostname
+        and port is None
+        and not candidate.username
+        and not candidate.password
+    )
+
+
+def _is_token_response(response):
+    """Return whether a response came from the OAuth token endpoint."""
+    try:
+        url = urllib.parse.urlsplit(str(response.url))
+    except (AttributeError, ValueError):
+        return False
+    return url.scheme == "https" and url.hostname == "login.microsoftonline.com" and url.path.rstrip("/").endswith("/oauth2/v2.0/token")
+
+
 class RetVal(tuple):
     def __new__(cls, val1, val2=None):
         return tuple.__new__(RetVal, (val1, val2))
@@ -364,8 +390,11 @@ class MsGraphForSharepointConnector(BaseConnector):
         # store the r_text in debug data, it will get dumped in the logs if the action fails
         if hasattr(action_result, "add_debug_data"):
             action_result.add_debug_data({"r_status_code": r.status_code})
-            action_result.add_debug_data({"r_text": r.text})
-            action_result.add_debug_data({"r_headers": r.headers})
+            if _is_token_response(r):
+                action_result.add_debug_data({"r_text": "<OAuth token response redacted>"})
+            else:
+                action_result.add_debug_data({"r_text": r.text})
+                action_result.add_debug_data({"r_headers": r.headers})
 
         # Process each 'Content-Type' of response separately
 
@@ -702,6 +731,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         list_items = list()
         next_link = None
+        seen_links = set()
 
         # maximum page size
         page_size = MS_SHAREPOINT_PER_PAGE_COUNT
@@ -714,8 +744,13 @@ class MsGraphForSharepointConnector(BaseConnector):
         else:
             params = {"$top": page_size}
 
-        while True:
+        for _ in range(MS_SHAREPOINT_MAX_PAGINATION_PAGES):
             if next_link:
+                if not _is_expected_graph_url(next_link):
+                    return action_result.set_status(phantom.APP_ERROR, "Rejected pagination URL outside Microsoft Graph"), None
+                if next_link in seen_links:
+                    return action_result.set_status(phantom.APP_ERROR, "Rejected repeated Microsoft Graph pagination URL"), None
+                seen_links.add(next_link)
                 ret_val, response = self._make_rest_call_helper(endpoint, action_result, next_link=next_link)
             else:
                 ret_val, response = self._make_rest_call_helper(endpoint, action_result, params=params)
@@ -732,6 +767,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             next_link = response.get("@odata.nextLink", None)
             if not next_link:
                 break
+        else:
+            return action_result.set_status(phantom.APP_ERROR, "Microsoft Graph pagination exceeded its safety limit"), None
 
         return phantom.APP_SUCCESS, list_items
 
@@ -1045,8 +1082,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully deleted folder")
 
     def build_drive_endpoint(self, drive_id: str = ""):
+        encoded_drive_id = urllib.parse.quote(str(drive_id), safe="")
         return (
-            MS_CUSTOM_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id, drive_id=drive_id)
+            MS_CUSTOM_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id, drive_id=encoded_drive_id)
             if drive_id
             else MS_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id)
         )
