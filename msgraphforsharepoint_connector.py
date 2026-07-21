@@ -327,9 +327,14 @@ class MsGraphForSharepointConnector(BaseConnector):
         return RetVal(action_result.set_status(phantom.APP_ERROR, message), None)
 
     def _process_json_response(self, r, action_result):
-        # Try a json parse
+        # MS Graph can emit non-JSON tokens (Infinity/-Infinity/NaN) in column metadata,
+        # e.g. an unbounded Number column reports "maximum": Infinity. requests' JSON
+        # backend (simplejson) raises on those tokens, so parse the raw text with the
+        # stdlib json module and neutralize the non-finite constants at decode time.
+        # _sanitize_non_finite_floats then catches overflow numeric literals (e.g. 1e400)
+        # that decode to inf but are not covered by parse_constant.
         try:
-            resp_json = r.json()
+            resp_json = json.loads(r.text, parse_constant=lambda _constant: None)
         except Exception as e:
             error_message = self._get_error_message_from_exception(e)
             return RetVal(action_result.set_status(phantom.APP_ERROR, f"Unable to parse JSON response. Error: {error_message}"), None)

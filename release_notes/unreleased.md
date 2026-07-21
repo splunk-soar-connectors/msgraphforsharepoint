@@ -1,1 +1,2 @@
 **Unreleased**
+* fix: parse non-finite float tokens (Infinity/-Infinity/NaN) in MS Graph responses so 'get list' no longer fails on unbounded number columns
