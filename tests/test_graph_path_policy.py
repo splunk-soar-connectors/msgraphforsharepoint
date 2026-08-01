@@ -31,6 +31,20 @@ def _load_path_helpers():
     return namespace["_encode_graph_path_segment"], namespace["_encode_graph_path"]
 
 
+def _load_drive_builder():
+    source = CONNECTOR.read_text()
+    tree = ast.parse(source)
+    connector_class = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "MsGraphForSharepointConnector")
+    builder = next(node for node in connector_class.body if isinstance(node, ast.FunctionDef) and node.name == "build_drive_endpoint")
+    namespace = {
+        "_encode_graph_path_segment": _load_path_helpers()[0],
+        "MS_CUSTOM_DRIVE_ROOT_ENDPOINT": "/sites/{site_id}/drives/{drive_id}",
+        "MS_DRIVE_ROOT_ENDPOINT": "/sites/{site_id}/drive",
+    }
+    exec(compile(ast.fix_missing_locations(ast.Module(body=[builder], type_ignores=[])), str(CONNECTOR), "exec"), namespace)
+    return namespace["build_drive_endpoint"]
+
+
 class GraphPathPolicyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -53,6 +67,17 @@ class GraphPathPolicyTests(unittest.TestCase):
             with self.subTest(payload=payload):
                 with self.assertRaises(ValueError):
                     self.encode_path(payload)
+
+    def test_drive_builder_applies_the_segment_policy(self):
+        builder = _load_drive_builder()
+        connector = type("Connector", (), {"_site_id": "site"})()
+
+        self.assertEqual(builder(connector, "drive id"), "/sites/site/drives/drive%20id")
+        self.assertEqual(builder(connector), "/sites/site/drive")
+        for payload in (".", "..", "%2e%2e", "a/b", "a?x"):
+            with self.subTest(payload=payload):
+                with self.assertRaises(ValueError):
+                    builder(connector, payload)
 
 
 if __name__ == "__main__":

@@ -1124,7 +1124,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully deleted folder")
 
     def build_drive_endpoint(self, drive_id: str = ""):
-        encoded_drive_id = urllib.parse.quote(str(drive_id), safe="")
+        encoded_drive_id = _encode_graph_path_segment(drive_id) if drive_id else ""
         return (
             MS_CUSTOM_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id, drive_id=encoded_drive_id)
             if drive_id
@@ -1133,6 +1133,14 @@ class MsGraphForSharepointConnector(BaseConnector):
 
     def handle_action(self, param):
         ret_val = phantom.APP_SUCCESS
+
+        for key in (MS_SHAREPOINT_JSON_DRIVE_ID, "source_drive_id"):
+            if param.get(key):
+                try:
+                    _encode_graph_path_segment(param[key])
+                except ValueError as exc:
+                    action_result = self.add_action_result(ActionResult(dict(param)))
+                    return action_result.set_status(phantom.APP_ERROR, f"Invalid {key.replace('_', ' ')}: {exc}")
 
         # Get the action that we are supposed to execute for this App Run
         action_id = self.get_action_identifier()
