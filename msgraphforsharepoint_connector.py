@@ -799,7 +799,12 @@ class MsGraphForSharepointConnector(BaseConnector):
     def _handle_add_item(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
         item = param.get("item")
-        endpoint = f"{MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))}/items"
+        try:
+            list_id = _encode_graph_path_segment(param[MS_SHAREPOINT_JSON_LIST])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid list ID: {exc}")
+
+        endpoint = f"{MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=list_id)}/items"
         ret_val, item = self._make_rest_call_helper(method="post", endpoint=endpoint, data=item.encode("utf-8"), action_result=action_result)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
@@ -814,9 +819,13 @@ class MsGraphForSharepointConnector(BaseConnector):
     def _handle_update_item(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
         item = param.get("item")
-        item_id = param.get("item_id")
+        try:
+            list_id = _encode_graph_path_segment(param[MS_SHAREPOINT_JSON_LIST])
+            item_id = _encode_graph_path_segment(param["item_id"])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid list or item ID: {exc}")
 
-        list_endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        list_endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=list_id)
         endpoint = f"{list_endpoint}/items/{item_id}"
 
         ret_val, item = self._make_rest_call_helper(method="patch", endpoint=endpoint, data=item.encode("utf-8"), action_result=action_result)
@@ -997,7 +1006,12 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        try:
+            list_id = _encode_graph_path_segment(param[MS_SHAREPOINT_JSON_LIST])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid list ID: {exc}")
+
+        endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=list_id)
         params = {"expand": "columns"}
         ret_val, response = self._make_rest_call_helper(endpoint, action_result, params=params)
         if phantom.is_fail(ret_val):
