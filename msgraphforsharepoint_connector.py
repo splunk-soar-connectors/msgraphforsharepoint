@@ -61,6 +61,30 @@ def _is_token_response(response):
     return url.scheme == "https" and url.hostname == "login.microsoftonline.com" and url.path.rstrip("/").endswith("/oauth2/v2.0/token")
 
 
+def _encode_graph_path_segment(value):
+    """Canonicalize and encode one caller-controlled Microsoft Graph path segment."""
+    decoded = str(value)
+    for _ in range(5):
+        next_value = urllib.parse.unquote(decoded)
+        if next_value == decoded:
+            break
+        decoded = next_value
+
+    if decoded in {"", ".", ".."} or any(char in decoded for char in "/\\?#%") or any(ord(char) < 32 for char in decoded):
+        raise ValueError("Path values must contain non-empty, non-traversal segments")
+    return urllib.parse.quote(decoded, safe="")
+
+
+def _encode_graph_path(value, *, allow_empty=False):
+    """Encode each logical path component without preserving traversal syntax."""
+    stripped = str(value).strip("/")
+    if not stripped:
+        if allow_empty:
+            return ""
+        raise ValueError("Path values must not be empty")
+    return "/".join(_encode_graph_path_segment(segment) for segment in stripped.split("/"))
+
+
 class RetVal(tuple):
     def __new__(cls, val1, val2=None):
         return tuple.__new__(RetVal, (val1, val2))
@@ -775,7 +799,12 @@ class MsGraphForSharepointConnector(BaseConnector):
     def _handle_add_item(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
         item = param.get("item")
-        endpoint = f"{MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))}/items"
+        try:
+            list_id = _encode_graph_path_segment(param[MS_SHAREPOINT_JSON_LIST])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid list ID: {exc}")
+
+        endpoint = f"{MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=list_id)}/items"
         ret_val, item = self._make_rest_call_helper(method="post", endpoint=endpoint, data=item.encode("utf-8"), action_result=action_result)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
@@ -790,9 +819,13 @@ class MsGraphForSharepointConnector(BaseConnector):
     def _handle_update_item(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
         item = param.get("item")
-        item_id = param.get("item_id")
+        try:
+            list_id = _encode_graph_path_segment(param[MS_SHAREPOINT_JSON_LIST])
+            item_id = _encode_graph_path_segment(param["item_id"])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid list or item ID: {exc}")
 
-        list_endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        list_endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=list_id)
         endpoint = f"{list_endpoint}/items/{item_id}"
 
         ret_val, item = self._make_rest_call_helper(method="patch", endpoint=endpoint, data=item.encode("utf-8"), action_result=action_result)
@@ -830,7 +863,10 @@ class MsGraphForSharepointConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         source_drive_id = param.get("source_drive_id", "")
-        source_item_id = param["source_item_id"]
+        try:
+            source_item_id = _encode_graph_path_segment(param["source_item_id"])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid source item ID: {exc}")
 
         endpoint = f"{self.build_drive_endpoint(source_drive_id)}{MS_DRIVE_COPY_ITEM_ENDPOINT.format(item_id=source_item_id)}"
 
@@ -865,7 +901,10 @@ class MsGraphForSharepointConnector(BaseConnector):
     def _handle_create_folder(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
         drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
-        parent_item_id = param["parent_item_id"]
+        try:
+            parent_item_id = _encode_graph_path_segment(param["parent_item_id"])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid parent item ID: {exc}")
         endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_DRIVE_CREATE_FOLDER_ENDPOINT.format(parent_id=parent_item_id)}"
 
         data = {
@@ -967,7 +1006,12 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=urllib.parse.quote(param[MS_SHAREPOINT_JSON_LIST]))
+        try:
+            list_id = _encode_graph_path_segment(param[MS_SHAREPOINT_JSON_LIST])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid list ID: {exc}")
+
+        endpoint = MS_GET_LIST_ENDPOINT.format(site_id=self._site_id, list=list_id)
         params = {"expand": "columns"}
         ret_val, response = self._make_rest_call_helper(endpoint, action_result, params=params)
         if phantom.is_fail(ret_val):
@@ -992,8 +1036,11 @@ class MsGraphForSharepointConnector(BaseConnector):
         if not self._site_id:
             return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format("retrieving a file"))
 
-        sp_path = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_PATH].strip("/"))
-        sp_file = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_NAME])
+        try:
+            sp_path = _encode_graph_path(param[MS_SHAREPOINT_JSON_FILE_PATH], allow_empty=True)
+            sp_file = _encode_graph_path_segment(param[MS_SHAREPOINT_JSON_FILE_NAME])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid file path: {exc}")
         sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
         endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(path=sp_path, file=sp_file)}"
 
@@ -1030,8 +1077,11 @@ class MsGraphForSharepointConnector(BaseConnector):
         if not self._site_id:
             return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format("removing a file"))
 
-        sp_path = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_PATH].rstrip("/"))
-        sp_file = urllib.parse.quote(param[MS_SHAREPOINT_JSON_FILE_NAME])
+        try:
+            sp_path = _encode_graph_path(param[MS_SHAREPOINT_JSON_FILE_PATH], allow_empty=True)
+            sp_file = _encode_graph_path_segment(param[MS_SHAREPOINT_JSON_FILE_NAME])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid file path: {exc}")
         sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
         endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_GET_FILE_METADATA_ENDPOINT.format(path=sp_path, file=sp_file)}"
 
@@ -1048,7 +1098,10 @@ class MsGraphForSharepointConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format("removing a file"))
 
         drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
-        folder_path = param["folder_path"].strip("/")
+        try:
+            folder_path = _encode_graph_path(param["folder_path"])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid folder path: {exc}")
 
         endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_GET_FOLDER_ITEMS_ENDPOINT.format(folder_path=folder_path)}"
 
@@ -1071,7 +1124,10 @@ class MsGraphForSharepointConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format("removing a file"))
 
         drive_id = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
-        folder_path = param["folder_path"].strip("/")
+        try:
+            folder_path = _encode_graph_path(param["folder_path"])
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid folder path: {exc}")
 
         endpoint = f"{self.build_drive_endpoint(drive_id)}{MS_FOLDER_ENDPOINT.format(folder_path=folder_path)}"
 
@@ -1082,7 +1138,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully deleted folder")
 
     def build_drive_endpoint(self, drive_id: str = ""):
-        encoded_drive_id = urllib.parse.quote(str(drive_id), safe="")
+        encoded_drive_id = _encode_graph_path_segment(drive_id) if drive_id else ""
         return (
             MS_CUSTOM_DRIVE_ROOT_ENDPOINT.format(site_id=self._site_id, drive_id=encoded_drive_id)
             if drive_id
@@ -1091,6 +1147,14 @@ class MsGraphForSharepointConnector(BaseConnector):
 
     def handle_action(self, param):
         ret_val = phantom.APP_SUCCESS
+
+        for key in (MS_SHAREPOINT_JSON_DRIVE_ID, "source_drive_id"):
+            if param.get(key):
+                try:
+                    _encode_graph_path_segment(param[key])
+                except ValueError as exc:
+                    action_result = self.add_action_result(ActionResult(dict(param)))
+                    return action_result.set_status(phantom.APP_ERROR, f"Invalid {key.replace('_', ' ')}: {exc}")
 
         # Get the action that we are supposed to execute for this App Run
         action_id = self.get_action_identifier()
