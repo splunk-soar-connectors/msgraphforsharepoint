@@ -628,7 +628,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         app_name = app_json["name"]
         app_dir_name = _get_dir_name_from_app_name(app_name)
 
-        url_to_app_rest = "{}/rest/handler/{}_{}/{}".format(phantom_base_url, app_dir_name, app_json["appid"], asset_name)
+        url_to_app_rest = "{}/rest/handler/{}_{}/{}".format(
+            phantom_base_url, app_dir_name, app_json["appid"], urllib.parse.quote(asset_name, safe="")
+        )
 
         return phantom.APP_SUCCESS, url_to_app_rest
 
@@ -648,7 +650,10 @@ class MsGraphForSharepointConnector(BaseConnector):
         self.save_progress("Using OAuth Redirect URL as:")
         self.save_progress(app_rest_url)
 
-        admin_consent_url = f"https://login.microsoftonline.com/{self._tenant}/adminconsent?client_id={self._client_id}&redirect_uri={app_rest_url}&state={self.get_asset_id()}"
+        admin_consent_url = (
+            f"https://login.microsoftonline.com/{self._tenant}/adminconsent?client_id={self._client_id}"
+            f"&redirect_uri={urllib.parse.quote(app_rest_url, safe='')}&state={self.get_asset_id()}"
+        )
         self.save_progress("Please connect to the following URL from a different tab to continue the connectivity process")
         self.save_progress(admin_consent_url)
         self.save_progress("Waiting for Admin Consent to complete")
