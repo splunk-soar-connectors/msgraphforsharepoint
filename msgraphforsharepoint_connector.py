@@ -513,6 +513,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
+        if resp_json.get(MS_SHAREPOINT_JSON_EXPIRES_IN):
+            resp_json[MS_SHAREPOINT_JSON_EXPIRES_AT] = int(time.time()) + resp_json[MS_SHAREPOINT_JSON_EXPIRES_IN] - MS_SHAREPOINT_TOKEN_EXPIRY_BUFFER
+
         self._state[MS_SHAREPOINT_JSON_TOKEN] = resp_json
         self._access_token = resp_json[MS_SHAREPOINT_JSON_ACCESS_TOKEN]
 
@@ -556,7 +559,9 @@ class MsGraphForSharepointConnector(BaseConnector):
         if headers is None:
             headers = {}
 
-        if not self._access_token or is_force:
+        token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {})
+
+        if not self._access_token or is_force or token.get(MS_SHAREPOINT_JSON_EXPIRES_AT, 0) < time.time():
             self.save_progress("Generating a token")
             ret_val = self._get_token(action_result)
 
@@ -565,22 +570,9 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         headers.update({"Authorization": f"Bearer {self._access_token}", "Accept": "application/json", "Content-Type": "application/json"})
 
+
         self.save_progress(f"Connecting to endpoint {endpoint}")
         ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
-
-        # If token is expired, generate a new token
-        message = action_result.get_message()
-        self.debug_print(f"message: {message}")
-        if message and ("token" in message and "expired" in message):
-            self.save_progress("Bad token, generating a new one")
-            ret_val = self._get_token(action_result)
-            if phantom.is_fail(ret_val):
-                return action_result.get_status(), None
-
-            headers.update({"Authorization": f"Bearer {self._access_token}"})
-
-            self.save_progress(f"Connecting to endpoint {endpoint}")
-            ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
 
         if phantom.is_fail(ret_val):
             return action_result.get_status(), None
