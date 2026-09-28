@@ -77,7 +77,7 @@ class _Connector:
     _make_rest_call_helper = _MAKE_REST_CALL_HELPER
     _tenant = "tenant"
     _client_id = "client"
-    _client_secret = "secret"
+    _client_secret = ""
     _base_url = "https://graph.microsoft.com/v1.0"
 
     def __init__(self, token=None, token_error=False):
