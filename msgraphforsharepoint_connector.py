@@ -574,6 +574,17 @@ class MsGraphForSharepointConnector(BaseConnector):
         self.save_progress(f"Connecting to endpoint {endpoint}")
         ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
 
+        message = (action_result.get_message() or "").lower() if phantom.is_fail(ret_val) else ""
+        if "token" in message and ("expired" in message or "invalid token lifetime" in message):
+            self.save_progress("Bad token, generating a new one")
+            ret_val = self._get_token(action_result)
+            if phantom.is_fail(ret_val):
+                return action_result.get_status(), None
+
+            headers.update({"Authorization": f"Bearer {self._access_token}"})
+            self.save_progress(f"Connecting to endpoint {endpoint}")
+            ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
+
         if phantom.is_fail(ret_val):
             return action_result.get_status(), None
 

@@ -40,13 +40,18 @@ class _Clock:
 class _ActionResult:
     def __init__(self):
         self.status = _Phantom.APP_SUCCESS
+        self.message = ""
 
-    def set_status(self, status, _message=None):
+    def set_status(self, status, message=None):
         self.status = status
+        self.message = message or ""
         return status
 
     def get_status(self):
         return self.status
+
+    def get_message(self):
+        return self.message
 
 
 def _load_methods():
@@ -80,10 +85,13 @@ class _Connector:
     _client_secret = ""
     _base_url = "https://graph.microsoft.com/v1.0"
 
-    def __init__(self, token=None, token_error=False):
+    def __init__(self, token=None, token_error=False, graph_error_message=None):
         self._state = {"token": token or {}}
         self._access_token = self._state["token"].get("access_token")
         self.token_error = token_error
+        self.graph_error_message = graph_error_message or (
+            "Error from server. Status Code: 401 Data from server: InvalidAuthenticationToken. Invalid token lifetime."
+        )
         self.calls = []
 
     def save_progress(self, _message):
@@ -98,9 +106,7 @@ class _Connector:
                 return action_result.set_status(_Phantom.APP_ERROR, "Token request failed"), None
             return _Phantom.APP_SUCCESS, {"access_token": "fresh", "expires_in": 3600}
         if headers["Authorization"] != "Bearer fresh":
-            return action_result.set_status(
-                _Phantom.APP_ERROR, "Error from server. Status Code: 401 Data from server: InvalidAuthenticationToken. Invalid token lifetime."
-            ), None
+            return action_result.set_status(_Phantom.APP_ERROR, self.graph_error_message), None
         return _Phantom.APP_SUCCESS, {"value": "ok"}
 
 
@@ -146,6 +152,34 @@ class TokenExpiryTests(unittest.TestCase):
 
         self.assertEqual(status, _Phantom.APP_ERROR)
         self.assertIsNone(response)
+        self.assertEqual(len(connector.calls), 1)
+
+    def test_graph_token_failure_refreshes_and_retries(self):
+        messages = (
+            "Error from server. Status Code: 401 Data from server: token expired",
+            "Error from server. Status Code: 401 Data from server: InvalidAuthenticationToken. Invalid token lifetime.",
+        )
+        for message in messages:
+            with self.subTest(message=message):
+                connector = _Connector({"access_token": "stale", "expires_at": 4540}, graph_error_message=message)
+
+                status, response = connector._make_rest_call_helper("/sites/root", _ActionResult())
+
+                self.assertEqual(status, _Phantom.APP_SUCCESS)
+                self.assertEqual(response, {"value": "ok"})
+                self.assertEqual(len(connector.calls), 3)
+                self.assertEqual(connector.calls[0][1]["Authorization"], "Bearer stale")
+                self.assertEqual(connector.calls[2][1]["Authorization"], "Bearer fresh")
+
+    def test_successful_graph_call_does_not_retry_stale_error_message(self):
+        connector = _Connector({"access_token": "fresh", "expires_at": 4540})
+        action_result = _ActionResult()
+        action_result.set_status(_Phantom.APP_SUCCESS, "token expired")
+
+        status, response = connector._make_rest_call_helper("/sites/root", action_result)
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(response, {"value": "ok"})
         self.assertEqual(len(connector.calls), 1)
 
 
