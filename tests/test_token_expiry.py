@@ -85,7 +85,14 @@ class _Connector:
     _client_secret = ""
     _base_url = "https://graph.microsoft.com/v1.0"
 
-    def __init__(self, token=None, token_error=False, graph_error_message=None, valid_authorizations=("Bearer fresh",)):
+    def __init__(
+        self,
+        token=None,
+        token_error=False,
+        graph_error_message=None,
+        valid_authorizations=("Bearer fresh",),
+        token_response=None,
+    ):
         self._state = {"token": token or {}}
         self._access_token = self._state["token"].get("access_token")
         self.token_error = token_error
@@ -93,6 +100,7 @@ class _Connector:
             "Error from server. Status Code: 401 Data from server: InvalidAuthenticationToken. Invalid token lifetime."
         )
         self.valid_authorizations = valid_authorizations
+        self.token_response = token_response or {"access_token": "fresh", "expires_in": 3600}
         self.calls = []
 
     def save_progress(self, _message):
@@ -101,13 +109,15 @@ class _Connector:
     def _make_rest_call(
         self, endpoint, action_result, verify=True, headers=None, params=None, data=None, json=None, method="get", download=False
     ):
-        self.calls.append((endpoint, dict(headers or {})))
-        if method == "post":
+        self.calls.append((endpoint, dict(headers or {}), method, download, data))
+        if endpoint.startswith("https://login.microsoftonline.com/"):
             if self.token_error:
                 return action_result.set_status(_Phantom.APP_ERROR, "Token request failed"), None
-            return _Phantom.APP_SUCCESS, {"access_token": "fresh", "expires_in": 3600}
+            return _Phantom.APP_SUCCESS, self.token_response
         if headers["Authorization"] not in self.valid_authorizations:
             return action_result.set_status(_Phantom.APP_ERROR, self.graph_error_message), None
+        if download:
+            return _Phantom.APP_SUCCESS, "/tmp/sharepoint-download"
         return _Phantom.APP_SUCCESS, {"value": "ok"}
 
 
@@ -171,6 +181,80 @@ class TokenExpiryTests(unittest.TestCase):
         self.assertIsNone(response)
         self.assertEqual(len(connector.calls), 1)
 
+    def test_failed_refresh_after_graph_rejection_returns_error(self):
+        connector = _Connector({"access_token": "stale", "expires_at": 4540}, token_error=True)
+        action_result = _ActionResult()
+
+        status, response = connector._make_rest_call_helper("/sites/root", action_result)
+
+        self.assertEqual(status, _Phantom.APP_ERROR)
+        self.assertEqual(action_result.get_status(), _Phantom.APP_ERROR)
+        self.assertIsNone(response)
+        self.assertEqual(len(connector.calls), 2)
+
+    def test_graph_failure_after_retry_remains_an_error(self):
+        connector = _Connector({"access_token": "stale", "expires_at": 4540}, valid_authorizations=())
+        action_result = _ActionResult()
+
+        status, response = connector._make_rest_call_helper("/sites/root", action_result)
+
+        self.assertEqual(status, _Phantom.APP_ERROR)
+        self.assertEqual(action_result.get_status(), _Phantom.APP_ERROR)
+        self.assertIsNone(response)
+        self.assertEqual(len(connector.calls), 3)
+
+    def test_force_refreshes_before_graph_request(self):
+        connector = _Connector({"access_token": "stale", "expires_at": 4540})
+
+        status, response = connector._make_rest_call_helper("/sites/root", _ActionResult(), is_force=True)
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(response, {"value": "ok"})
+        self.assertEqual(len(connector.calls), 2)
+        self.assertEqual(connector.calls[0][2], "post")
+        self.assertEqual(connector.calls[1][1]["Authorization"], "Bearer fresh")
+
+    def test_download_retries_with_download_enabled(self):
+        connector = _Connector({"access_token": "stale", "expires_at": 4540})
+
+        status, response = connector._make_rest_call_helper("/content", _ActionResult(), download=True)
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(response, "/tmp/sharepoint-download")
+        self.assertEqual(len(connector.calls), 3)
+        self.assertTrue(connector.calls[0][3])
+        self.assertTrue(connector.calls[2][3])
+
+    def test_write_retry_preserves_payload(self):
+        connector = _Connector({"access_token": "stale", "expires_at": 4540})
+        payload = b'{"name":"item"}'
+
+        status, response = connector._make_rest_call_helper("/items", _ActionResult(), data=payload, method="post")
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(response, {"value": "ok"})
+        self.assertEqual(len(connector.calls), 3)
+        self.assertEqual(connector.calls[0][2:], ("post", False, payload))
+        self.assertEqual(connector.calls[2][2:], ("post", False, payload))
+
+    def test_invalid_token_lifetime_does_not_discard_access_token(self):
+        connector = _Connector(token_response={"access_token": "fresh", "expires_in": "invalid"})
+
+        status, response = connector._make_rest_call_helper("/sites/root", _ActionResult())
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(response, {"value": "ok"})
+        self.assertEqual(len(connector.calls), 2)
+
+    def test_invalid_saved_expiry_uses_cached_token(self):
+        connector = _Connector({"access_token": "legacy", "expires_at": "invalid"}, valid_authorizations=("Bearer fresh", "Bearer legacy"))
+
+        status, response = connector._make_rest_call_helper("/sites/root", _ActionResult())
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(response, {"value": "ok"})
+        self.assertEqual(len(connector.calls), 1)
+
     def test_graph_token_failure_refreshes_and_retries(self):
         messages = (
             "Error from server. Status Code: 401 Data from server: token expired",
@@ -179,10 +263,12 @@ class TokenExpiryTests(unittest.TestCase):
         for message in messages:
             with self.subTest(message=message):
                 connector = _Connector({"access_token": "stale", "expires_at": 4540}, graph_error_message=message)
+                action_result = _ActionResult()
 
-                status, response = connector._make_rest_call_helper("/sites/root", _ActionResult())
+                status, response = connector._make_rest_call_helper("/sites/root", action_result)
 
                 self.assertEqual(status, _Phantom.APP_SUCCESS)
+                self.assertEqual(action_result.get_status(), _Phantom.APP_SUCCESS)
                 self.assertEqual(response, {"value": "ok"})
                 self.assertEqual(len(connector.calls), 3)
                 self.assertEqual(connector.calls[0][1]["Authorization"], "Bearer stale")

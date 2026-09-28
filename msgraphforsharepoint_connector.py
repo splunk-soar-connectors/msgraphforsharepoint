@@ -514,10 +514,12 @@ class MsGraphForSharepointConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        if resp_json.get(MS_SHAREPOINT_JSON_EXPIRES_IN):
-            resp_json[MS_SHAREPOINT_JSON_EXPIRES_AT] = (
-                request_time + int(resp_json[MS_SHAREPOINT_JSON_EXPIRES_IN]) - MS_SHAREPOINT_TOKEN_EXPIRY_BUFFER
-            )
+        try:
+            expires_in = int(resp_json.get(MS_SHAREPOINT_JSON_EXPIRES_IN))
+        except (TypeError, ValueError):
+            expires_in = None
+        if expires_in is not None:
+            resp_json[MS_SHAREPOINT_JSON_EXPIRES_AT] = request_time + expires_in - MS_SHAREPOINT_TOKEN_EXPIRY_BUFFER
         self._state[MS_SHAREPOINT_JSON_TOKEN] = resp_json
         self._access_token = resp_json[MS_SHAREPOINT_JSON_ACCESS_TOKEN]
 
@@ -562,7 +564,10 @@ class MsGraphForSharepointConnector(BaseConnector):
             headers = {}
 
         token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}) or {}
-        expires_at = token.get(MS_SHAREPOINT_JSON_EXPIRES_AT)
+        try:
+            expires_at = float(token.get(MS_SHAREPOINT_JSON_EXPIRES_AT))
+        except (TypeError, ValueError):
+            expires_at = None
         if not self._access_token or is_force or (expires_at is not None and expires_at <= time.time()):
             self.save_progress("Generating a token")
             ret_val = self._get_token(action_result)
