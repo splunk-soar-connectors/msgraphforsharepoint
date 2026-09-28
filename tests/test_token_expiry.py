@@ -85,13 +85,14 @@ class _Connector:
     _client_secret = ""
     _base_url = "https://graph.microsoft.com/v1.0"
 
-    def __init__(self, token=None, token_error=False, graph_error_message=None):
+    def __init__(self, token=None, token_error=False, graph_error_message=None, valid_authorizations=("Bearer fresh",)):
         self._state = {"token": token or {}}
         self._access_token = self._state["token"].get("access_token")
         self.token_error = token_error
         self.graph_error_message = graph_error_message or (
             "Error from server. Status Code: 401 Data from server: InvalidAuthenticationToken. Invalid token lifetime."
         )
+        self.valid_authorizations = valid_authorizations
         self.calls = []
 
     def save_progress(self, _message):
@@ -105,7 +106,7 @@ class _Connector:
             if self.token_error:
                 return action_result.set_status(_Phantom.APP_ERROR, "Token request failed"), None
             return _Phantom.APP_SUCCESS, {"access_token": "fresh", "expires_in": 3600}
-        if headers["Authorization"] != "Bearer fresh":
+        if headers["Authorization"] not in self.valid_authorizations:
             return action_result.set_status(_Phantom.APP_ERROR, self.graph_error_message), None
         return _Phantom.APP_SUCCESS, {"value": "ok"}
 
@@ -125,13 +126,29 @@ class TokenExpiryTests(unittest.TestCase):
         self.assertEqual(len(connector.calls), 2)
         self.assertEqual(connector.calls[1][1]["Authorization"], "Bearer fresh")
 
-    def test_legacy_token_without_expiry_is_replaced(self):
+    def test_legacy_token_without_expiry_is_refreshed_after_graph_rejects_it(self):
         connector = _Connector({"access_token": "stale", "expires_in": 3600})
 
         status, _ = connector._make_rest_call_helper("/sites/root", _ActionResult())
 
         self.assertEqual(status, _Phantom.APP_SUCCESS)
-        self.assertEqual(connector.calls[1][1]["Authorization"], "Bearer fresh")
+        self.assertEqual(len(connector.calls), 3)
+        self.assertEqual(connector.calls[0][1]["Authorization"], "Bearer stale")
+        self.assertEqual(connector.calls[2][1]["Authorization"], "Bearer fresh")
+
+    def test_valid_legacy_token_is_used_without_refresh(self):
+        connector = _Connector(
+            {"access_token": "legacy", "expires_in": 3600},
+            token_error=True,
+            valid_authorizations=("Bearer fresh", "Bearer legacy"),
+        )
+
+        status, response = connector._make_rest_call_helper("/sites/root", _ActionResult())
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(response, {"value": "ok"})
+        self.assertEqual(len(connector.calls), 1)
+        self.assertEqual(connector.calls[0][1]["Authorization"], "Bearer legacy")
 
     def test_valid_token_is_reused_until_expiry(self):
         connector = _Connector({"access_token": "fresh", "expires_at": 4540})

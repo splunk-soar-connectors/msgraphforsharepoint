@@ -562,7 +562,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             headers = {}
 
         token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}) or {}
-        if not self._access_token or is_force or token.get(MS_SHAREPOINT_JSON_EXPIRES_AT, 0) <= time.time():
+        expires_at = token.get(MS_SHAREPOINT_JSON_EXPIRES_AT)
+        if not self._access_token or is_force or (expires_at is not None and expires_at <= time.time()):
             self.save_progress("Generating a token")
             ret_val = self._get_token(action_result)
 
