@@ -516,7 +516,7 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         try:
             expires_in = int(resp_json.get(MS_SHAREPOINT_JSON_EXPIRES_IN))
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             expires_in = None
         if expires_in is not None:
             resp_json[MS_SHAREPOINT_JSON_EXPIRES_AT] = request_time + expires_in

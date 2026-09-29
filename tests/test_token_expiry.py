@@ -307,6 +307,16 @@ class TokenExpiryTests(unittest.TestCase):
         self.assertEqual(response, {"value": "ok"})
         self.assertEqual(len(connector.calls), 2)
 
+    def test_infinite_token_lifetime_does_not_discard_access_token(self):
+        connector = _Connector(token_response={"access_token": "fresh", "expires_in": float("inf")})
+
+        status, response = connector._make_rest_call_helper("/sites/root", _ActionResult())
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(response, {"value": "ok"})
+        self.assertEqual(connector._state["token"]["access_token"], "fresh")
+        self.assertNotIn("expires_at", connector._state["token"])
+
     def test_invalid_saved_expiry_uses_cached_token(self):
         connector = _Connector({"access_token": "legacy", "expires_at": "invalid"}, valid_authorizations=("Bearer fresh", "Bearer legacy"))
 
