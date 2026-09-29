@@ -508,11 +508,18 @@ class MsGraphForSharepointConnector(BaseConnector):
         req_url = MS_SERVER_TOKEN_URL.format(self._tenant)
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
+        request_time = time.time()
         ret_val, resp_json = self._make_rest_call(req_url, action_result, headers=headers, data=data, method="post")
 
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
+        try:
+            expires_in = int(resp_json.get(MS_SHAREPOINT_JSON_EXPIRES_IN))
+        except (TypeError, ValueError, OverflowError):
+            expires_in = None
+        if expires_in is not None:
+            resp_json[MS_SHAREPOINT_JSON_EXPIRES_AT] = request_time + expires_in
         self._state[MS_SHAREPOINT_JSON_TOKEN] = resp_json
         self._access_token = resp_json[MS_SHAREPOINT_JSON_ACCESS_TOKEN]
 
@@ -556,7 +563,12 @@ class MsGraphForSharepointConnector(BaseConnector):
         if headers is None:
             headers = {}
 
-        if not self._access_token or is_force:
+        token = self._state.get(MS_SHAREPOINT_JSON_TOKEN, {}) or {}
+        try:
+            expires_at = float(token.get(MS_SHAREPOINT_JSON_EXPIRES_AT))
+        except (TypeError, ValueError):
+            expires_at = None
+        if not self._access_token or is_force or (expires_at is not None and expires_at <= time.time()):
             self.save_progress("Generating a token")
             ret_val = self._get_token(action_result)
 
@@ -568,17 +580,14 @@ class MsGraphForSharepointConnector(BaseConnector):
         self.save_progress(f"Connecting to endpoint {endpoint}")
         ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
 
-        # If token is expired, generate a new token
-        message = action_result.get_message()
-        self.debug_print(f"message: {message}")
-        if message and ("token" in message and "expired" in message):
+        message = (action_result.get_message() or "").lower() if phantom.is_fail(ret_val) else ""
+        if "token" in message and ("expired" in message or "invalid token lifetime" in message):
             self.save_progress("Bad token, generating a new one")
             ret_val = self._get_token(action_result)
             if phantom.is_fail(ret_val):
                 return action_result.get_status(), None
 
             headers.update({"Authorization": f"Bearer {self._access_token}"})
-
             self.save_progress(f"Connecting to endpoint {endpoint}")
             ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
 
