@@ -1,3 +1,3 @@
 **Unreleased**
 
-* Refresh Microsoft Graph access tokens before they expire so SharePoint actions continue after token lifetime errors.
+* Refresh Microsoft Graph access tokens at expiry and retry token lifetime errors so SharePoint actions continue.

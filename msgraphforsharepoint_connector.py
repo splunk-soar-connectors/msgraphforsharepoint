@@ -519,7 +519,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         except (TypeError, ValueError):
             expires_in = None
         if expires_in is not None:
-            resp_json[MS_SHAREPOINT_JSON_EXPIRES_AT] = request_time + expires_in - MS_SHAREPOINT_TOKEN_EXPIRY_BUFFER
+            resp_json[MS_SHAREPOINT_JSON_EXPIRES_AT] = request_time + expires_in
         self._state[MS_SHAREPOINT_JSON_TOKEN] = resp_json
         self._access_token = resp_json[MS_SHAREPOINT_JSON_ACCESS_TOKEN]
 

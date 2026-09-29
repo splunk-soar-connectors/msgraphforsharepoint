@@ -38,9 +38,11 @@ class _Clock:
 
 
 class _ActionResult:
-    def __init__(self):
+    def __init__(self, _param=None):
         self.status = _Phantom.APP_SUCCESS
         self.message = ""
+        self.data = []
+        self.summary = {}
 
     def set_status(self, status, message=None):
         self.status = status
@@ -53,12 +55,24 @@ class _ActionResult:
     def get_message(self):
         return self.message
 
+    def add_data(self, data):
+        self.data.append(data)
+
+    def update_summary(self, summary):
+        self.summary = summary
+        return summary
+
+    def get_data_size(self):
+        return len(self.data)
+
 
 def _load_methods():
     tree = ast.parse(CONNECTOR.read_text())
     connector_class = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "MsGraphForSharepointConnector")
     methods = [
-        node for node in connector_class.body if isinstance(node, ast.FunctionDef) and node.name in {"_get_token", "_make_rest_call_helper"}
+        node
+        for node in connector_class.body
+        if isinstance(node, ast.FunctionDef) and node.name in {"_get_token", "_make_rest_call_helper", "_paginator", "_handle_get_list"}
     ]
     namespace = {
         "phantom": _Phantom,
@@ -68,22 +82,40 @@ def _load_methods():
         "MS_SHAREPOINT_JSON_ACCESS_TOKEN": "access_token",
         "MS_SHAREPOINT_JSON_EXPIRES_IN": "expires_in",
         "MS_SHAREPOINT_JSON_EXPIRES_AT": "expires_at",
-        "MS_SHAREPOINT_TOKEN_EXPIRY_BUFFER": 60,
+        "MS_SHAREPOINT_JSON_LIMIT": "limit",
+        "MS_SHAREPOINT_JSON_LIST": "list",
+        "MS_SHAREPOINT_JSON_ITEM_COUNT": "item_count",
+        "MS_SHAREPOINT_LIMIT_KEY": "'limit' action parameter",
+        "MS_SHAREPOINT_ERROR_MISSING_SITE_ID": "Site ID required for {}",
+        "MS_SHAREPOINT_PER_PAGE_COUNT": 1000,
+        "MS_SHAREPOINT_MAX_PAGINATION_PAGES": 1000,
+        "MS_GET_LIST_ENDPOINT": "/sites/{site_id}/lists/{list}",
+        "ActionResult": _ActionResult,
+        "_encode_graph_path_segment": str,
+        "_is_expected_graph_url": lambda url: url.startswith("https://graph.microsoft.com/"),
     }
     exec(compile(ast.fix_missing_locations(ast.Module(body=methods, type_ignores=[])), str(CONNECTOR), "exec"), namespace)
-    return namespace["_get_token"], namespace["_make_rest_call_helper"]
+    return (
+        namespace["_get_token"],
+        namespace["_make_rest_call_helper"],
+        namespace["_paginator"],
+        namespace["_handle_get_list"],
+    )
 
 
-_GET_TOKEN, _MAKE_REST_CALL_HELPER = _load_methods()
+_GET_TOKEN, _MAKE_REST_CALL_HELPER, _PAGINATOR, _HANDLE_GET_LIST = _load_methods()
 
 
 class _Connector:
     _get_token = _GET_TOKEN
     _make_rest_call_helper = _MAKE_REST_CALL_HELPER
+    _paginator = _PAGINATOR
+    _handle_get_list = _HANDLE_GET_LIST
     _tenant = "tenant"
     _client_id = "client"
     _client_secret = ""
     _base_url = "https://graph.microsoft.com/v1.0"
+    _site_id = "site"
 
     def __init__(
         self,
@@ -92,6 +124,7 @@ class _Connector:
         graph_error_message=None,
         valid_authorizations=("Bearer fresh",),
         token_response=None,
+        graph_responses=None,
     ):
         self._state = {"token": token or {}}
         self._access_token = self._state["token"].get("access_token")
@@ -101,10 +134,18 @@ class _Connector:
         )
         self.valid_authorizations = valid_authorizations
         self.token_response = token_response or {"access_token": "fresh", "expires_in": 3600}
+        self.graph_responses = graph_responses or {}
         self.calls = []
 
     def save_progress(self, _message):
         pass
+
+    def add_action_result(self, action_result):
+        self.action_result = action_result
+        return action_result
+
+    def _validate_integer(self, _action_result, _value, _key, _allow_zero):
+        return _Phantom.APP_SUCCESS, None
 
     def _make_rest_call(
         self, endpoint, action_result, verify=True, headers=None, params=None, data=None, json=None, method="get", download=False
@@ -118,7 +159,7 @@ class _Connector:
             return action_result.set_status(_Phantom.APP_ERROR, self.graph_error_message), None
         if download:
             return _Phantom.APP_SUCCESS, "/tmp/sharepoint-download"
-        return _Phantom.APP_SUCCESS, {"value": "ok"}
+        return _Phantom.APP_SUCCESS, self.graph_responses.get(endpoint, {"value": "ok"})
 
 
 class TokenExpiryTests(unittest.TestCase):
@@ -132,7 +173,7 @@ class TokenExpiryTests(unittest.TestCase):
 
         self.assertEqual(status, _Phantom.APP_SUCCESS)
         self.assertEqual(response, {"value": "ok"})
-        self.assertEqual(connector._state["token"]["expires_at"], 4540)
+        self.assertEqual(connector._state["token"]["expires_at"], 4600)
         self.assertEqual(len(connector.calls), 2)
         self.assertEqual(connector.calls[1][1]["Authorization"], "Bearer fresh")
 
@@ -161,16 +202,36 @@ class TokenExpiryTests(unittest.TestCase):
         self.assertEqual(connector.calls[0][1]["Authorization"], "Bearer legacy")
 
     def test_valid_token_is_reused_until_expiry(self):
-        connector = _Connector({"access_token": "fresh", "expires_at": 4540})
+        connector = _Connector({"access_token": "fresh", "expires_at": 4600})
 
         status, _ = connector._make_rest_call_helper("/sites/root", _ActionResult())
 
         self.assertEqual(status, _Phantom.APP_SUCCESS)
         self.assertEqual(len(connector.calls), 1)
-        _Clock.now = 4540
+        _Clock.now = 4600
         status, _ = connector._make_rest_call_helper("/sites/root", _ActionResult())
         self.assertEqual(status, _Phantom.APP_SUCCESS)
         self.assertEqual(len(connector.calls), 3)
+
+    def test_oauth_outage_does_not_block_valid_token_in_last_minute(self):
+        connector = _Connector()
+        connector._make_rest_call_helper("/sites/root", _ActionResult())
+        connector.token_error = True
+        _Clock.now = 4541
+
+        status, response = connector._make_rest_call_helper("/sites/root", _ActionResult())
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(response, {"value": "ok"})
+        self.assertEqual(connector._state["token"]["expires_at"], 4600)
+        self.assertEqual(len(connector.calls), 3)
+
+        _Clock.now = 4600
+        status, response = connector._make_rest_call_helper("/sites/root", _ActionResult())
+
+        self.assertEqual(status, _Phantom.APP_ERROR)
+        self.assertIsNone(response)
+        self.assertEqual(len(connector.calls), 4)
 
     def test_token_request_failure_stops_before_graph_request(self):
         connector = _Connector({"access_token": "stale", "expires_at": 999}, token_error=True)
@@ -182,7 +243,7 @@ class TokenExpiryTests(unittest.TestCase):
         self.assertEqual(len(connector.calls), 1)
 
     def test_failed_refresh_after_graph_rejection_returns_error(self):
-        connector = _Connector({"access_token": "stale", "expires_at": 4540}, token_error=True)
+        connector = _Connector({"access_token": "stale", "expires_at": 4600}, token_error=True)
         action_result = _ActionResult()
 
         status, response = connector._make_rest_call_helper("/sites/root", action_result)
@@ -193,7 +254,7 @@ class TokenExpiryTests(unittest.TestCase):
         self.assertEqual(len(connector.calls), 2)
 
     def test_graph_failure_after_retry_remains_an_error(self):
-        connector = _Connector({"access_token": "stale", "expires_at": 4540}, valid_authorizations=())
+        connector = _Connector({"access_token": "stale", "expires_at": 4600}, valid_authorizations=())
         action_result = _ActionResult()
 
         status, response = connector._make_rest_call_helper("/sites/root", action_result)
@@ -204,7 +265,7 @@ class TokenExpiryTests(unittest.TestCase):
         self.assertEqual(len(connector.calls), 3)
 
     def test_force_refreshes_before_graph_request(self):
-        connector = _Connector({"access_token": "stale", "expires_at": 4540})
+        connector = _Connector({"access_token": "stale", "expires_at": 4600})
 
         status, response = connector._make_rest_call_helper("/sites/root", _ActionResult(), is_force=True)
 
@@ -215,7 +276,7 @@ class TokenExpiryTests(unittest.TestCase):
         self.assertEqual(connector.calls[1][1]["Authorization"], "Bearer fresh")
 
     def test_download_retries_with_download_enabled(self):
-        connector = _Connector({"access_token": "stale", "expires_at": 4540})
+        connector = _Connector({"access_token": "stale", "expires_at": 4600})
 
         status, response = connector._make_rest_call_helper("/content", _ActionResult(), download=True)
 
@@ -226,7 +287,7 @@ class TokenExpiryTests(unittest.TestCase):
         self.assertTrue(connector.calls[2][3])
 
     def test_write_retry_preserves_payload(self):
-        connector = _Connector({"access_token": "stale", "expires_at": 4540})
+        connector = _Connector({"access_token": "stale", "expires_at": 4600})
         payload = b'{"name":"item"}'
 
         status, response = connector._make_rest_call_helper("/items", _ActionResult(), data=payload, method="post")
@@ -262,7 +323,8 @@ class TokenExpiryTests(unittest.TestCase):
         )
         for message in messages:
             with self.subTest(message=message):
-                connector = _Connector({"access_token": "stale", "expires_at": 4540}, graph_error_message=message)
+                _Clock.now = 4599
+                connector = _Connector({"access_token": "stale", "expires_at": 4600}, graph_error_message=message)
                 action_result = _ActionResult()
 
                 status, response = connector._make_rest_call_helper("/sites/root", action_result)
@@ -274,8 +336,26 @@ class TokenExpiryTests(unittest.TestCase):
                 self.assertEqual(connector.calls[0][1]["Authorization"], "Bearer stale")
                 self.assertEqual(connector.calls[2][1]["Authorization"], "Bearer fresh")
 
+    def test_get_list_retries_token_failure_and_paginates_items(self):
+        _Clock.now = 4599
+        endpoint = "https://graph.microsoft.com/v1.0/sites/site/lists/example"
+        connector = _Connector(
+            {"access_token": "stale", "expires_at": 4600},
+            graph_responses={endpoint: {"id": "example"}, f"{endpoint}/items": {"value": [{"id": "1"}]}},
+        )
+
+        status = connector._handle_get_list({"list": "example"})
+
+        self.assertEqual(status, _Phantom.APP_SUCCESS)
+        self.assertEqual(connector.action_result.data, [{"id": "example", "items": [{"id": "1"}]}])
+        self.assertEqual(connector.action_result.summary["item_count"], 1)
+        self.assertEqual(len(connector.calls), 4)
+        self.assertEqual(connector.calls[0][1]["Authorization"], "Bearer stale")
+        self.assertEqual(connector.calls[2][1]["Authorization"], "Bearer fresh")
+        self.assertEqual(connector.calls[3][0], f"{endpoint}/items")
+
     def test_successful_graph_call_does_not_retry_stale_error_message(self):
-        connector = _Connector({"access_token": "fresh", "expires_at": 4540})
+        connector = _Connector({"access_token": "fresh", "expires_at": 4600})
         action_result = _ActionResult()
         action_result.set_status(_Phantom.APP_SUCCESS, "token expired")
 
