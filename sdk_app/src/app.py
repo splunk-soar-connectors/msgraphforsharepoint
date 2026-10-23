@@ -51,6 +51,7 @@ from .actions.files import (
     remove_folder as remove_folder_impl,
 )
 from .test_connectivity import run_test_connectivity
+from .webhooks.admin_consent import register_webhooks
 
 logger = getLogger()
 
@@ -98,10 +99,19 @@ app = App(
     asset_cls=Asset,
 )
 
+register_webhooks(app)
+
 
 @app.test_connectivity()
 def test_connectivity(soar: SOARClient, asset: Asset) -> None:
-    run_test_connectivity(soar, asset)
+    consent_callback_url = (
+        app.get_webhook_url("admin-consent") if not asset.admin_consent else ""
+    )
+    run_test_connectivity(
+        soar,
+        asset,
+        consent_callback_url=consent_callback_url,
+    )
 
 
 class CopyDriveItemParams(Params):
@@ -436,10 +446,16 @@ class ListListsOutput(ActionOutput):
     )
 
 
+from .views.list_lists import display_list_lists
+
+
 @app.action(
     description="Fetch the available lists under a SharePoint site",
     action_type="investigate",
     verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
+    view_handler=app.view_handler(template="msgraphforsharepoint_list_lists.html")(
+        display_list_lists
+    ),
     summary_type=ListListsSummary,
 )
 def list_lists(
@@ -671,10 +687,16 @@ class GetListOutput(ActionOutput):
     )
 
 
+from .views.get_list import display_get_list
+
+
 @app.action(
     description="Retrieves a list from a SharePoint Site",
     action_type="investigate",
     verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
+    view_handler=app.view_handler(template="msgraphforsharepoint_get_list.html")(
+        display_get_list
+    ),
     summary_type=GetListSummary,
 )
 def get_list(params: GetListParams, soar: SOARClient, asset: Asset) -> GetListOutput:
