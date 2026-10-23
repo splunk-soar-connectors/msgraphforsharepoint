@@ -81,7 +81,11 @@ class GraphClient:
         json_body: Any = None,  # noqa: ANN401
         force_token_refresh: bool = False,
     ) -> Any:  # noqa: ANN401
-        url = endpoint if endpoint.startswith("https://") else f"{GRAPH_BASE_URL}{endpoint}"
+        url = (
+            endpoint
+            if endpoint.startswith("https://")
+            else f"{GRAPH_BASE_URL}{endpoint}"
+        )
         parsed_url = urllib.parse.urlsplit(url)
         if (
             parsed_url.scheme != "https"
@@ -123,6 +127,44 @@ class GraphClient:
             return _sanitize_non_finite(json.loads(response.text, parse_constant=lambda _value: None))
         except (json.JSONDecodeError, TypeError) as exc:
             raise ActionFailure(f"Unable to parse Microsoft Graph response JSON: {exc}") from exc
+
+    def download_to_file(self, endpoint: str, destination: str) -> None:
+        """Stream Graph file content to disk, following its content redirect."""
+        url = endpoint if endpoint.startswith("https://") else f"{GRAPH_BASE_URL}{endpoint}"
+        parsed_url = urllib.parse.urlsplit(url)
+        if (
+            parsed_url.scheme != "https"
+            or parsed_url.hostname != "graph.microsoft.com"
+            or parsed_url.port is not None
+            or parsed_url.username
+            or parsed_url.password
+        ):
+            raise ActionFailure("Rejected request URL outside Microsoft Graph")
+
+        token = self._auth_flow.get_token()
+        for attempt in range(2):
+            try:
+                with self._http.stream(
+                    "GET",
+                    url,
+                    headers={
+                        "Authorization": f"Bearer {token.access_token}",
+                        "Accept": "application/json",
+                    },
+                    follow_redirects=True,
+                ) as response:
+                    if response.status_code == 401 and attempt == 0:
+                        token = self._auth_flow.authenticate()
+                        continue
+                    if not 200 <= response.status_code < 399:
+                        response.read()
+                        raise ActionFailure(self._error_message(response))
+                    with open(destination, "wb") as output:
+                        for chunk in response.iter_bytes(chunk_size=10 * 1024 * 1024):
+                            output.write(chunk)
+                return
+            except httpx.RequestError as exc:
+                raise ActionFailure("Error connecting to Microsoft Graph") from exc
 
     @staticmethod
     def _error_message(response: httpx.Response) -> str:

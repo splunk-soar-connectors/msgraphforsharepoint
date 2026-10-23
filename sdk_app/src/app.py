@@ -44,6 +44,12 @@ from .actions.list_items import (
     add_item as add_item_impl,
     update_item as update_item_impl,
 )
+from .actions.files import (
+    GetFileSummary,
+    get_file as get_file_impl,
+    remove_file as remove_file_impl,
+    remove_folder as remove_folder_impl,
+)
 from .test_connectivity import run_test_connectivity
 
 logger = getLogger()
@@ -909,109 +915,93 @@ class GetFileParams(Params):
     )
 
 
-class GraphOutput(ActionOutput):
-    downloadUrl: str = OutputField(
-        cef_types=["url"],
-        example_values=[
-            "https://test-tenant-name.sharepoint.com/sites/TestSiteName/_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0"
-        ],
-    )
-
-
-class MicrosoftOutput(ActionOutput):
-    graph: GraphOutput
-
-
-class OdataOutput(ActionOutput):
-    context: str = OutputField(
-        cef_types=["url"],
-        example_values=[
-            "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/drive/root/$entity"
-        ],
-    )
-
-
 class ImageOutput(ActionOutput):
-    width: float = OutputField(example_values=[256])
-    height: float = OutputField(example_values=[266])
+    width: float | None = OutputField(example_values=[256])
+    height: float | None = OutputField(example_values=[266])
 
 
 class UserOutput(ActionOutput):
-    displayName: str = OutputField(example_values=["Test User"])
-    email: str = OutputField(
+    displayName: str | None = OutputField(example_values=["Test User"])
+    email: str | None = OutputField(
         cef_types=["email"], example_values=["test_user@tenant-name.ontest.com"]
     )
-    id: str = OutputField(example_values=["eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"])
+    id: str | None = OutputField(example_values=["eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"])
 
 
 class CreatedbyOutput(ActionOutput):
-    user: UserOutput
+    user: UserOutput | None = OutputField()
 
 
 class HashesOutput(ActionOutput):
-    quickXorHash: str = OutputField(example_values=["EIDYEgye8dEx3XhA7xc12GqSwxk="])
+    quickXorHash: str | None = OutputField(example_values=["EIDYEgye8dEx3XhA7xc12GqSwxk="])
 
 
 class FileOutput(ActionOutput):
-    hashes: HashesOutput
-    mimeType: str = OutputField(example_values=["text/plain"])
+    hashes: HashesOutput | None = OutputField()
+    mimeType: str | None = OutputField(example_values=["text/plain"])
 
 
 class FilesysteminfoOutput(ActionOutput):
-    createdDateTime: str = OutputField(example_values=["2022-02-10T15:25:21Z"])
-    lastModifiedDateTime: str = OutputField(example_values=["2022-02-10T15:25:21Z"])
+    createdDateTime: str | None = OutputField(example_values=["2022-02-10T15:25:21Z"])
+    lastModifiedDateTime: str | None = OutputField(example_values=["2022-02-10T15:25:21Z"])
 
 
 class LastmodifiedbyOutput(ActionOutput):
-    user: UserOutput
+    user: UserOutput | None = OutputField()
 
 
 class ParentreferenceOutput(ActionOutput):
-    driveId: str = OutputField(
+    driveId: str | None = OutputField(
         cef_types=["sharepoint drive id"],
         example_values=[
             "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi"
         ],
     )
-    driveType: str = OutputField(example_values=["documentLibrary"])
-    id: str = OutputField(
+    driveType: str | None = OutputField(example_values=["documentLibrary"])
+    id: str | None = OutputField(
         cef_types=["sharepoint drive item id"],
         example_values=["01SNFLYIRDSQLQVWP7EVDKSL3YYUNW6I4G"],
     )
-    name: str = OutputField(example_values=["Playbook-Folder"])
-    path: str = OutputField(example_values=["/drive/root:/test_folder_name"])
-    siteId: str = OutputField(example_values=["dc6f43e9-54fa-4a39-8783-314e3bbbed41"])
+    name: str | None = OutputField(example_values=["Playbook-Folder"])
+    path: str | None = OutputField(example_values=["/drive/root:/test_folder_name"])
+    siteId: str | None = OutputField(example_values=["dc6f43e9-54fa-4a39-8783-314e3bbbed41"])
 
 
 class SharedOutput(ActionOutput):
-    scope: str = OutputField(example_values=["users"])
+    scope: str | None = OutputField(example_values=["users"])
 
 
-class GetFileOutput(ActionOutput):
-    microsoft: MicrosoftOutput
-    odata: OdataOutput
-    image: ImageOutput
-    cTag: str = OutputField(
+class GetFileOutput(PermissiveActionOutput):
+    download_url: str | None = OutputField(
+        alias="@microsoft.graph.downloadUrl",
+        cef_types=["url"],
+        example_values=[
+            "https://test-tenant-name.sharepoint.com/sites/TestSiteName/_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0"
+        ],
+    )
+    context: str | None = OutputField(alias="@odata.context", cef_types=["url"])
+    image: ImageOutput | None = OutputField()
+    cTag: str | None = OutputField(
         example_values=['"c:{C743B2E0-36EB-4C9A-9CE0-190C2FD4DD97},1"']
     )
-    createdBy: CreatedbyOutput
-    createdDateTime: str = OutputField(example_values=["2022-02-10T15:25:21Z"])
-    eTag: str = OutputField(
+    createdBy: CreatedbyOutput | None = OutputField()
+    createdDateTime: str | None = OutputField(example_values=["2022-02-10T15:25:21Z"])
+    eTag: str | None = OutputField(
         example_values=['"{C743B2E0-36EB-4C9A-9CE0-190C2FD4DD97},1"']
     )
-    file: FileOutput
-    fileSystemInfo: FilesysteminfoOutput
-    id: str = OutputField(
+    file: FileOutput | None = OutputField()
+    fileSystemInfo: FilesysteminfoOutput | None = OutputField()
+    id: str | None = OutputField(
         cef_types=["sharepoint drive item id"],
         example_values=["01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX"],
     )
-    lastModifiedBy: LastmodifiedbyOutput
-    lastModifiedDateTime: str = OutputField(example_values=["2022-02-10T15:25:21Z"])
-    name: str = OutputField(example_values=["test_file_name.txt"])
-    parentReference: ParentreferenceOutput
-    shared: SharedOutput
-    size: float = OutputField(example_values=[1422])
-    webUrl: str = OutputField(
+    lastModifiedBy: LastmodifiedbyOutput | None = OutputField()
+    lastModifiedDateTime: str | None = OutputField(example_values=["2022-02-10T15:25:21Z"])
+    name: str | None = OutputField(example_values=["test_file_name.txt"])
+    parentReference: ParentreferenceOutput | None = OutputField()
+    shared: SharedOutput | None = OutputField()
+    size: float | None = OutputField(example_values=[1422])
+    webUrl: str | None = OutputField(
         cef_types=["url"],
         example_values=[
             "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt"
@@ -1023,10 +1013,11 @@ class GetFileOutput(ActionOutput):
     description="Retrieves a file from a SharePoint site",
     action_type="generic",
     read_only=False,
+    summary_type=GetFileSummary,
     verbose="The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
 )
 def get_file(params: GetFileParams, soar: SOARClient, asset: Asset) -> GetFileOutput:
-    raise NotImplementedError()
+    return get_file_impl(params, soar, asset)
 
 
 class RemoveFileParams(Params):
@@ -1046,7 +1037,7 @@ class RemoveFileParams(Params):
 def remove_file(
     params: RemoveFileParams, soar: SOARClient, asset: Asset
 ) -> ActionOutput:
-    raise NotImplementedError()
+    return remove_file_impl(params, soar, asset)
 
 
 class RemoveFolderParams(Params):
@@ -1065,7 +1056,7 @@ class RemoveFolderParams(Params):
 def remove_folder(
     params: RemoveFolderParams, soar: SOARClient, asset: Asset
 ) -> ActionOutput:
-    raise NotImplementedError()
+    return remove_folder_impl(params, soar, asset)
 
 
 if __name__ == "__main__":
