@@ -28,6 +28,11 @@ from .actions.folder_items import (
     ListFolderItemsOutput,
     list_folder_items as list_folder_items_impl,
 )
+from .actions.copy_drive_item import (
+    CopyDriveItemOutput,
+    copy_drive_item as copy_drive_item_impl,
+)
+from .actions.create_folder import create_folder as create_folder_impl
 from .test_connectivity import run_test_connectivity
 
 logger = getLogger()
@@ -116,8 +121,8 @@ class CopyDriveItemParams(Params):
 )
 def copy_drive_item(
     params: CopyDriveItemParams, soar: SOARClient, asset: Asset
-) -> ActionOutput:
-    raise NotImplementedError()
+) -> CopyDriveItemOutput:
+    return copy_drive_item_impl(params, soar, asset)
 
 
 class CreateFolderParams(Params):
@@ -131,17 +136,6 @@ class CreateFolderParams(Params):
         description="ID of drive to create folder in. If no id is specified the default drive will be used",
         primary=True,
         cef_types=["sharepoint drive id"],
-    )
-
-
-class OdataOutput(ActionOutput):
-    context: str = OutputField(
-        example_values=[
-            "https://test.microsoft.com/v1.0/$metadata#sites('test.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/drive/items('01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N')/children/$entity"
-        ]
-    )
-    etag: str = OutputField(
-        example_values=['"{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},1"']
     )
 
 
@@ -219,7 +213,16 @@ class SharedOutput(ActionOutput):
 
 
 class CreateFolderOutput(ActionOutput):
-    odata: OdataOutput
+    context: str = OutputField(
+        alias="@odata.context",
+        example_values=[
+            "https://test.microsoft.com/v1.0/$metadata#sites('test.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/drive/items('01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N')/children/$entity"
+        ],
+    )
+    etag: str = OutputField(
+        alias="@odata.etag",
+        example_values=['"{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},1"'],
+    )
     cTag: str = OutputField(
         example_values=['"c:{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},0"']
     )
@@ -249,7 +252,7 @@ class CreateFolderOutput(ActionOutput):
 def create_folder(
     params: CreateFolderParams, soar: SOARClient, asset: Asset
 ) -> CreateFolderOutput:
-    raise NotImplementedError()
+    return create_folder_impl(params, soar, asset)
 
 
 class ListFolderItemsParams(Params):

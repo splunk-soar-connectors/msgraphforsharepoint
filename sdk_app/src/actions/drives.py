@@ -86,7 +86,12 @@ def list_drives(
 
 def drive_children_endpoint(site_id: str, drive_id: str | None) -> str:
     """Build the legacy default-drive or named-drive children endpoint."""
+    return f"{drive_root_endpoint(site_id, drive_id)}/items/root/children"
+
+
+def drive_root_endpoint(site_id: str, drive_id: str | None) -> str:
+    """Build the legacy default-drive or named-drive root endpoint."""
     if drive_id:
         encoded_drive_id = encode_path_segment(drive_id)
-        return f"/sites/{site_id}/drives/{encoded_drive_id}/items/root/children"
-    return f"/sites/{site_id}/drive/items/root/children"
+        return f"/sites/{site_id}/drives/{encoded_drive_id}"
+    return f"/sites/{site_id}/drive"
