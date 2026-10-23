@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from soar_sdk.abstract import SOARClient
 from soar_sdk.app import App
 from soar_sdk.params import Param, Params, OnPollParams, OnESPollParams
-from soar_sdk.action_results import ActionOutput, OutputField
+from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.asset import BaseAsset, AssetField, FieldCategory
 from soar_sdk.logging import getLogger
 from soar_sdk.models.container import Container
@@ -33,6 +33,12 @@ from .actions.copy_drive_item import (
     copy_drive_item as copy_drive_item_impl,
 )
 from .actions.create_folder import create_folder as create_folder_impl
+from .actions.lists import (
+    GetListSummary,
+    ListListsSummary,
+    get_list as get_list_impl,
+    list_lists as list_lists_impl,
+)
 from .test_connectivity import run_test_connectivity
 
 logger = getLogger()
@@ -363,10 +369,6 @@ class ListListsParams(Params):
     limit: float | None = Param(description="Maximum number of sites to return")
 
 
-class OdataOutput(ActionOutput):
-    etag: str = OutputField(example_values=['"4896b66a-659c-4fce-a148-0b26bd718f68,5"'])
-
-
 class UserOutput(ActionOutput):
     displayName: str = OutputField(example_values=["Test User"])
     email: str = OutputField(
@@ -398,7 +400,7 @@ class ParentreferenceOutput(ActionOutput):
 
 
 class ListListsOutput(ActionOutput):
-    odata: OdataOutput
+    etag: str = OutputField(alias="@odata.etag")
     createdBy: CreatedbyOutput
     createdDateTime: str = OutputField(example_values=["2022-02-24T05:38:53Z"])
     description: str = OutputField(example_values=["Test List Description"])
@@ -427,11 +429,12 @@ class ListListsOutput(ActionOutput):
     description="Fetch the available lists under a SharePoint site",
     action_type="investigate",
     verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
+    summary_type=ListListsSummary,
 )
 def list_lists(
     params: ListListsParams, soar: SOARClient, asset: Asset
-) -> ListListsOutput:
-    raise NotImplementedError()
+) -> list[ListListsOutput]:
+    return list_lists_impl(params, soar, asset)
 
 
 class GetListParams(Params):
@@ -441,10 +444,6 @@ class GetListParams(Params):
         cef_types=["sharepoint list id", "sharepoint list name"],
     )
     limit: float | None = Param(description="Maximum number of list items to return")
-
-
-class OdataOutput(ActionOutput):
-    etag: str = OutputField(example_values=['"fe7e1a7c-a66a-4944-b1f1-2b7c7499603c,1"'])
 
 
 class CalculatedOutput(ActionOutput):
@@ -464,53 +463,44 @@ class DatetimeOutput(ActionOutput):
 
 
 class LookupOutput(ActionOutput):
-    allowMultipleValues: bool
-    allowUnlimitedLength: bool
-    columnName: str = OutputField(example_values=["ItemChildCount"])
-    listId: str
-    primaryLookupColumnId: str = OutputField(example_values=["ID"])
+    allowMultipleValues: bool | None = OutputField()
+    allowUnlimitedLength: bool | None = OutputField()
+    columnName: str | None = OutputField(example_values=["ItemChildCount"])
+    listId: str | None = OutputField()
+    primaryLookupColumnId: str | None = OutputField(example_values=["ID"])
 
 
 class PersonorgroupOutput(ActionOutput):
-    allowMultipleSelection: bool
-    chooseFromType: str = OutputField(example_values=["peopleAndGroups"])
-    displayAs: str = OutputField(example_values=["nameWithPresence"])
+    allowMultipleSelection: bool | None = OutputField()
+    chooseFromType: str | None = OutputField(example_values=["peopleAndGroups"])
+    displayAs: str | None = OutputField(example_values=["nameWithPresence"])
 
 
 class TextOutput(ActionOutput):
-    allowMultipleLines: bool
-    appendChangesToExistingText: bool
-    linesForEditing: float = OutputField(example_values=[0])
-    maxLength: float = OutputField(example_values=[255])
-    textType: str = OutputField(example_values=["plain"])
+    allowMultipleLines: bool | None = OutputField()
+    appendChangesToExistingText: bool | None = OutputField()
+    linesForEditing: float | None = OutputField(example_values=[0])
+    maxLength: float | None = OutputField(example_values=[255])
+    textType: str | None = OutputField(example_values=["plain"])
 
 
 class ColumnsOutput(ActionOutput):
-    calculated: CalculatedOutput
-    choice: ChoiceOutput
+    calculated: CalculatedOutput | None = OutputField()
+    choice: ChoiceOutput | None = OutputField()
     columnGroup: str = OutputField(example_values=["Custom Columns"])
-    dateTime: DatetimeOutput
+    dateTime: DatetimeOutput | None = OutputField()
     description: str = OutputField(example_values=["Test List Description"])
     displayName: str = OutputField(example_values=["ID"])
-    enforceUniqueValues: bool
-    hidden: bool
+    enforceUniqueValues: bool | None = OutputField()
+    hidden: bool | None = OutputField()
     id: str = OutputField(example_values=["1d22ea11-1e32-424e-89ab-9fedbadb6ce1"])
-    indexed: bool
-    lookup: LookupOutput
+    indexed: bool | None = OutputField()
+    lookup: LookupOutput | None = OutputField()
     name: str = OutputField(example_values=["ID"])
-    personOrGroup: PersonorgroupOutput
-    readOnly: bool
-    required: bool
-    text: TextOutput
-
-
-class Columns_OdataOutput(ActionOutput):
-    context: str = OutputField(
-        cef_types=["url"],
-        example_values=[
-            "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/columns"
-        ],
-    )
+    personOrGroup: PersonorgroupOutput | None = OutputField()
+    readOnly: bool | None = OutputField()
+    required: bool | None = OutputField()
+    text: TextOutput | None = OutputField()
 
 
 class UserOutput(ActionOutput):
@@ -540,8 +530,8 @@ class InterviewersOutput(ActionOutput):
     LookupValue: str = OutputField(example_values=["test"])
 
 
-class FieldsOutput(ActionOutput):
-    odata: OdataOutput
+class FieldsOutput(PermissiveActionOutput):
+    etag: str = OutputField(alias="@odata.etag")
     AppAuthorLookupId: str = OutputField(example_values=["8"])
     AppEditorLookupId: str = OutputField(example_values=["8"])
     ApplicationDate: str = OutputField(example_values=["2022-02-03T08:00:00Z"])
@@ -582,21 +572,17 @@ class FieldsOutput(ActionOutput):
     id: str = OutputField(example_values=["1"])
 
 
-class Fields_OdataOutput(ActionOutput):
-    context: str = OutputField(
-        cef_types=["url"],
-        example_values=[
-            "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items('1')/fields/$entity"
-        ],
-    )
-
-
 class ApplicationOutput(ActionOutput):
     displayName: str = OutputField(example_values=["test"])
     id: str = OutputField(example_values=["71b307af-1dcb-4e39-9640-5129afc83162"])
 
 
 class LastmodifiedbyOutput(ActionOutput):
+    user: UserOutput
+
+
+class ItemLastModifiedByOutput(ActionOutput):
+    application: ApplicationOutput
     user: UserOutput
 
 
@@ -608,31 +594,29 @@ class ParentreferenceOutput(ActionOutput):
     )
 
 
+class ItemParentReferenceOutput(ActionOutput):
+    id: str = OutputField(cef_types=["sharepoint item id"])
+    siteId: str = OutputField()
+
+
 class ItemsOutput(ActionOutput):
-    odata: OdataOutput
+    etag: str = OutputField(alias="@odata.etag")
     contentType: ContenttypeOutput
     createdBy: CreatedbyOutput
     createdDateTime: str = OutputField(example_values=["2022-02-08T12:29:27Z"])
     eTag: str = OutputField(example_values=['"fe7e1a7c-a66a-4944-b1f1-2b7c7499603c,1"'])
     fields: FieldsOutput
-    fields_odata: Fields_OdataOutput
+    fields_context: str = OutputField(
+        alias="fields@odata.context", cef_types=["url"]
+    )
     id: str = OutputField(example_values=["1"])
-    lastModifiedBy: LastmodifiedbyOutput
+    lastModifiedBy: ItemLastModifiedByOutput
     lastModifiedDateTime: str = OutputField(example_values=["2022-02-08T12:29:27Z"])
-    parentReference: ParentreferenceOutput
+    parentReference: ItemParentReferenceOutput
     webUrl: str = OutputField(
         cef_types=["url"],
         example_values=[
             "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name/1_.000"
-        ],
-    )
-
-
-class Items_OdataOutput(ActionOutput):
-    context: str = OutputField(
-        cef_types=["url"],
-        example_values=[
-            "https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items"
         ],
     )
 
@@ -644,9 +628,12 @@ class ListOutput(ActionOutput):
 
 
 class GetListOutput(ActionOutput):
-    odata: OdataOutput
+    context: str = OutputField(alias="@odata.context", cef_types=["url"])
+    etag: str = OutputField(alias="@odata.etag")
     columns: list[ColumnsOutput]
-    columns_odata: Columns_OdataOutput
+    columns_context: str = OutputField(
+        alias="columns@odata.context", cef_types=["url"]
+    )
     createdBy: CreatedbyOutput
     createdDateTime: str = OutputField(example_values=["2022-02-08T12:29:09Z"])
     description: str = OutputField(example_values=["Test List Description"])
@@ -659,7 +646,7 @@ class GetListOutput(ActionOutput):
         example_values=["4961c496-52c1-49bd-b1fa-e1b2e976256c"],
     )
     items: list[ItemsOutput]
-    items_odata: Items_OdataOutput
+    items_context: str = OutputField(alias="items@odata.context", cef_types=["url"])
     lastModifiedBy: LastmodifiedbyOutput
     lastModifiedDateTime: str = OutputField(example_values=["2022-02-16T06:03:09Z"])
     list: ListOutput
@@ -677,9 +664,10 @@ class GetListOutput(ActionOutput):
     description="Retrieves a list from a SharePoint Site",
     action_type="investigate",
     verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
+    summary_type=GetListSummary,
 )
 def get_list(params: GetListParams, soar: SOARClient, asset: Asset) -> GetListOutput:
-    raise NotImplementedError()
+    return get_list_impl(params, soar, asset)
 
 
 class AddItemParams(Params):
