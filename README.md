@@ -4,7 +4,7 @@ Publisher: Splunk <br>
 Connector Version: 1.5.7 <br>
 Product Vendor: Microsoft <br>
 Product Name: SharePoint <br>
-Minimum Product Version: 6.3.0
+Minimum Product Version: 8.7.0
 
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
 
