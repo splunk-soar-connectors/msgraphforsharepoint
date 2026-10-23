@@ -7,7 +7,7 @@
     "logo": "logo_msgraphforsharepoint.svg",
     "logo_dark": "logo_msgraphforsharepoint_dark.svg",
     "product_name": "SharePoint",
-    "python_version": "3.9, 3.13",
+    "python_version": "3.13",
     "product_version_regex": ".*",
     "publisher": "Splunk",
     "license": "Copyright (c) 2022-2026 Splunk Inc.",
@@ -17,7 +17,7 @@
     "main_module": "msgraphforsharepoint_connector.py",
     "rest_handler": "msgraphforsharepoint_connector.handle_request",
     "fips_compliant": true,
-    "min_phantom_version": "6.3.0",
+    "min_phantom_version": "8.7.0",
     "contributors": [
         {
             "name": "import-au"
@@ -35,35 +35,41 @@
             "description": "Tenant ID",
             "data_type": "string",
             "required": true,
-            "order": 0
+            "order": 0,
+            "category": "connectivity"
         },
         "site_id": {
             "description": "SharePoint Site ID",
             "data_type": "string",
-            "order": 1
+            "order": 1,
+            "category": "connectivity"
         },
         "endpoint_test_connectivity": {
             "description": "Endpoint for test connectivity (Valid format: /sites/{hostname}:/{site-server-relative-url})",
             "data_type": "string",
             "order": 2,
-            "default": "/sites/root"
+            "default": "/sites/root",
+            "category": "connectivity"
         },
         "admin_consent": {
             "description": "Admin Consent Already Provided",
             "data_type": "boolean",
-            "order": 3
+            "order": 3,
+            "category": "connectivity"
         },
         "client_id": {
             "description": "Client/Application ID",
             "data_type": "string",
             "required": true,
-            "order": 4
+            "order": 4,
+            "category": "connectivity"
         },
         "client_secret": {
             "description": "Client Secret",
             "data_type": "password",
             "required": true,
-            "order": 5
+            "order": 5,
+            "category": "connectivity"
         }
     },
     "actions": [
