@@ -13,6 +13,21 @@ from soar_sdk.models.finding import Finding
 from soar_sdk.models.attachment_input import AttachmentInput
 
 from .actions.sites import SitesSummary, list_sites as list_sites_impl
+from .actions.drives import (
+    DrivesSummary,
+    ListDrivesOutput,
+    list_drives as list_drives_impl,
+)
+from .actions.drive_children import (
+    DriveChildrenSummary,
+    ListDriveChildrenOutput,
+    list_drive_children as list_drive_children_impl,
+)
+from .actions.folder_items import (
+    FolderItemsSummary,
+    ListFolderItemsOutput,
+    list_folder_items as list_folder_items_impl,
+)
 from .test_connectivity import run_test_connectivity
 
 logger = getLogger()
@@ -246,178 +261,36 @@ class ListFolderItemsParams(Params):
     folder_path: str = Param(description="Path of the folder to query", primary=True)
 
 
-class FileOutput(ActionOutput):
-    mimeType: str = OutputField(example_values=["video/mp4"])
-
-
-class FolderOutput(ActionOutput):
-    childCount: float = OutputField(example_values=[5])
-
-
-class SharedOutput(ActionOutput):
-    scope: str = OutputField(example_values=["users"])
-    webUrl: str = OutputField(
-        example_values=[
-            "https://test-tenant-name.sharepoint.com/sites/SiteName/documents/example.mp4"
-        ]
-    )
-
-
-class ParentreferenceOutput(ActionOutput):
-    driveType: str = OutputField(example_values=["documentLibrary"])
-    id: str = OutputField(
-        cef_types=["sharepoint drive item id"],
-        example_values=["01WJINUWV6Y2GOVW7725BZO354PWSELRRZ"],
-    )
-    name: str = OutputField(example_values=["Shared Documents"])
-    path: str = OutputField(
-        example_values=[
-            "/drives/b!P_PLxcYmjkiP68Fx-chtHkdhtZd0TeZPokKrsyopCWbKblNpI0pzRa5Mk398L4cc/root:"
-        ]
-    )
-    siteId: str = OutputField(example_values=["c5cbf33f-26c6-488e-8feb-c171f9c86d1e"])
-
-
-class FilesysteminfoOutput(ActionOutput):
-    createdDateTime: str = OutputField(example_values=["2020-07-28T20:15:33Z"])
-    lastModifiedDateTime: str = OutputField(example_values=["2020-07-28T20:15:33Z"])
-
-
-class UserOutput(ActionOutput):
-    displayName: str = OutputField(example_values=["Test User"])
-    email: str = OutputField(
-        cef_types=["email"], example_values=["test_user@tenant-name.ontest.com"]
-    )
-    id: str = OutputField(example_values=["eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"])
-
-
-class CreatedbyOutput(ActionOutput):
-    user: UserOutput
-
-
-class LastmodifiedbyOutput(ActionOutput):
-    user: UserOutput
-
-
-class GraphOutput(ActionOutput):
-    downloadUrl: str = OutputField(
-        cef_types=["url"],
-        example_values=[
-            "https://test.sharepoint.com/sites/Test/_layouts/15/download.aspx?UniqueId=d5bfdd47-e0e8-4a7e-99a3-c96f30191b12&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvcGhhbnRvbWVuZ2luZWVyaW5nMi5zaGFyZXBvaW50LmNvbUAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJpc3MiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAiLCJuYmYiOiIxNjk5MjU1NDY4IiwiZXhwIjoiMTY5OTI1OTA2OCIsImVuZHBvaW50dXJsIjoiM1hObzdUK3U4YnFXUU1DTko0OXdiQXVDZ01ad0FNRDh3ckZvVC9yWkxKbz0iLCJlbmRwb2ludHVybExlbmd0aCI6IjE0OCIsImlzbG9vcGJhY2siOiJUcnVlIiwiY2lkIjoiUS9ZVVdDcFQvMEsrQThFOWtxeEIvQT09IiwidmVyIjoiaGFzaGVkcHJvb2Z0b2tlbiIsInNpdGVpZCI6IlpHTTJaalF6WlRrdE5UUm1ZUzAwWVRNNUxUZzNPRE10TXpFMFpUTmlZbUpsWkRReCIsImFwcF9kaXNwbGF5bmFtZSI6ImlnaGVsYW5pX3NoYXJlcG9pbnRfdGVzdCIsIm5hbWVpZCI6IjcxYjMwN2FmLTFkY2ItNGUzOS05NjQwLTUxMjlhZmM4MzE2MkAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJyb2xlcyI6ImFsbGZpbGVzLndyaXRlIHNlbGVjdGVkc2l0ZXMgZ3JvdXAucmVhZCBhbGxzaXRlcy5yZWFkIGFsbHNpdGVzLndyaXRlIGdyb3VwLndyaXRlIGFsbGZpbGVzLnJlYWQgYWxsc2l0ZXMuZnVsbGNvbnRyb2wgYWxscHJvZmlsZXMucmVhZCIsInR0IjoiMSIsImlwYWRkciI6IjQwLjEyNi40LjQwIn0.y13AkyxdRPgziPhIV8_FFBGjtZGHgNpgkW0GU7MMUfA&ApiVersion=2.0"
-        ],
-    )
-
-
-class MicrosoftOutput(ActionOutput):
-    graph: GraphOutput
-
-
-class ListFolderItemsOutput(ActionOutput):
-    id: str = OutputField(example_values=["01SNFLYIQZLCKT6RR4OJEYA47OGVIKB7DB"])
-    cTag: str = OutputField(
-        example_values=["'c:{3F967819-3D56-4972-8073-EF3550A1TC34},1'"]
-    )
-    eTag: str = OutputField(
-        example_values=["'{3F967819-3D56-4972-8073-EF3550A1TC34},1'"]
-    )
-    file: FileOutput
-    folder: FolderOutput
-    name: str = OutputField(example_values=["example.mp4"])
-    size: float = OutputField(example_values=[157000])
-    shared: SharedOutput
-    parentReference: ParentreferenceOutput
-    fileSystemInfo: FilesysteminfoOutput
-    createdBy: CreatedbyOutput
-    lastModifiedBy: LastmodifiedbyOutput
-    createdDateTime: str = OutputField(example_values=["2022-02-24T05:38:53Z"])
-    microsoft: MicrosoftOutput
-    lastModifiedDateTime: str = OutputField(example_values=["2020-07-28T20:15:33Z"])
 
 
 @app.action(
     description="List items in a folder",
     action_type="investigate",
     verbose="List all direct children in a folder.",
+    summary_type=FolderItemsSummary,
 )
 def list_folder_items(
     params: ListFolderItemsParams, soar: SOARClient, asset: Asset
-) -> ListFolderItemsOutput:
-    raise NotImplementedError()
+) -> list[ListFolderItemsOutput]:
+    return list_folder_items_impl(params, soar, asset)
 
 
 class ListDrivesParams(Params):
     limit: float | None = Param(description="Maximum number of drives to return")
 
 
-class UserOutput(ActionOutput):
-    displayName: str = OutputField(example_values=["Test User"])
-    email: str = OutputField(
-        cef_types=["email"], example_values=["test_user@tenant-name.ontest.com"]
-    )
-    id: str = OutputField(example_values=["eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"])
-
-
-class GroupOutput(ActionOutput):
-    id: str = OutputField(example_values=["eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"])
-    email: str = OutputField(
-        cef_types=["email"], example_values=["test_group@tenant-name.ontest.com"]
-    )
-    displayName: str = OutputField(example_values=["Test Group"])
-
-
-class OwnerOutput(ActionOutput):
-    user: UserOutput
-    group: GroupOutput
-
-
-class QuotaOutput(ActionOutput):
-    used: float = OutputField(example_values=[8546734])
-    state: str = OutputField(example_values=["normal"])
-    total: float = OutputField(example_values=[274877685])
-    deleted: float = OutputField(example_values=[0])
-    remaining: float = OutputField(example_values=[266330951])
-
-
-class CreatedbyOutput(ActionOutput):
-    user: UserOutput
-
-
-class LastmodifiedbyOutput(ActionOutput):
-    user: UserOutput
-
-
-class ListDrivesOutput(ActionOutput):
-    id: str = OutputField(
-        example_values=[
-            "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpuWT-s6xSLQ6CTR3DzR9nz"
-        ]
-    )
-    name: str = OutputField(example_values=["Custom Library"])
-    owner: OwnerOutput
-    quota: QuotaOutput
-    createdBy: CreatedbyOutput
-    createdDateTime: str = OutputField(example_values=["2022-02-24T05:38:53Z"])
-    description: str = OutputField(example_values=["Test List Description"])
-    driveType: str = OutputField(example_values=["documentLibrary"])
-    lastModifiedBy: LastmodifiedbyOutput
-    lastModifiedDateTime: str = OutputField(example_values=["2022-03-03T13:43:06Z"])
-    webUrl: str = OutputField(
-        cef_types=["url"],
-        example_values=[
-            "https://test-tenant-name.sharepoint.com/sites/SiteName/Lists/ListName"
-        ],
-    )
 
 
 @app.action(
     description="Fetch the available drives (libraries) under a SharePoint site",
     action_type="investigate",
     verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
+    summary_type=DrivesSummary,
 )
 def list_drives(
     params: ListDrivesParams, soar: SOARClient, asset: Asset
-) -> ListDrivesOutput:
-    raise NotImplementedError()
+) -> list[ListDrivesOutput]:
+    return list_drives_impl(params, soar, asset)
 
 
 class ListDriveChildrenParams(Params):
@@ -428,129 +301,17 @@ class ListDriveChildrenParams(Params):
     )
 
 
-class GraphOutput(ActionOutput):
-    downloadUrl: str = OutputField(
-        cef_types=["url"],
-        example_values=[
-            "https://test.sharepoint.com/sites/Test/_layouts/15/download.aspx?UniqueId=d5bfdd47-e0e8-4a7e-99a3-c96f30191b12&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvcGhhbnRvbWVuZ2luZWVyaW5nMi5zaGFyZXBvaW50LmNvbUAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJpc3MiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAiLCJuYmYiOiIxNjk5MjU1NDY4IiwiZXhwIjoiMTY5OTI1OTA2OCIsImVuZHBvaW50dXJsIjoiM1hObzdUK3U4YnFXUU1DTko0OXdiQXVDZ01ad0FNRDh3ckZvVC9yWkxKbz0iLCJlbmRwb2ludHVybExlbmd0aCI6IjE0OCIsImlzbG9vcGJhY2siOiJUcnVlIiwiY2lkIjoiUS9ZVVdDcFQvMEsrQThFOWtxeEIvQT09IiwidmVyIjoiaGFzaGVkcHJvb2Z0b2tlbiIsInNpdGVpZCI6IlpHTTJaalF6WlRrdE5UUm1ZUzAwWVRNNUxUZzNPRE10TXpFMFpUTmlZbUpsWkRReCIsImFwcF9kaXNwbGF5bmFtZSI6ImlnaGVsYW5pX3NoYXJlcG9pbnRfdGVzdCIsIm5hbWVpZCI6IjcxYjMwN2FmLTFkY2ItNGUzOS05NjQwLTUxMjlhZmM4MzE2MkAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJyb2xlcyI6ImFsbGZpbGVzLndyaXRlIHNlbGVjdGVkc2l0ZXMgZ3JvdXAucmVhZCBhbGxzaXRlcy5yZWFkIGFsbHNpdGVzLndyaXRlIGdyb3VwLndyaXRlIGFsbGZpbGVzLnJlYWQgYWxsc2l0ZXMuZnVsbGNvbnRyb2wgYWxscHJvZmlsZXMucmVhZCIsInR0IjoiMSIsImlwYWRkciI6IjQwLjEyNi40LjQwIn0.y13AkyxdRPgziPhIV8_FFBGjtZGHgNpgkW0GU7MMUfA&ApiVersion=2.0"
-        ],
-    )
-
-
-class MicrosoftOutput(ActionOutput):
-    graph: GraphOutput
-
-
-class ImageOutput(ActionOutput):
-    width: float = OutputField(example_values=[1752])
-    height: float = OutputField(example_values=[1244])
-
-
-class UserOutput(ActionOutput):
-    displayName: str = OutputField(example_values=["SharePoint App"])
-    email: str = OutputField(example_values=["test@gmail.com"])
-    id: str = OutputField(example_values=["eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"])
-
-
-class CreatedbyOutput(ActionOutput):
-    user: UserOutput
-
-
-class DecoratorOutput(ActionOutput):
-    iconColor: str = OutputField(example_values=["darkGreen"])
-
-
-class HashesOutput(ActionOutput):
-    quickXorHash: str = OutputField(example_values=["8JpxaQB3wX1/FkQ5Gt3prUbUUFU="])
-
-
-class FileOutput(ActionOutput):
-    hashes: HashesOutput
-    mimeType: str = OutputField(example_values=["application/vnd.ms-excel"])
-
-
-class FilesysteminfoOutput(ActionOutput):
-    createdDateTime: str = OutputField(example_values=["2020-07-28T20:15:33Z"])
-    lastModifiedDateTime: str = OutputField(example_values=["2020-07-28T20:15:33Z"])
-
-
-class FolderOutput(ActionOutput):
-    childCount: float = OutputField(example_values=[1])
-
-
-class ApplicationOutput(ActionOutput):
-    displayName: str = OutputField(example_values=["Yammer"])
-    id: str = OutputField(example_values=["00000005-0000-0ff1-ce00-000000000000"])
-
-
-class LastmodifiedbyOutput(ActionOutput):
-    application: ApplicationOutput
-    user: UserOutput
-
-
-class ParentreferenceOutput(ActionOutput):
-    driveId: str = OutputField(
-        cef_types=["sharepoint drive id"],
-        example_values=[
-            "b!P_PLxcYmjkiP68Fx-chtHkdhtZd0TeZPokKrsyopCWbKblNpI0pzRa5Mk398L4cc"
-        ],
-    )
-    driveType: str = OutputField(example_values=["documentLibrary"])
-    id: str = OutputField(
-        cef_types=["sharepoint drive item id"],
-        example_values=["01WJINUWV6Y2GOVW7725BZO354PWSELRRZ"],
-    )
-    name: str = OutputField(example_values=["Shared Documents"])
-    path: str = OutputField(
-        example_values=[
-            "/drives/b!P_PLxcYmjkiP68Fx-chtHkdhtZd0TeZPokKrsyopCWbKblNpI0pzRa5Mk398L4cc/root:"
-        ]
-    )
-    siteId: str = OutputField(example_values=["c5cbf33f-26c6-488e-8feb-c171f9c86d1e"])
-
-
-class SharedOutput(ActionOutput):
-    scope: str = OutputField(example_values=["users"])
-
-
-class SpecialfolderOutput(ActionOutput):
-    name: str = OutputField(example_values=["apps"])
-
-
-class ListDriveChildrenOutput(ActionOutput):
-    microsoft: MicrosoftOutput
-    image: ImageOutput
-    cTag: str = OutputField(
-        example_values=['"c:{E1E93D43-F034-489F-8304-BAF7F064A30D},0"']
-    )
-    createdBy: CreatedbyOutput
-    createdDateTime: str = OutputField(example_values=["2020-07-28T20:15:33Z"])
-    decorator: DecoratorOutput
-    eTag: str = OutputField(
-        example_values=['"{E1E93D43-F034-489F-8304-BAF7F064A30D},1"']
-    )
-    file: FileOutput
-    fileSystemInfo: FilesysteminfoOutput
-    folder: FolderOutput
-    id: str = OutputField(cef_types=["sharepoint drive item id"])
-    lastModifiedBy: LastmodifiedbyOutput
-    lastModifiedDateTime: str = OutputField(example_values=["2020-07-28T20:15:33Z"])
-    name: str
-    parentReference: ParentreferenceOutput
-    shared: SharedOutput
-    size: float = OutputField(example_values=[775])
-    specialFolder: SpecialfolderOutput
-    webUrl: str = OutputField(cef_types=["url"])
 
 
 @app.action(
     description="List the items in a drive folder by drive ID or search for a specific file name if provided",
     action_type="investigate",
+    summary_type=DriveChildrenSummary,
 )
 def list_drive_children(
     params: ListDriveChildrenParams, soar: SOARClient, asset: Asset
-) -> ListDriveChildrenOutput:
-    raise NotImplementedError()
+) -> list[ListDriveChildrenOutput]:
+    return list_drive_children_impl(params, soar, asset)
 
 
 class ListSitesParams(Params):
