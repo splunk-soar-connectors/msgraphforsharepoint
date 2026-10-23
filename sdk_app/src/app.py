@@ -39,6 +39,11 @@ from .actions.lists import (
     get_list as get_list_impl,
     list_lists as list_lists_impl,
 )
+from .actions.list_items import (
+    ListItemSummary,
+    add_item as add_item_impl,
+    update_item as update_item_impl,
+)
 from .test_connectivity import run_test_connectivity
 
 logger = getLogger()
@@ -696,7 +701,7 @@ class CreatedbyOutput(ActionOutput):
     user: UserOutput
 
 
-class FieldsOutput(ActionOutput):
+class FieldsOutput(PermissiveActionOutput):
     odata: OdataOutput
     AppAuthorLookupId: str
     AppEditorLookupId: str
@@ -775,9 +780,10 @@ class AddItemOutput(ActionOutput):
     description="Add an item to a list on a SharePoint Site",
     action_type="generic",
     read_only=False,
+    summary_type=ListItemSummary,
 )
 def add_item(params: AddItemParams, soar: SOARClient, asset: Asset) -> AddItemOutput:
-    raise NotImplementedError()
+    return add_item_impl(params, soar, asset)
 
 
 class UpdateItemParams(Params):
@@ -811,7 +817,7 @@ class CreatedbyOutput(ActionOutput):
     user: UserOutput
 
 
-class FieldsOutput(ActionOutput):
+class FieldsOutput(PermissiveActionOutput):
     odata: OdataOutput
     AppAuthorLookupId: str
     AppEditorLookupId: str
@@ -886,11 +892,12 @@ class UpdateItemOutput(ActionOutput):
     description="Update an item in a list on a SharePoint Site",
     action_type="generic",
     read_only=False,
+    summary_type=ListItemSummary,
 )
 def update_item(
     params: UpdateItemParams, soar: SOARClient, asset: Asset
 ) -> UpdateItemOutput:
-    raise NotImplementedError()
+    return update_item_impl(params, soar, asset)
 
 
 class GetFileParams(Params):
