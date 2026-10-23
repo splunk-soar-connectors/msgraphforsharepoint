@@ -12,6 +12,9 @@ from soar_sdk.models.artifact import Artifact
 from soar_sdk.models.finding import Finding
 from soar_sdk.models.attachment_input import AttachmentInput
 
+from .actions.sites import SitesSummary, list_sites as list_sites_impl
+from .test_connectivity import run_test_connectivity
+
 logger = getLogger()
 
 
@@ -61,7 +64,7 @@ app = App(
 
 @app.test_connectivity()
 def test_connectivity(soar: SOARClient, asset: Asset) -> None:
-    raise NotImplementedError()
+    run_test_connectivity(soar, asset)
 
 
 class CopyDriveItemParams(Params):
@@ -584,11 +587,12 @@ class ListSitesOutput(ActionOutput):
     description="Fetch the details of the SharePoint sites",
     action_type="investigate",
     verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
+    summary_type=SitesSummary,
 )
 def list_sites(
     params: ListSitesParams, soar: SOARClient, asset: Asset
-) -> ListSitesOutput:
-    raise NotImplementedError()
+) -> list[ListSitesOutput]:
+    return list_sites_impl(params, soar, asset)
 
 
 class ListListsParams(Params):
