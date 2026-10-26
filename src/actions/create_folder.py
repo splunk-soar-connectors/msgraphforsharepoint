@@ -1,7 +1,7 @@
 """SDK action boundary for the SharePoint create_folder action."""
 
 import httpx
-from soar_sdk.action_results import ActionOutput, OutputField
+from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.params import Params, Param
 import json
 from soar_sdk.abstract import SOARClient
@@ -27,43 +27,43 @@ class CreateFolderParams(Params):
     )
 
 
-class CommentingdisabledOutput(ActionOutput):
+class CommentingdisabledOutput(PermissiveActionOutput):
     isDisabled: bool
 
 
-class CommentsettingsOutput(ActionOutput):
+class CommentsettingsOutput(PermissiveActionOutput):
     commentingDisabled: CommentingdisabledOutput
 
 
-class ApplicationOutput(ActionOutput):
+class ApplicationOutput(PermissiveActionOutput):
     displayName: str = OutputField(example_values=["sharepoint_test"])
     id: str = OutputField(example_values=["71b307af-1dcb-4e39-9640-5129afc83162"])
 
 
-class UserOutput(ActionOutput):
+class UserOutput(PermissiveActionOutput):
     displayName: str = OutputField(example_values=["SharePoint App"])
 
 
-class CreatedbyOutput(ActionOutput):
+class CreatedbyOutput(PermissiveActionOutput):
     application: ApplicationOutput
     user: UserOutput
 
 
-class FilesysteminfoOutput(ActionOutput):
+class FilesysteminfoOutput(PermissiveActionOutput):
     createdDateTime: str = OutputField(example_values=["2023-10-25T08:55:48Z"])
     lastModifiedDateTime: str = OutputField(example_values=["2023-10-25T08:55:48Z"])
 
 
-class FolderOutput(ActionOutput):
+class FolderOutput(PermissiveActionOutput):
     childCount: float = OutputField(example_values=[0])
 
 
-class LastmodifiedbyOutput(ActionOutput):
+class LastmodifiedbyOutput(PermissiveActionOutput):
     application: ApplicationOutput
     user: UserOutput
 
 
-class SharepointidsOutput(ActionOutput):
+class SharepointidsOutput(PermissiveActionOutput):
     listId: str = OutputField(example_values=["498fd15d-ef79-4c0b-8ac4-c4ea27ed8be2"])
     listItemUniqueId: str = OutputField(
         example_values=["916162a1-5e65-41c9-9ebe-a4bb86d8d76d"]
@@ -76,7 +76,7 @@ class SharepointidsOutput(ActionOutput):
     webId: str = OutputField(example_values=["c42b48c4-59b9-48f1-b96e-e8145b5539fa"])
 
 
-class ParentreferenceOutput(ActionOutput):
+class ParentreferenceOutput(PermissiveActionOutput):
     driveId: str = OutputField(
         cef_types=["sharepoint drive id"],
         example_values=[
@@ -96,11 +96,11 @@ class ParentreferenceOutput(ActionOutput):
     sharepointIds: SharepointidsOutput
 
 
-class SharedOutput(ActionOutput):
+class SharedOutput(PermissiveActionOutput):
     scope: str = OutputField(example_values=["unknown"])
 
 
-class CreateFolderOutput(ActionOutput):
+class CreateFolderOutput(PermissiveActionOutput):
     context: str = OutputField(
         alias="@odata.context",
         example_values=[

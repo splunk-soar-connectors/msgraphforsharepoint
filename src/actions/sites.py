@@ -4,7 +4,7 @@ import httpx
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
 from soar_sdk.exceptions import ActionFailure
-from soar_sdk.action_results import ActionOutput, OutputField
+from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from ..auth import get_graph_client
 from ..graph_response import GraphResponseError, get_graph_response
 from ._limits import validate_limit
@@ -19,13 +19,13 @@ class ListSitesParams(Params):
     limit: float | None = Param(description="Maximum number of sites to return")
 
 
-class SitecollectionOutput(ActionOutput):
+class SitecollectionOutput(PermissiveActionOutput):
     hostname: str = OutputField(
         cef_types=["host name"], example_values=["tenant-name.sharepoint.com"]
     )
 
 
-class ListSitesOutput(ActionOutput):
+class ListSitesOutput(PermissiveActionOutput):
     createdDateTime: str = OutputField(example_values=["2016-10-31T20:25:06Z"])
     displayName: str = OutputField(example_values=["Test Site Name"])
     id: str = OutputField(

@@ -3,7 +3,7 @@
 import httpx
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField
+from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ..graph_response import GraphResponseError, get_graph_response
@@ -15,56 +15,56 @@ class DriveChildrenSummary(ActionOutput):
     drive_children_count: int = OutputField(example_values=[1])
 
 
-class HashesOutput(ActionOutput):
+class HashesOutput(PermissiveActionOutput):
     quickXorHash: str | None = OutputField(
         example_values=["8JpxaQB3wX1/FkQ5Gt3prUbUUFU="]
     )
 
 
-class FileOutput(ActionOutput):
+class FileOutput(PermissiveActionOutput):
     hashes: HashesOutput | None = OutputField()
     mimeType: str | None = OutputField(example_values=["application/vnd.ms-excel"])
 
 
-class FolderOutput(ActionOutput):
+class FolderOutput(PermissiveActionOutput):
     childCount: float | None = OutputField(example_values=[1])
 
 
-class ImageOutput(ActionOutput):
+class ImageOutput(PermissiveActionOutput):
     width: float | None = OutputField(example_values=[1752])
     height: float | None = OutputField(example_values=[1244])
 
 
-class UserOutput(ActionOutput):
+class UserOutput(PermissiveActionOutput):
     displayName: str | None = OutputField(example_values=["SharePoint App"])
     email: str | None = OutputField()
     id: str | None = OutputField()
 
 
-class CreatedByOutput(ActionOutput):
+class CreatedByOutput(PermissiveActionOutput):
     user: UserOutput | None = OutputField()
 
 
-class DecoratorOutput(ActionOutput):
+class DecoratorOutput(PermissiveActionOutput):
     iconColor: str | None = OutputField(example_values=["darkGreen"])
 
 
-class FileSystemInfoOutput(ActionOutput):
+class FileSystemInfoOutput(PermissiveActionOutput):
     createdDateTime: str | None = OutputField()
     lastModifiedDateTime: str | None = OutputField()
 
 
-class ApplicationOutput(ActionOutput):
+class ApplicationOutput(PermissiveActionOutput):
     displayName: str | None = OutputField()
     id: str | None = OutputField()
 
 
-class LastModifiedByOutput(ActionOutput):
+class LastModifiedByOutput(PermissiveActionOutput):
     application: ApplicationOutput | None = OutputField()
     user: UserOutput | None = OutputField()
 
 
-class ParentReferenceOutput(ActionOutput):
+class ParentReferenceOutput(PermissiveActionOutput):
     driveId: str | None = OutputField(cef_types=["sharepoint drive id"])
     driveType: str | None = OutputField()
     id: str | None = OutputField(cef_types=["sharepoint drive item id"])
@@ -73,15 +73,15 @@ class ParentReferenceOutput(ActionOutput):
     siteId: str | None = OutputField()
 
 
-class SharedOutput(ActionOutput):
+class SharedOutput(PermissiveActionOutput):
     scope: str | None = OutputField(example_values=["users"])
 
 
-class SpecialFolderOutput(ActionOutput):
+class SpecialFolderOutput(PermissiveActionOutput):
     name: str | None = OutputField(example_values=["apps"])
 
 
-class ListDriveChildrenOutput(ActionOutput):
+class ListDriveChildrenOutput(PermissiveActionOutput):
     download_url: str | None = OutputField(
         alias="@microsoft.graph.downloadUrl",
         cef_types=["url"],

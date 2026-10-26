@@ -3,7 +3,7 @@
 import httpx
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField
+from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ..graph_response import GraphResponseError, get_graph_response
@@ -15,20 +15,20 @@ class FolderItemsSummary(ActionOutput):
     items_count: int = OutputField(example_values=[1])
 
 
-class FileOutput(ActionOutput):
+class FileOutput(PermissiveActionOutput):
     mimeType: str | None = OutputField(example_values=["video/mp4"])
 
 
-class FolderOutput(ActionOutput):
+class FolderOutput(PermissiveActionOutput):
     childCount: float | None = OutputField(example_values=[5])
 
 
-class SharedOutput(ActionOutput):
+class SharedOutput(PermissiveActionOutput):
     scope: str | None = OutputField(example_values=["users"])
     webUrl: str | None = OutputField(cef_types=["url"])
 
 
-class ParentReferenceOutput(ActionOutput):
+class ParentReferenceOutput(PermissiveActionOutput):
     driveType: str | None = OutputField(example_values=["documentLibrary"])
     id: str | None = OutputField(cef_types=["sharepoint drive item id"])
     name: str | None = OutputField(example_values=["Shared Documents"])
@@ -36,26 +36,26 @@ class ParentReferenceOutput(ActionOutput):
     siteId: str | None = OutputField()
 
 
-class FileSystemInfoOutput(ActionOutput):
+class FileSystemInfoOutput(PermissiveActionOutput):
     createdDateTime: str | None = OutputField()
     lastModifiedDateTime: str | None = OutputField()
 
 
-class UserOutput(ActionOutput):
+class UserOutput(PermissiveActionOutput):
     displayName: str | None = OutputField(example_values=["Test User"])
     email: str | None = OutputField(cef_types=["email"])
     id: str | None = OutputField()
 
 
-class CreatedByOutput(ActionOutput):
+class CreatedByOutput(PermissiveActionOutput):
     user: UserOutput | None = OutputField()
 
 
-class LastModifiedByOutput(ActionOutput):
+class LastModifiedByOutput(PermissiveActionOutput):
     user: UserOutput | None = OutputField()
 
 
-class ListFolderItemsOutput(ActionOutput):
+class ListFolderItemsOutput(PermissiveActionOutput):
     id: str | None = OutputField()
     cTag: str | None = OutputField()
     eTag: str | None = OutputField()

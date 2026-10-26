@@ -24,20 +24,20 @@ class AddItemParams(Params):
     item: str = Param(description="JSON string of item")
 
 
-class OdataOutput(ActionOutput):
+class OdataOutput(PermissiveActionOutput):
     etag: str
 
 
-class ContenttypeOutput(ActionOutput):
+class ContenttypeOutput(PermissiveActionOutput):
     id: str
     name: str
 
 
-class UserOutput(ActionOutput):
+class UserOutput(PermissiveActionOutput):
     displayName: str
 
 
-class CreatedbyOutput(ActionOutput):
+class CreatedbyOutput(PermissiveActionOutput):
     user: UserOutput
 
 
@@ -82,26 +82,26 @@ class FieldsOutput(PermissiveActionOutput):
     id: str
 
 
-class Fields_OdataOutput(ActionOutput):
+class Fields_OdataOutput(PermissiveActionOutput):
     context: str = OutputField(cef_types=["url"])
 
 
-class ApplicationOutput(ActionOutput):
+class ApplicationOutput(PermissiveActionOutput):
     displayName: str
     id: str
 
 
-class LastmodifiedbyOutput(ActionOutput):
+class LastmodifiedbyOutput(PermissiveActionOutput):
     application: ApplicationOutput
     user: UserOutput
 
 
-class ParentreferenceOutput(ActionOutput):
+class ParentreferenceOutput(PermissiveActionOutput):
     id: str = OutputField(example_values=["a86797a9-c9a9-47e7-891b-8413b2d758fc"])
     siteId: str
 
 
-class AddItemOutput(ActionOutput):
+class AddItemOutput(PermissiveActionOutput):
     odata: OdataOutput
     contentType: ContenttypeOutput
     createdBy: CreatedbyOutput

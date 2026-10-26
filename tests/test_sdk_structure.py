@@ -55,6 +55,26 @@ def test_action_models_precede_action_code() -> None:
             ), source.name
 
 
+def test_graph_response_output_models_are_permissive() -> None:
+    actions_dir = Path(__file__).resolve().parents[1] / "src" / "actions"
+    output_classes = []
+    for source in actions_dir.glob("*.py"):
+        module = ast.parse(source.read_text(encoding="utf-8"))
+        for node in module.body:
+            if isinstance(node, ast.ClassDef) and node.name.endswith("Output"):
+                output_classes.append((source.name, node.name, node.bases))
+
+    assert output_classes
+    for source_name, class_name, bases in output_classes:
+        base_names = {
+            base.id for base in bases if isinstance(base, ast.Name)
+        }
+        assert "PermissiveActionOutput" in base_names, (
+            f"{source_name}:{class_name} must preserve variable Microsoft Graph "
+            "response fields with PermissiveActionOutput"
+        )
+
+
 @pytest.mark.parametrize(
     ("value", "expected"),
     [

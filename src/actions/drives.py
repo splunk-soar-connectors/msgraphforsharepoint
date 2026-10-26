@@ -3,7 +3,7 @@
 import httpx
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField
+from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ..graph_response import GraphResponseError, get_graph_response
@@ -16,24 +16,24 @@ class DrivesSummary(ActionOutput):
     drives_count: int = OutputField(example_values=[1])
 
 
-class UserOutput(ActionOutput):
+class UserOutput(PermissiveActionOutput):
     displayName: str | None = OutputField(example_values=["Test User"])
     email: str | None = OutputField(cef_types=["email"])
     id: str | None = OutputField()
 
 
-class GroupOutput(ActionOutput):
+class GroupOutput(PermissiveActionOutput):
     id: str | None = OutputField()
     email: str | None = OutputField(cef_types=["email"])
     displayName: str | None = OutputField()
 
 
-class OwnerOutput(ActionOutput):
+class OwnerOutput(PermissiveActionOutput):
     user: UserOutput | None = OutputField()
     group: GroupOutput | None = OutputField()
 
 
-class QuotaOutput(ActionOutput):
+class QuotaOutput(PermissiveActionOutput):
     used: float | None = OutputField(example_values=[8546734])
     state: str | None = OutputField(example_values=["normal"])
     total: float | None = OutputField(example_values=[274877685])
@@ -41,15 +41,15 @@ class QuotaOutput(ActionOutput):
     remaining: float | None = OutputField(example_values=[266330951])
 
 
-class CreatedByOutput(ActionOutput):
+class CreatedByOutput(PermissiveActionOutput):
     user: UserOutput | None = OutputField()
 
 
-class LastModifiedByOutput(ActionOutput):
+class LastModifiedByOutput(PermissiveActionOutput):
     user: UserOutput | None = OutputField()
 
 
-class ListDrivesOutput(ActionOutput):
+class ListDrivesOutput(PermissiveActionOutput):
     id: str | None = OutputField()
     name: str | None = OutputField(example_values=["Custom Library"])
     owner: OwnerOutput | None = OutputField()

@@ -29,12 +29,12 @@ class GetFileParams(Params):
     )
 
 
-class ImageOutput(ActionOutput):
+class ImageOutput(PermissiveActionOutput):
     width: float | None = OutputField(example_values=[256])
     height: float | None = OutputField(example_values=[266])
 
 
-class UserOutput(ActionOutput):
+class UserOutput(PermissiveActionOutput):
     displayName: str | None = OutputField(example_values=["Test User"])
     email: str | None = OutputField(
         cef_types=["email"], example_values=["test_user@tenant-name.ontest.com"]
@@ -44,33 +44,33 @@ class UserOutput(ActionOutput):
     )
 
 
-class CreatedbyOutput(ActionOutput):
+class CreatedbyOutput(PermissiveActionOutput):
     user: UserOutput | None = OutputField()
 
 
-class HashesOutput(ActionOutput):
+class HashesOutput(PermissiveActionOutput):
     quickXorHash: str | None = OutputField(
         example_values=["EIDYEgye8dEx3XhA7xc12GqSwxk="]
     )
 
 
-class FileOutput(ActionOutput):
+class FileOutput(PermissiveActionOutput):
     hashes: HashesOutput | None = OutputField()
     mimeType: str | None = OutputField(example_values=["text/plain"])
 
 
-class FilesysteminfoOutput(ActionOutput):
+class FilesysteminfoOutput(PermissiveActionOutput):
     createdDateTime: str | None = OutputField(example_values=["2022-02-10T15:25:21Z"])
     lastModifiedDateTime: str | None = OutputField(
         example_values=["2022-02-10T15:25:21Z"]
     )
 
 
-class LastmodifiedbyOutput(ActionOutput):
+class LastmodifiedbyOutput(PermissiveActionOutput):
     user: UserOutput | None = OutputField()
 
 
-class ParentreferenceOutput(ActionOutput):
+class ParentreferenceOutput(PermissiveActionOutput):
     driveId: str | None = OutputField(
         cef_types=["sharepoint drive id"],
         example_values=[
@@ -89,7 +89,7 @@ class ParentreferenceOutput(ActionOutput):
     )
 
 
-class SharedOutput(ActionOutput):
+class SharedOutput(PermissiveActionOutput):
     scope: str | None = OutputField(example_values=["users"])
 
 

@@ -25,23 +25,23 @@ class GetListParams(Params):
     limit: float | None = Param(description="Maximum number of list items to return")
 
 
-class CalculatedOutput(ActionOutput):
+class CalculatedOutput(PermissiveActionOutput):
     format: str = OutputField(example_values=["dateTime"])
     formula: str = OutputField(example_values=["=[test]"])
     outputType: str = OutputField(example_values=["dateTime"])
 
 
-class ChoiceOutput(ActionOutput):
+class ChoiceOutput(PermissiveActionOutput):
     allowTextEntry: bool = OutputField(example_values=[False])
     displayAs: str = OutputField(example_values=["dropDownMenu"])
 
 
-class DatetimeOutput(ActionOutput):
+class DatetimeOutput(PermissiveActionOutput):
     displayAs: str = OutputField(example_values=["default"])
     format: str = OutputField(example_values=["dateTime"])
 
 
-class LookupOutput(ActionOutput):
+class LookupOutput(PermissiveActionOutput):
     allowMultipleValues: bool | None = OutputField()
     allowUnlimitedLength: bool | None = OutputField()
     columnName: str | None = OutputField(example_values=["ItemChildCount"])
@@ -49,13 +49,13 @@ class LookupOutput(ActionOutput):
     primaryLookupColumnId: str | None = OutputField(example_values=["ID"])
 
 
-class PersonorgroupOutput(ActionOutput):
+class PersonorgroupOutput(PermissiveActionOutput):
     allowMultipleSelection: bool | None = OutputField()
     chooseFromType: str | None = OutputField(example_values=["peopleAndGroups"])
     displayAs: str | None = OutputField(example_values=["nameWithPresence"])
 
 
-class TextOutput(ActionOutput):
+class TextOutput(PermissiveActionOutput):
     allowMultipleLines: bool | None = OutputField()
     appendChangesToExistingText: bool | None = OutputField()
     linesForEditing: float | None = OutputField(example_values=[0])
@@ -63,7 +63,7 @@ class TextOutput(ActionOutput):
     textType: str | None = OutputField(example_values=["plain"])
 
 
-class ColumnsOutput(ActionOutput):
+class ColumnsOutput(PermissiveActionOutput):
     calculated: CalculatedOutput | None = OutputField()
     choice: ChoiceOutput | None = OutputField()
     columnGroup: str = OutputField(example_values=["Custom Columns"])
@@ -82,7 +82,7 @@ class ColumnsOutput(ActionOutput):
     text: TextOutput | None = OutputField()
 
 
-class UserOutput(ActionOutput):
+class UserOutput(PermissiveActionOutput):
     displayName: str = OutputField(example_values=["Test User"])
     email: str = OutputField(
         cef_types=["email"], example_values=["test_user@tenant-name.ontest.com"]
@@ -90,11 +90,11 @@ class UserOutput(ActionOutput):
     id: str = OutputField(example_values=["eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"])
 
 
-class CreatedbyOutput(ActionOutput):
+class CreatedbyOutput(PermissiveActionOutput):
     user: UserOutput
 
 
-class ContenttypeOutput(ActionOutput):
+class ContenttypeOutput(PermissiveActionOutput):
     id: str = OutputField(
         example_values=[
             "0x01008C9AE9AA9A043D48B717AB18E1E7180E00F8FCD4A1A57C3043B42193515148F5EC"
@@ -103,7 +103,7 @@ class ContenttypeOutput(ActionOutput):
     name: str = OutputField(example_values=["Item"])
 
 
-class InterviewersOutput(ActionOutput):
+class InterviewersOutput(PermissiveActionOutput):
     Email: str = OutputField(example_values=["test@testuser.com"])
     LookupId: float = OutputField(example_values=[18])
     LookupValue: str = OutputField(example_values=["test"])
@@ -151,21 +151,21 @@ class FieldsOutput(PermissiveActionOutput):
     id: str = OutputField(example_values=["1"])
 
 
-class ApplicationOutput(ActionOutput):
+class ApplicationOutput(PermissiveActionOutput):
     displayName: str = OutputField(example_values=["test"])
     id: str = OutputField(example_values=["71b307af-1dcb-4e39-9640-5129afc83162"])
 
 
-class LastmodifiedbyOutput(ActionOutput):
+class LastmodifiedbyOutput(PermissiveActionOutput):
     user: UserOutput
 
 
-class ItemLastModifiedByOutput(ActionOutput):
+class ItemLastModifiedByOutput(PermissiveActionOutput):
     application: ApplicationOutput
     user: UserOutput
 
 
-class ParentreferenceOutput(ActionOutput):
+class ParentreferenceOutput(PermissiveActionOutput):
     siteId: str = OutputField(
         example_values=[
             "tenant-name.sharepoint.com,dc6f43e9-54fa-4a39-8783-314e3bbbed41,c42b48c4-59b9-48f1-b96e-e8145b5539fa"
@@ -173,12 +173,12 @@ class ParentreferenceOutput(ActionOutput):
     )
 
 
-class ItemParentReferenceOutput(ActionOutput):
+class ItemParentReferenceOutput(PermissiveActionOutput):
     id: str = OutputField(cef_types=["sharepoint item id"])
     siteId: str = OutputField()
 
 
-class ItemsOutput(ActionOutput):
+class ItemsOutput(PermissiveActionOutput):
     etag: str = OutputField(alias="@odata.etag")
     contentType: ContenttypeOutput
     createdBy: CreatedbyOutput
@@ -198,13 +198,13 @@ class ItemsOutput(ActionOutput):
     )
 
 
-class ListOutput(ActionOutput):
+class ListOutput(PermissiveActionOutput):
     contentTypesEnabled: bool
     hidden: bool
     template: str = OutputField(example_values=["genericList"])
 
 
-class GetListOutput(ActionOutput):
+class GetListOutput(PermissiveActionOutput):
     context: str = OutputField(alias="@odata.context", cef_types=["url"])
     etag: str = OutputField(alias="@odata.etag")
     columns: list[ColumnsOutput]

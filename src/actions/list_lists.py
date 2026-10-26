@@ -3,7 +3,7 @@
 import httpx
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField
+from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ..graph_response import GraphResponseError, get_graph_response
@@ -19,7 +19,7 @@ class ListListsParams(Params):
     limit: float | None = Param(description="Maximum number of sites to return")
 
 
-class UserOutput(ActionOutput):
+class UserOutput(PermissiveActionOutput):
     displayName: str = OutputField(example_values=["Test User"])
     email: str = OutputField(
         cef_types=["email"], example_values=["test_user@tenant-name.ontest.com"]
@@ -27,21 +27,21 @@ class UserOutput(ActionOutput):
     id: str = OutputField(example_values=["eeb3645f-df19-47a1-8e8c-fcd234cb5f6f"])
 
 
-class CreatedbyOutput(ActionOutput):
+class CreatedbyOutput(PermissiveActionOutput):
     user: UserOutput
 
 
-class LastmodifiedbyOutput(ActionOutput):
+class LastmodifiedbyOutput(PermissiveActionOutput):
     user: UserOutput
 
 
-class ListOutput(ActionOutput):
+class ListOutput(PermissiveActionOutput):
     contentTypesEnabled: bool
     hidden: bool
     template: str = OutputField(example_values=["genericList"])
 
 
-class ParentreferenceOutput(ActionOutput):
+class ParentreferenceOutput(PermissiveActionOutput):
     siteId: str = OutputField(
         example_values=[
             "tenant-name.sharepoint.com,dc6f43e9-54fa-4a39-8783-314e3bbbed41,c42b48c4-59b9-48f1-b96e-e8145b5539fa"
@@ -49,7 +49,7 @@ class ParentreferenceOutput(ActionOutput):
     )
 
 
-class ListListsOutput(ActionOutput):
+class ListListsOutput(PermissiveActionOutput):
     etag: str = OutputField(alias="@odata.etag")
     createdBy: CreatedbyOutput
     createdDateTime: str = OutputField(example_values=["2022-02-24T05:38:53Z"])
