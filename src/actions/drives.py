@@ -50,8 +50,10 @@ class LastModifiedByOutput(PermissiveActionOutput):
 
 
 class ListDrivesOutput(PermissiveActionOutput):
-    id: str | None = OutputField()
-    name: str | None = OutputField(example_values=["Custom Library"])
+    name: str | None = OutputField(
+        example_values=["Custom Library"], column_name="Drive Name"
+    )
+    id: str | None = OutputField(column_name="Drive ID")
     owner: OwnerOutput | None = OutputField()
     quota: QuotaOutput | None = OutputField()
     createdBy: CreatedByOutput | None = OutputField()

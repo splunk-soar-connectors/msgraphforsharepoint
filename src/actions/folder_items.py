@@ -56,12 +56,12 @@ class LastModifiedByOutput(PermissiveActionOutput):
 
 
 class ListFolderItemsOutput(PermissiveActionOutput):
-    id: str | None = OutputField()
+    name: str | None = OutputField(column_name="Item Name")
+    id: str | None = OutputField(column_name="Item ID")
     cTag: str | None = OutputField()
     eTag: str | None = OutputField()
     file: FileOutput | None = OutputField()
     folder: FolderOutput | None = OutputField()
-    name: str | None = OutputField()
     size: float | None = OutputField()
     shared: SharedOutput | None = OutputField()
     parentReference: ParentReferenceOutput | None = OutputField()

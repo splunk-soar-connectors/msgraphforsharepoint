@@ -21,17 +21,22 @@ class ListSitesParams(Params):
 
 class SitecollectionOutput(PermissiveActionOutput):
     hostname: str = OutputField(
-        cef_types=["host name"], example_values=["tenant-name.sharepoint.com"]
+        cef_types=["host name"],
+        example_values=["tenant-name.sharepoint.com"],
+        column_name="Hostname",
     )
 
 
 class ListSitesOutput(PermissiveActionOutput):
     createdDateTime: str = OutputField(example_values=["2016-10-31T20:25:06Z"])
-    displayName: str = OutputField(example_values=["Test Site Name"])
+    displayName: str = OutputField(
+        example_values=["Test Site Name"], column_name="Sharepoint Site Name"
+    )
     id: str = OutputField(
         example_values=[
             "tenant-name.sharepoint.com,595384ee-13aa-49d1-814b-00ed3e024cde,70abfe37-8aa1-4168-b83e-41b6e9721509"
-        ]
+        ],
+        column_name="Sharepoint Site ID",
     )
     isPersonalSite: bool
     lastModifiedDateTime: str = OutputField(

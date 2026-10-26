@@ -44,8 +44,20 @@ class UserOutput(PermissiveActionOutput):
     )
 
 
+class CreatedByUserOutput(UserOutput):
+    displayName: str | None = OutputField(
+        example_values=["Test User"], column_name="Created By"
+    )
+
+
+class LastModifiedByUserOutput(UserOutput):
+    displayName: str | None = OutputField(
+        example_values=["Test User"], column_name="Last Modified By"
+    )
+
+
 class CreatedbyOutput(PermissiveActionOutput):
-    user: UserOutput | None = OutputField()
+    user: CreatedByUserOutput | None = OutputField()
 
 
 class HashesOutput(PermissiveActionOutput):
@@ -67,7 +79,7 @@ class FilesysteminfoOutput(PermissiveActionOutput):
 
 
 class LastmodifiedbyOutput(PermissiveActionOutput):
-    user: UserOutput | None = OutputField()
+    user: LastModifiedByUserOutput | None = OutputField()
 
 
 class ParentreferenceOutput(PermissiveActionOutput):
@@ -76,6 +88,7 @@ class ParentreferenceOutput(PermissiveActionOutput):
         example_values=[
             "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi"
         ],
+        column_name="Drive ID",
     )
     driveType: str | None = OutputField(example_values=["documentLibrary"])
     id: str | None = OutputField(
@@ -106,6 +119,11 @@ class GetFileOutput(PermissiveActionOutput):
     cTag: str | None = OutputField(
         example_values=['"c:{C743B2E0-36EB-4C9A-9CE0-190C2FD4DD97},1"']
     )
+    id: str | None = OutputField(
+        cef_types=["sharepoint drive item id"],
+        example_values=["01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX"],
+        column_name="Drive Item ID",
+    )
     createdBy: CreatedbyOutput | None = OutputField()
     createdDateTime: str | None = OutputField(example_values=["2022-02-10T15:25:21Z"])
     eTag: str | None = OutputField(
@@ -113,10 +131,6 @@ class GetFileOutput(PermissiveActionOutput):
     )
     file: FileOutput | None = OutputField()
     fileSystemInfo: FilesysteminfoOutput | None = OutputField()
-    id: str | None = OutputField(
-        cef_types=["sharepoint drive item id"],
-        example_values=["01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX"],
-    )
     lastModifiedBy: LastmodifiedbyOutput | None = OutputField()
     lastModifiedDateTime: str | None = OutputField(
         example_values=["2022-02-10T15:25:21Z"]

@@ -65,7 +65,9 @@ class LastModifiedByOutput(PermissiveActionOutput):
 
 
 class ParentReferenceOutput(PermissiveActionOutput):
-    driveId: str | None = OutputField(cef_types=["sharepoint drive id"])
+    driveId: str | None = OutputField(
+        cef_types=["sharepoint drive id"], column_name="Drive ID"
+    )
     driveType: str | None = OutputField()
     id: str | None = OutputField(cef_types=["sharepoint drive item id"])
     name: str | None = OutputField()
@@ -96,15 +98,17 @@ class ListDriveChildrenOutput(PermissiveActionOutput):
     file: FileOutput | None = OutputField()
     fileSystemInfo: FileSystemInfoOutput | None = OutputField()
     folder: FolderOutput | None = OutputField()
-    id: str | None = OutputField(cef_types=["sharepoint drive item id"])
+    id: str | None = OutputField(
+        cef_types=["sharepoint drive item id"], column_name="Drive Item ID"
+    )
+    name: str | None = OutputField(column_name="Item Name")
+    webUrl: str | None = OutputField(cef_types=["url"], column_name="Web URL")
     lastModifiedBy: LastModifiedByOutput | None = OutputField()
     lastModifiedDateTime: str | None = OutputField()
-    name: str | None = OutputField()
     parentReference: ParentReferenceOutput | None = OutputField()
     shared: SharedOutput | None = OutputField()
     size: float | None = OutputField(example_values=[775])
     specialFolder: SpecialFolderOutput | None = OutputField()
-    webUrl: str | None = OutputField(cef_types=["url"])
 
 
 class ListDriveChildrenParams(Params):

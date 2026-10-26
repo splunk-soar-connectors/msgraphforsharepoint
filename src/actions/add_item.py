@@ -109,7 +109,7 @@ class AddItemOutput(PermissiveActionOutput):
     eTag: str
     fields: FieldsOutput
     fields_odata: Fields_OdataOutput
-    id: str = OutputField(cef_types=["sharepoint item id"])
+    id: str = OutputField(cef_types=["sharepoint item id"], column_name="ID")
     lastModifiedBy: LastmodifiedbyOutput
     lastModifiedDateTime: str
     parentReference: ParentreferenceOutput

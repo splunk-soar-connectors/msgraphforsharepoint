@@ -21,7 +21,7 @@ class UpdateItemParams(Params):
         primary=True,
         cef_types=["sharepoint list id", "sharepoint list name"],
     )
-    item_id: float = Param(
+    item_id: int = Param(
         description="ID of the item to update",
         primary=True,
         cef_types=["sharepoint item id"],
@@ -110,7 +110,7 @@ class UpdateItemOutput(PermissiveActionOutput):
     eTag: str
     fields: FieldsOutput
     fields_odata: Fields_OdataOutput
-    id: str = OutputField(cef_types=["sharepoint item id"])
+    id: str = OutputField(cef_types=["sharepoint item id"], column_name="ID")
     lastModifiedBy: LastmodifiedbyOutput
     lastModifiedDateTime: str
     parentReference: ParentreferenceOutput

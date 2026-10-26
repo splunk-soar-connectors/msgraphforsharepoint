@@ -24,6 +24,7 @@ def register_actions(app: App) -> App:
         description="Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values",
         action_type="generic",
         read_only=False,
+        render_as="table",
         verbose="While copying the file if file_name is provided without file extension, the copied file will not have any extension.",
     )
     app.register_action(
@@ -31,11 +32,13 @@ def register_actions(app: App) -> App:
         description="Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID",
         action_type="generic",
         read_only=False,
+        render_as="table",
     )
     app.register_action(
         action=list_folder_items,
         description="List items in a folder",
         action_type="investigate",
+        render_as="table",
         verbose="List all direct children in a folder.",
         summary_type=FolderItemsSummary,
     )
@@ -43,6 +46,7 @@ def register_actions(app: App) -> App:
         action=list_drives,
         description="Fetch the available drives (libraries) under a SharePoint site",
         action_type="investigate",
+        render_as="table",
         verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
         summary_type=DrivesSummary,
     )
@@ -50,12 +54,14 @@ def register_actions(app: App) -> App:
         action=list_drive_children,
         description="List the items in a drive folder by drive ID or search for a specific file name if provided",
         action_type="investigate",
+        render_as="table",
         summary_type=DriveChildrenSummary,
     )
     app.register_action(
         action=list_sites,
         description="Fetch the details of the SharePoint sites",
         action_type="investigate",
+        render_as="table",
         verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
         summary_type=SitesSummary,
     )
@@ -82,6 +88,7 @@ def register_actions(app: App) -> App:
         description="Add an item to a list on a SharePoint Site",
         action_type="generic",
         read_only=False,
+        render_as="table",
         summary_type=AddItemSummary,
     )
     app.register_action(
@@ -89,6 +96,7 @@ def register_actions(app: App) -> App:
         description="Update an item in a list on a SharePoint Site",
         action_type="generic",
         read_only=False,
+        render_as="table",
         summary_type=UpdateItemSummary,
     )
     app.register_action(
@@ -96,6 +104,7 @@ def register_actions(app: App) -> App:
         description="Retrieves a file from a SharePoint site",
         action_type="generic",
         read_only=False,
+        render_as="table",
         verbose="The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
         summary_type=GetFileSummary,
     )
@@ -104,6 +113,7 @@ def register_actions(app: App) -> App:
         description="Removes a file from a SharePoint site",
         action_type="generic",
         read_only=False,
+        render_as="table",
         verbose="The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
     )
     app.register_action(
@@ -111,6 +121,7 @@ def register_actions(app: App) -> App:
         description="Removes a folder from a SharePoint site",
         action_type="generic",
         read_only=False,
+        render_as="table",
         verbose="The 'folder path' parameter will be considered from the root of the document library specified in drive_id.",
     )
     return app

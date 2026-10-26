@@ -82,6 +82,7 @@ class ParentreferenceOutput(PermissiveActionOutput):
         example_values=[
             "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi"
         ],
+        column_name="Drive ID",
     )
     driveType: str = OutputField(example_values=["documentLibrary"])
     id: str = OutputField(
@@ -122,14 +123,18 @@ class CreateFolderOutput(PermissiveActionOutput):
     )
     fileSystemInfo: FilesysteminfoOutput
     folder: FolderOutput
-    id: str = OutputField(cef_types=["sharepoint drive item id"])
+    folder_name: str = OutputField(column_name="Created Folder Name")
+    id: str = OutputField(
+        cef_types=["sharepoint drive item id"],
+        column_name="Created Drive Item ID",
+    )
     lastModifiedBy: LastmodifiedbyOutput
     lastModifiedDateTime: str = OutputField(example_values=["2023-10-25T08:55:48Z"])
     name: str = OutputField(example_values=["test2"])
+    webUrl: str = OutputField(cef_types=["url"], column_name="Web URL")
     parentReference: ParentreferenceOutput
     shared: SharedOutput
     size: float = OutputField(example_values=[0])
-    webUrl: str = OutputField(cef_types=["url"])
 
 
 def _request_graph(client: httpx.Client, method: str, endpoint: str, **kwargs):
@@ -171,4 +176,6 @@ def create_folder(
         )
 
     soar.set_message("Successfully created a folder")
-    return CreateFolderOutput.model_validate(response)
+    return CreateFolderOutput.model_validate(
+        {**response, "folder_name": params.folder_name}
+    )
