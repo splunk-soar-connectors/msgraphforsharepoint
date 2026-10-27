@@ -101,6 +101,14 @@ documentation](https://support.microsoft.com/en-us/kb/905231) .\
 As a workaround for lists, we can use the list_id instead of the list_name. Run the 'list lists'
 action to get the list_id.
 
+## Generic Microsoft Graph requests
+
+The **make request** action sends one request to Microsoft Graph using the asset's configured
+authentication. Supply a relative endpoint beginning with `/v1.0/` or `/beta/`; do not include a
+host name. The action returns the HTTP status code and raw response body, including for HTTP error
+responses. It does not follow redirects or paginate results. Requests using write methods can
+change Microsoft Graph data, subject to the permissions granted to the app registration.
+
 ## Port Information
 
 The app uses HTTP/ HTTPS protocol for communicating with the Microsoft servers. Below are the

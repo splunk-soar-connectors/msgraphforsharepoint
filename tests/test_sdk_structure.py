@@ -1,11 +1,25 @@
+# Copyright (c) 2026 Splunk Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Deterministic SDK structure and pure input-boundary checks."""
 
 from __future__ import annotations
 
-import httpx
-import pytest
 import ast
 from pathlib import Path
+
+import httpx
+import pytest
 from soar_sdk.exceptions import ActionFailure
 
 from src.actions._limits import validate_limit
@@ -13,6 +27,21 @@ from src.actions._paths import encode_path, encode_path_segment
 from src.app import create_msgraphforsharepoint_app
 from src.auth import _GraphAuth
 from src.consts import GRAPH_BASE_URL
+
+
+def _inherits_permissive(
+    class_name: str,
+    class_bases: dict[str, set[str]],
+    ancestors: set[str] | None = None,
+) -> bool:
+    ancestors = ancestors or set()
+    if class_name in ancestors:
+        return False
+    bases = class_bases.get(class_name, set())
+    return "PermissiveActionOutput" in bases or any(
+        _inherits_permissive(base, class_bases, ancestors | {class_name})
+        for base in bases
+    )
 
 
 def test_application_registers_all_connector_actions() -> None:
@@ -31,6 +60,7 @@ def test_application_registers_all_connector_actions() -> None:
         "get_file",
         "remove_file",
         "remove_folder",
+        "make_request",
         "test_connectivity",
     }
 
@@ -57,22 +87,24 @@ def test_action_models_precede_action_code() -> None:
 
 def test_graph_response_output_models_are_permissive() -> None:
     actions_dir = Path(__file__).resolve().parents[1] / "src" / "actions"
-    output_classes = []
+    checked_classes = 0
     for source in actions_dir.glob("*.py"):
         module = ast.parse(source.read_text(encoding="utf-8"))
+        class_bases: dict[str, set[str]] = {}
         for node in module.body:
             if isinstance(node, ast.ClassDef) and node.name.endswith("Output"):
-                output_classes.append((source.name, node.name, node.bases))
+                class_bases[node.name] = {
+                    base.id for base in node.bases if isinstance(base, ast.Name)
+                }
 
-    assert output_classes
-    for source_name, class_name, bases in output_classes:
-        base_names = {
-            base.id for base in bases if isinstance(base, ast.Name)
-        }
-        assert "PermissiveActionOutput" in base_names, (
-            f"{source_name}:{class_name} must preserve variable Microsoft Graph "
-            "response fields with PermissiveActionOutput"
-        )
+        for class_name in class_bases:
+            assert _inherits_permissive(class_name, class_bases), (
+                f"{source.name}:{class_name} must preserve variable Microsoft Graph "
+                "response fields with PermissiveActionOutput"
+            )
+            checked_classes += 1
+
+    assert checked_classes
 
 
 @pytest.mark.parametrize(
