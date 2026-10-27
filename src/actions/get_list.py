@@ -213,12 +213,15 @@ class GetListOutput(PermissiveActionOutput):
     createdDateTime: str = OutputField(example_values=["2022-02-08T12:29:09Z"])
     description: str = OutputField(example_values=["Test List Description"])
     displayName: str = OutputField(
-        cef_types=["sharepoint list name"], example_values=["Test List Name"]
+        cef_types=["sharepoint list name"],
+        example_values=["Test List Name"],
+        column_name="List Name",
     )
     eTag: str = OutputField(example_values=['"4961c496-52c1-49bd-b1fa-e1b2e976256c,5"'])
     id: str = OutputField(
         cef_types=["sharepoint list id"],
         example_values=["4961c496-52c1-49bd-b1fa-e1b2e976256c"],
+        column_name="List ID",
     )
     items: list[ItemsOutput]
     items_context: str = OutputField(alias="items@odata.context", cef_types=["url"])

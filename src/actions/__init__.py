@@ -14,8 +14,6 @@ from .update_item import update_item, ListItemSummary as UpdateItemSummary
 from .get_file import get_file, GetFileSummary
 from .remove_file import remove_file
 from .remove_folder import remove_folder
-from ..views.get_list import display_get_list
-from ..views.list_lists import display_list_lists
 
 
 def register_actions(app: App) -> App:
@@ -69,19 +67,17 @@ def register_actions(app: App) -> App:
         action=list_lists,
         description="Fetch the available lists under a SharePoint site",
         action_type="investigate",
+        render_as="table",
         verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
         summary_type=ListListsSummary,
-        view_handler=display_list_lists,
-        view_template="msgraphforsharepoint_list_lists.html",
     )
     app.register_action(
         action=get_list,
         description="Retrieves a list from a SharePoint Site",
         action_type="investigate",
+        render_as="table",
         verbose="The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.",
         summary_type=GetListSummary,
-        view_handler=display_get_list,
-        view_template="msgraphforsharepoint_get_list.html",
     )
     app.register_action(
         action=add_item,

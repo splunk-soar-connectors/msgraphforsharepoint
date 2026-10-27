@@ -55,12 +55,15 @@ class ListListsOutput(PermissiveActionOutput):
     createdDateTime: str = OutputField(example_values=["2022-02-24T05:38:53Z"])
     description: str = OutputField(example_values=["Test List Description"])
     displayName: str = OutputField(
-        cef_types=["sharepoint list name"], example_values=["ListName"]
+        cef_types=["sharepoint list name"],
+        example_values=["ListName"],
+        column_name="List Name",
     )
     eTag: str = OutputField(example_values=['"4896b66a-659c-4fce-a148-0b26bd718f68,5"'])
     id: str = OutputField(
         cef_types=["sharepoint list id"],
         example_values=["4896b66a-659c-4fce-a148-0b26bd718f68"],
+        column_name="List ID",
     )
     lastModifiedBy: LastmodifiedbyOutput
     lastModifiedDateTime: str = OutputField(example_values=["2022-03-03T13:43:06Z"])
