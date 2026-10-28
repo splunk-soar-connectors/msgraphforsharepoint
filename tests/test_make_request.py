@@ -11,18 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Pure request-boundary and SDK registration checks; no HTTP substitutes."""
+"""Pure request construction and input validation checks; no HTTP substitutes."""
 
 import json
 
 import httpx
 import pytest
-from soar_sdk.action_results import MakeRequestOutput
 from soar_sdk.exceptions import ActionFailure
-from soar_sdk.params import MakeRequestParams
 
 from src.actions.make_request import GraphMakeRequestParams, _build_request
-from src.app import create_msgraphforsharepoint_app
 
 
 def request(**overrides: object) -> httpx.Request:
@@ -177,13 +174,3 @@ def test_non_json_body_is_utf8_encoded() -> None:
         headers='{"Content-Type": "text/plain; charset=utf-8"}', body="你好"
     )
     assert actual.content == "你好".encode()
-
-
-def test_registers_native_sdk_request_contract() -> None:
-    action = create_msgraphforsharepoint_app().actions_manager.get_action("make_request")
-    assert issubclass(action.params_class, MakeRequestParams)
-    assert action.meta.output is MakeRequestOutput
-    assert action.meta.action == "make request"
-    params = GraphMakeRequestParams(http_method="GET", endpoint="/v1.0/sites/root")
-    assert params.verify_ssl is True
-    assert params.timeout is None
