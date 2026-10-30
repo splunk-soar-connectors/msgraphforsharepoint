@@ -24,6 +24,30 @@ def _request_graph(client: httpx.Client, method: str, endpoint: str, **kwargs):
         raise ActionFailure(str(exc)) from exc
 
 
+def _page_contents(
+    page: object,
+) -> tuple[list[dict[str, object]], object]:
+    """Validate the result collection in one Graph page."""
+    if not isinstance(page, dict):
+        raise ActionFailure("Microsoft Graph returned an invalid page")
+    value = page.get("value", [])
+    if not isinstance(value, list) or not all(isinstance(item, dict) for item in value):
+        raise ActionFailure("Microsoft Graph returned an invalid page value")
+    return value, page.get("@odata.nextLink")
+
+
+def _next_page_link(next_link: object, seen_links: set[str]) -> str | None:
+    """Validate and record the next link, rejecting repeated pagination URLs."""
+    if not next_link:
+        return None
+    if not isinstance(next_link, str) or next_link in seen_links:
+        raise ActionFailure(
+            "Rejected repeated or invalid Microsoft Graph pagination URL"
+        )
+    seen_links.add(next_link)
+    return next_link
+
+
 def _paginate(
     client: httpx.Client,
     endpoint: str,
@@ -44,22 +68,11 @@ def _paginate(
             next_link or endpoint,
             **({} if next_link else {"params": page_params}),
         )
-        if not isinstance(page, dict):
-            raise ActionFailure("Microsoft Graph returned an invalid page")
-        value = page.get("value", [])
-        if not isinstance(value, list) or not all(
-            isinstance(item, dict) for item in value
-        ):
-            raise ActionFailure("Microsoft Graph returned an invalid page value")
+        value, candidate_next_link = _page_contents(page)
         results.extend(value)
         if limit is not None and len(results) >= limit:
             return results[:limit]
-        next_link = page.get("@odata.nextLink")
-        if not next_link:
+        next_link = _next_page_link(candidate_next_link, seen_links)
+        if next_link is None:
             return results
-        if not isinstance(next_link, str) or next_link in seen_links:
-            raise ActionFailure(
-                "Rejected repeated or invalid Microsoft Graph pagination URL"
-            )
-        seen_links.add(next_link)
     raise ActionFailure("Microsoft Graph pagination exceeded its safety limit")

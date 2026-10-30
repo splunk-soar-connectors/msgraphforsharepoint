@@ -17,9 +17,15 @@ import json
 
 import httpx
 import pytest
+from soar_sdk.auth import OAuthClientError
 from soar_sdk.exceptions import ActionFailure
 
-from src.actions.make_request import GraphMakeRequestParams, _build_request
+from src.actions.make_request import (
+    GraphMakeRequestParams,
+    _build_request,
+    _request_failure,
+    _send_request,
+)
 
 
 def request(**overrides: object) -> httpx.Request:
@@ -140,9 +146,7 @@ def test_rejects_reserved_headers(header: str) -> None:
         request(headers=json.dumps({header: "not-logged"}))
 
 
-@pytest.mark.parametrize(
-    "headers", ["[]", '"string"', "null", '{"Accept": 1}', "{bad"]
-)
+@pytest.mark.parametrize("headers", ["[]", '"string"', "null", '{"Accept": 1}', "{bad"])
 def test_rejects_invalid_headers_without_echoing_input(headers: str) -> None:
     with pytest.raises(ActionFailure) as error:
         request(headers=headers)
@@ -174,3 +178,35 @@ def test_non_json_body_is_utf8_encoded() -> None:
         headers='{"Content-Type": "text/plain; charset=utf-8"}', body="你好"
     )
     assert actual.content == "你好".encode()
+
+
+@pytest.mark.parametrize(
+    ("error", "error_type"),
+    [
+        (httpx.ConnectError("private transport details"), "ConnectError"),
+        (OAuthClientError("private authentication details"), "OAuthClientError"),
+        (ValueError("private value details"), "ValueError"),
+    ],
+)
+def test_request_failures_are_converted_to_sanitized_action_errors(
+    error: Exception, error_type: str
+) -> None:
+    failure = _request_failure(error)
+
+    assert str(failure) == (
+        f"Action failure: Microsoft Graph request failed ({error_type})"
+    )
+    assert "private" not in str(failure)
+
+
+def test_send_request_translates_httpx_transport_errors_without_network() -> None:
+    request = httpx.Request("GET", "ftp://graph.microsoft.com/v1.0/sites/root")
+
+    with (
+        httpx.Client() as client,
+        pytest.raises(
+            ActionFailure,
+            match=r"Microsoft Graph request failed \(UnsupportedProtocol\)",
+        ),
+    ):
+        _send_request(client, request, timeout=1)

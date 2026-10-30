@@ -35,6 +35,28 @@ class GraphMakeRequestParams(MakeRequestParams):
     )
 
 
+def _request_failure(error: Exception) -> ActionFailure:
+    """Create a sanitized action failure for an auth, transport, or value error."""
+    return ActionFailure(f"Microsoft Graph request failed ({type(error).__name__})")
+
+
+def _send_request(
+    client: httpx.Client, request: httpx.Request, *, timeout: float
+) -> httpx.Response:
+    """Send one prepared request and translate client-layer errors safely."""
+    try:
+        return client.request(
+            request.method,
+            request.url,
+            headers=request.headers,
+            content=request.content,
+            timeout=timeout,
+            follow_redirects=False,
+        )
+    except (httpx.HTTPError, OAuthClientError, ValueError) as error:
+        raise _request_failure(error) from None
+
+
 def _json_object(value: str, name: str) -> dict:
     try:
         parsed = json.loads(value)
@@ -134,14 +156,7 @@ def make_request(
     try:
         request = _build_request(params)
         with get_graph_client(asset, verify=params.verify_ssl) as client:
-            response = client.request(
-                request.method,
-                request.url,
-                headers=request.headers,
-                content=request.content,
-                timeout=params.timeout or 30,
-                follow_redirects=False,
-            )
+            response = _send_request(client, request, timeout=params.timeout or 30)
         return MakeRequestOutput(
             status_code=response.status_code, response_body=response.text
         )
@@ -149,6 +164,4 @@ def make_request(
         raise
     except (httpx.HTTPError, OAuthClientError, ValueError) as error:
         # Do not echo request URLs, bodies, headers, or token responses.
-        raise ActionFailure(
-            f"Microsoft Graph request failed ({type(error).__name__})"
-        ) from None
+        raise _request_failure(error) from None
