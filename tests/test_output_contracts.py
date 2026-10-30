@@ -13,6 +13,8 @@
 # limitations under the License.
 """Regression checks for legacy SharePoint output field contracts."""
 
+import warnings
+
 import pytest
 
 from src.actions.add_item import AddItemOutput, FieldsOutput as AddItemFieldsOutput
@@ -62,9 +64,12 @@ def test_add_item_preserves_graph_metadata_aliases_and_optional_columns() -> Non
     }
     assert AddItemFieldsOutput.model_fields["etag"].alias == "@odata.etag"
 
-    fields = AddItemFieldsOutput.model_validate(
-        {"@odata.etag": "fields-etag", "CustomColumn": "value"}
-    )
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        fields = AddItemFieldsOutput.model_validate(
+            {"@odata.etag": "fields-etag", "CustomColumn": "value"}
+        )
+    assert not captured
     assert fields.model_dump(by_alias=True, exclude_none=True) == {
         "@odata.etag": "fields-etag",
         "CustomColumn": "value",
@@ -83,9 +88,12 @@ def test_update_item_preserves_graph_metadata_aliases_and_optional_columns() -> 
     }
     assert UpdateItemFieldsOutput.model_fields["etag"].alias == "@odata.etag"
 
-    fields = UpdateItemFieldsOutput.model_validate(
-        {"@odata.etag": "fields-etag", "CustomColumn": "value"}
-    )
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        fields = UpdateItemFieldsOutput.model_validate(
+            {"@odata.etag": "fields-etag", "CustomColumn": "value"}
+        )
+    assert not captured
     assert fields.model_dump(by_alias=True, exclude_none=True) == {
         "@odata.etag": "fields-etag",
         "CustomColumn": "value",
@@ -93,7 +101,10 @@ def test_update_item_preserves_graph_metadata_aliases_and_optional_columns() -> 
 
 
 def test_get_list_accepts_lists_with_different_columns() -> None:
-    fields = GetListFieldsOutput.model_validate({"DifferentColumn": "value"})
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always")
+        fields = GetListFieldsOutput.model_validate({"DifferentColumn": "value"})
+    assert not captured
     assert fields.model_dump(exclude_none=True) == {"DifferentColumn": "value"}
 
 
