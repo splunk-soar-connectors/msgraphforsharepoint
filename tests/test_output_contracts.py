@@ -13,6 +13,8 @@
 # limitations under the License.
 """Regression checks for legacy SharePoint output field contracts."""
 
+import pytest
+
 from src.actions.add_item import AddItemOutput, FieldsOutput as AddItemFieldsOutput
 from src.actions.get_file import GetFileSummary
 from src.actions.get_list import FieldsOutput as GetListFieldsOutput
@@ -20,6 +22,32 @@ from src.actions.update_item import (
     FieldsOutput as UpdateItemFieldsOutput,
     UpdateItemOutput,
 )
+
+
+@pytest.mark.parametrize("output_model", [AddItemOutput, UpdateItemOutput])
+def test_item_output_serialization_preserves_graph_response_keys(output_model) -> None:
+    response = {
+        "@odata.context": "https://graph.microsoft.com/$metadata#items/$entity",
+        "@odata.etag": "item-etag",
+        "contentType": {"id": "0x", "name": "Item"},
+        "createdBy": {"user": {"displayName": "Creator"}},
+        "createdDateTime": "2026-10-30T00:00:00Z",
+        "eTag": '"item-etag"',
+        "fields": {"@odata.etag": "fields-etag", "CustomColumn": "value"},
+        "fields@odata.context": "https://graph.microsoft.com/$metadata#fields",
+        "id": "1",
+        "lastModifiedBy": {
+            "application": {"displayName": "App", "id": "app-id"},
+            "user": {"displayName": "Editor"},
+        },
+        "lastModifiedDateTime": "2026-10-30T00:00:00Z",
+        "parentReference": {"id": "parent-id", "siteId": "site-id"},
+        "webUrl": "https://example.sharepoint.com/items/1",
+    }
+
+    output = output_model.model_validate(response)
+
+    assert output.model_dump(by_alias=True, exclude_none=True) == response
 
 
 def test_add_item_preserves_graph_metadata_aliases_and_optional_columns() -> None:
