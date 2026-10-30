@@ -19,9 +19,9 @@ below to do this:
     secure, as it cannot be retrieved after closing the window.
 
   - Under **Authentication** , select **Add a platform** . In the **Add a platform** window,
-    select **Web** . The **Redirect URLs** should be filled right here. We will get **Redirect
-    URLs** from the Phantom asset we create below in the section titled **Phantom Asset for
-    SharePoint** . This step is required only if you are a non-admin user.
+    select **Web** . For non-admin consent, add the webhook callback URL printed during **Test
+    Connectivity** as a redirect URI. The test waits for consent, so register that URL before
+    opening the Microsoft consent link.
 
   - Under **API Permissions** Click on **Add a permission** .
 
@@ -57,12 +57,12 @@ below to do this:
 
   - Configure an asset configuration parameter **Admin Consent Already Provided** with value
     **False** .
-  - You must have configured the **Redirect URLs** mentioned in the above steps.To configure
-    **Redirect URLs** , checkout the section titled **Phantom Asset for SharePoint** below.
   - Run the **Test Connectivity** .
-  - You will be asked to open a link in a new tab. Open the link in the same browser so that you
-    are logged into Splunk Phantom for the redirect. If you wish to use a different browser, log
-    in to the Splunk Phantom first, and then open the provided link.
+  - Copy the webhook callback URL printed in the connectivity log and add it as a **Web** redirect
+    URI in the app registration. Replace any legacy REST handler redirect URI with this SDK
+    webhook URL.
+  - Open the Microsoft consent link printed by **Test Connectivity** in a browser. The SOAR
+    webhook receives the redirect; the browser does not need to be logged into SOAR.
   - Proceed to log in to the Microsoft site with the admin user.
   - You will be prompted to agree to the permissions requested by the App.
   - If all goes well the browser should instruct you to close the tab.
@@ -76,11 +76,10 @@ When creating an asset for the **MS Graph for SharePoint** app, place the **Appl
 **Client Secret** fields respectively. You can also find **Tenant ID** on the application overview
 page. After filling in all the required values, click **SAVE** .
 
-After saving, a new field will appear in the **Asset Settings** tab. Take the URL found in the
-**POST incoming for MS Graph for SharePoint to this location** field and place it in the **Redirect
-URLs** field mentioned in a previous step. After doing so the URL should look something like:
-
-https://\<phantom_host>/rest/handler/msgraphforsharepoint_7963f3ef-b527-40e5-a704-392c56f0a88d/\<asset_name>
+For non-admin consent, the redirect URI is the SDK webhook URL printed in the **Test Connectivity**
+log. Register that URL as a **Web** redirect URI in the Microsoft app registration before opening
+the consent link. Existing installations must replace the legacy REST handler redirect URI with the
+SDK webhook URL.
 
 Additionally, updating the Base URL in the Company Settings is also required. Navigate to
 **Administration > Company Settings > Info** to configure the **Base URL For Splunk SOAR** . Then,
@@ -100,6 +99,14 @@ retrieve the list information. For more information about limitations check out 
 documentation](https://support.microsoft.com/en-us/kb/905231) .\
 As a workaround for lists, we can use the list_id instead of the list_name. Run the 'list lists'
 action to get the list_id.
+
+## Generic Microsoft Graph requests
+
+The **make request** action sends one request to Microsoft Graph using the asset's configured
+authentication. Supply a relative endpoint beginning with `/v1.0/` or `/beta/`; do not include a
+host name. The action returns the HTTP status code and raw response body, including for HTTP error
+responses. It does not follow redirects or paginate results. Requests using write methods can
+change Microsoft Graph data, subject to the permissions granted to the app registration.
 
 ## Port Information
 

@@ -4,7 +4,7 @@ Publisher: Splunk <br>
 Connector Version: 1.5.7 <br>
 Product Vendor: Microsoft <br>
 Product Name: SharePoint <br>
-Minimum Product Version: 6.3.0
+Minimum Product Version: 8.7.0
 
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
 
@@ -29,9 +29,9 @@ below to do this:
     secure, as it cannot be retrieved after closing the window.
 
   - Under **Authentication** , select **Add a platform** . In the **Add a platform** window,
-    select **Web** . The **Redirect URLs** should be filled right here. We will get **Redirect
-    URLs** from the Phantom asset we create below in the section titled **Phantom Asset for
-    SharePoint** . This step is required only if you are a non-admin user.
+    select **Web** . For non-admin consent, add the webhook callback URL printed during **Test
+    Connectivity** as a redirect URI. The test waits for consent, so register that URL before
+    opening the Microsoft consent link.
 
   - Under **API Permissions** Click on **Add a permission** .
 
@@ -67,12 +67,12 @@ below to do this:
 
   - Configure an asset configuration parameter **Admin Consent Already Provided** with value
     **False** .
-  - You must have configured the **Redirect URLs** mentioned in the above steps.To configure
-    **Redirect URLs** , checkout the section titled **Phantom Asset for SharePoint** below.
   - Run the **Test Connectivity** .
-  - You will be asked to open a link in a new tab. Open the link in the same browser so that you
-    are logged into Splunk Phantom for the redirect. If you wish to use a different browser, log
-    in to the Splunk Phantom first, and then open the provided link.
+  - Copy the webhook callback URL printed in the connectivity log and add it as a **Web** redirect
+    URI in the app registration. Replace any legacy REST handler redirect URI with this SDK
+    webhook URL.
+  - Open the Microsoft consent link printed by **Test Connectivity** in a browser. The SOAR
+    webhook receives the redirect; the browser does not need to be logged into SOAR.
   - Proceed to log in to the Microsoft site with the admin user.
   - You will be prompted to agree to the permissions requested by the App.
   - If all goes well the browser should instruct you to close the tab.
@@ -86,11 +86,10 @@ When creating an asset for the **MS Graph for SharePoint** app, place the **Appl
 **Client Secret** fields respectively. You can also find **Tenant ID** on the application overview
 page. After filling in all the required values, click **SAVE** .
 
-After saving, a new field will appear in the **Asset Settings** tab. Take the URL found in the
-**POST incoming for MS Graph for SharePoint to this location** field and place it in the **Redirect
-URLs** field mentioned in a previous step. After doing so the URL should look something like:
-
-https://\<phantom_host>/rest/handler/msgraphforsharepoint_7963f3ef-b527-40e5-a704-392c56f0a88d/\<asset_name>
+For non-admin consent, the redirect URI is the SDK webhook URL printed in the **Test Connectivity**
+log. Register that URL as a **Web** redirect URI in the Microsoft app registration before opening
+the consent link. Existing installations must replace the legacy REST handler redirect URI with the
+SDK webhook URL.
 
 Additionally, updating the Base URL in the Company Settings is also required. Navigate to
 **Administration > Company Settings > Info** to configure the **Base URL For Splunk SOAR** . Then,
@@ -110,6 +109,14 @@ retrieve the list information. For more information about limitations check out 
 documentation](https://support.microsoft.com/en-us/kb/905231) .\
 As a workaround for lists, we can use the list_id instead of the list_name. Run the 'list lists'
 action to get the list_id.
+
+## Generic Microsoft Graph requests
+
+The **make request** action sends one request to Microsoft Graph using the asset's configured
+authentication. Supply a relative endpoint beginning with `/v1.0/` or `/beta/`; do not include a
+host name. The action returns the HTTP status code and raw response body, including for HTTP error
+responses. It does not follow redirects or paginate results. Requests using write methods can
+change Microsoft Graph data, subject to the permissions granted to the app registration.
 
 ## Port Information
 
@@ -136,7 +143,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions
 
-[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity using supplied configuration <br>
+[test connectivity](#action-test-connectivity) - test connectivity <br>
 [copy drive item](#action-copy-drive-item) - Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values <br>
 [create folder](#action-create-folder) - Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID <br>
 [list folder items](#action-list-folder-items) - List items in a folder <br>
@@ -149,14 +156,21 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [update item](#action-update-item) - Update an item in a list on a SharePoint Site <br>
 [get file](#action-get-file) - Retrieves a file from a SharePoint site <br>
 [remove file](#action-remove-file) - Removes a file from a SharePoint site <br>
-[remove folder](#action-remove-folder) - Removes a folder from a SharePoint site
+[remove folder](#action-remove-folder) - Removes a folder from a SharePoint site <br>
+[make request](#action-make-request) - Call Microsoft Graph with the asset's authentication and return status and raw body.
+
+Supply a relative /v1.0/ or /beta/ path. Redirects are not followed. HTTP
+error responses are returned as data; invalid input, authentication and
+transport failures fail the action. Pagination is not followed.
 
 ## action: 'test connectivity'
 
-Validate the asset configuration for connectivity using supplied configuration
+test connectivity
 
 Type: **test** <br>
 Read only: **True**
+
+Basic test for app.
 
 #### Action Parameters
 
@@ -164,7 +178,12 @@ No parameters are required for this action
 
 #### Action Output
 
-No Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string | | success failure |
+action_result.message | string | | |
+summary.total_objects | numeric | | 1 |
+summary.total_objects_successful | numeric | | 1 |
 
 ## action: 'copy drive item'
 
@@ -189,18 +208,14 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.dest_drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
-action_result.parameter.dest_folder_id | string | `sharepoint drive item id` | 01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62 |
-action_result.parameter.file_name | string | | test_file_name |
-action_result.parameter.source_drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
-action_result.parameter.source_item_id | string | `sharepoint drive item id` | 01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62 |
-action_result.data | string | | |
-action_result.summary | string | | |
-action_result.message | string | | Successfully copied an item |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.source_item_id | string | `sharepoint drive item id` | |
+action_result.parameter.source_drive_id | string | `sharepoint drive id` | |
+action_result.parameter.dest_drive_id | string | `sharepoint drive id` | |
+action_result.parameter.dest_folder_id | string | `sharepoint drive item id` | |
+action_result.parameter.file_name | string | | |
 summary.total_objects | numeric | | 1 |
-summary.total_objects | numeric | | 1 |
-summary.total_objects_successful | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
 ## action: 'create folder'
@@ -222,10 +237,11 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
-action_result.parameter.folder_name | string | | Test_folder |
-action_result.parameter.parent_item_id | string | `sharepoint drive item id` | 01WJINUWTOBQ2QUVMHZ5E2XPKITGJIST62 |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.parent_item_id | string | `sharepoint drive item id` | |
+action_result.parameter.folder_name | string | | |
+action_result.parameter.drive_id | string | `sharepoint drive id` | |
 action_result.data.\*.@odata.context | string | | https://test.microsoft.com/v1.0/$metadata#sites('test.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/drive/items('01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N')/children/$entity |
 action_result.data.\*.@odata.etag | string | | "{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},1" |
 action_result.data.\*.cTag | string | | "c:{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},0" |
@@ -238,12 +254,14 @@ action_result.data.\*.eTag | string | | "{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},
 action_result.data.\*.fileSystemInfo.createdDateTime | string | | 2023-10-25T08:55:48Z |
 action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string | | 2023-10-25T08:55:48Z |
 action_result.data.\*.folder.childCount | numeric | | 0 |
+action_result.data.\*.folder_name | string | | |
 action_result.data.\*.id | string | `sharepoint drive item id` | |
 action_result.data.\*.lastModifiedBy.application.displayName | string | | sharepoint_test |
 action_result.data.\*.lastModifiedBy.application.id | string | | 71b307af-1dcb-4e39-9640-5129afc83162 |
 action_result.data.\*.lastModifiedBy.user.displayName | string | | SharePoint App |
 action_result.data.\*.lastModifiedDateTime | string | | 2023-10-25T08:55:48Z |
 action_result.data.\*.name | string | | test2 |
+action_result.data.\*.webUrl | string | `url` | |
 action_result.data.\*.parentReference.driveId | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
 action_result.data.\*.parentReference.driveType | string | | documentLibrary |
 action_result.data.\*.parentReference.id | string | `sharepoint drive item id` | 01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N |
@@ -256,9 +274,6 @@ action_result.data.\*.parentReference.sharepointIds.tenantId | string | | 140fe4
 action_result.data.\*.parentReference.sharepointIds.webId | string | | c42b48c4-59b9-48f1-b96e-e8145b5539fa |
 action_result.data.\*.shared.scope | string | | unknown |
 action_result.data.\*.size | numeric | | 0 |
-action_result.data.\*.webUrl | string | `url` | |
-action_result.summary | string | | |
-action_result.message | string | | Successfully created a folder |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -267,7 +282,7 @@ summary.total_objects_successful | numeric | | 1 |
 List items in a folder
 
 Type: **investigate** <br>
-Read only: **True**
+Read only: **False**
 
 List all direct children in a folder.
 
@@ -282,38 +297,36 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.folder_path | string | | library/test |
-action_result.parameter.drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
-action_result.data.\*.id | string | | 01SNFLYIQZLCKT6RR4OJEYA47OGVIKB7DB |
-action_result.data.\*.cTag | string | | 'c:{3F967819-3D56-4972-8073-EF3550A1TC34},1' |
-action_result.data.\*.eTag | string | | '{3F967819-3D56-4972-8073-EF3550A1TC34},1' |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.drive_id | string | `sharepoint drive id` | |
+action_result.parameter.folder_path | string | | |
+action_result.data.\*.name | string | | |
+action_result.data.\*.id | string | | |
+action_result.data.\*.cTag | string | | |
+action_result.data.\*.eTag | string | | |
 action_result.data.\*.file.mimeType | string | | video/mp4 |
 action_result.data.\*.folder.childCount | numeric | | 5 |
-action_result.data.\*.name | string | | example.mp4 |
-action_result.data.\*.size | numeric | | 157000 |
+action_result.data.\*.size | numeric | | |
 action_result.data.\*.shared.scope | string | | users |
-action_result.data.\*.shared.webUrl | string | | https://test-tenant-name.sharepoint.com/sites/SiteName/documents/example.mp4 |
+action_result.data.\*.shared.webUrl | string | `url` | |
 action_result.data.\*.parentReference.driveType | string | | documentLibrary |
-action_result.data.\*.parentReference.id | string | `sharepoint drive item id` | 01WJINUWV6Y2GOVW7725BZO354PWSELRRZ |
+action_result.data.\*.parentReference.id | string | `sharepoint drive item id` | |
 action_result.data.\*.parentReference.name | string | | Shared Documents |
-action_result.data.\*.parentReference.path | string | | /drives/b!P_PLxcYmjkiP68Fx-chtHkdhtZd0TeZPokKrsyopCWbKblNpI0pzRa5Mk398L4cc/root: |
-action_result.data.\*.parentReference.siteId | string | | c5cbf33f-26c6-488e-8feb-c171f9c86d1e |
-action_result.data.\*.fileSystemInfo.createdDateTime | string | | 2020-07-28T20:15:33Z |
-action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string | | 2020-07-28T20:15:33Z |
-action_result.data.\*.createdBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
-action_result.data.\*.createdBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
+action_result.data.\*.parentReference.path | string | | |
+action_result.data.\*.parentReference.siteId | string | | |
+action_result.data.\*.fileSystemInfo.createdDateTime | string | | |
+action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string | | |
 action_result.data.\*.createdBy.user.displayName | string | | Test User |
+action_result.data.\*.createdBy.user.email | string | `email` | |
+action_result.data.\*.createdBy.user.id | string | | |
 action_result.data.\*.lastModifiedBy.user.displayName | string | | Test User |
-action_result.data.\*.lastModifiedBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
-action_result.data.\*.lastModifiedBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
-action_result.data.\*.createdDateTime | string | | 2022-02-24T05:38:53Z |
-action_result.data.\*.@microsoft.graph.downloadUrl | string | `url` | https://test.sharepoint.com/sites/Test/\_layouts/15/download.aspx?UniqueId=d5bfdd47-e0e8-4a7e-99a3-c96f30191b12&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvcGhhbnRvbWVuZ2luZWVyaW5nMi5zaGFyZXBvaW50LmNvbUAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJpc3MiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAiLCJuYmYiOiIxNjk5MjU1NDY4IiwiZXhwIjoiMTY5OTI1OTA2OCIsImVuZHBvaW50dXJsIjoiM1hObzdUK3U4YnFXUU1DTko0OXdiQXVDZ01ad0FNRDh3ckZvVC9yWkxKbz0iLCJlbmRwb2ludHVybExlbmd0aCI6IjE0OCIsImlzbG9vcGJhY2siOiJUcnVlIiwiY2lkIjoiUS9ZVVdDcFQvMEsrQThFOWtxeEIvQT09IiwidmVyIjoiaGFzaGVkcHJvb2Z0b2tlbiIsInNpdGVpZCI6IlpHTTJaalF6WlRrdE5UUm1ZUzAwWVRNNUxUZzNPRE10TXpFMFpUTmlZbUpsWkRReCIsImFwcF9kaXNwbGF5bmFtZSI6ImlnaGVsYW5pX3NoYXJlcG9pbnRfdGVzdCIsIm5hbWVpZCI6IjcxYjMwN2FmLTFkY2ItNGUzOS05NjQwLTUxMjlhZmM4MzE2MkAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJyb2xlcyI6ImFsbGZpbGVzLndyaXRlIHNlbGVjdGVkc2l0ZXMgZ3JvdXAucmVhZCBhbGxzaXRlcy5yZWFkIGFsbHNpdGVzLndyaXRlIGdyb3VwLndyaXRlIGFsbGZpbGVzLnJlYWQgYWxsc2l0ZXMuZnVsbGNvbnRyb2wgYWxscHJvZmlsZXMucmVhZCIsInR0IjoiMSIsImlwYWRkciI6IjQwLjEyNi40LjQwIn0.y13AkyxdRPgziPhIV8_FFBGjtZGHgNpgkW0GU7MMUfA&ApiVersion=2.0 |
-action_result.data.\*.lastModifiedDateTime | string | | 2020-07-28T20:15:33Z |
-action_result.summary | string | | |
-action_result.summary.item_count | numeric | | 25 |
-action_result.message | string | | Item count: 25 |
-action_result.message | string | | Successfully copied an item |
+action_result.data.\*.lastModifiedBy.user.email | string | `email` | |
+action_result.data.\*.lastModifiedBy.user.id | string | | |
+action_result.data.\*.createdDateTime | string | | |
+action_result.data.\*.@microsoft.graph.downloadUrl | string | `url` | https://graph.microsoft.com/v1.0/download |
+action_result.data.\*.lastModifiedDateTime | string | | |
+action_result.summary.items_count | numeric | | 1 |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -322,7 +335,7 @@ summary.total_objects_successful | numeric | | 1 |
 Fetch the available drives (libraries) under a SharePoint site
 
 Type: **investigate** <br>
-Read only: **True**
+Read only: **False**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
 
@@ -336,34 +349,34 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.limit | numeric | | 500 |
-action_result.data.\*.id | string | | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpuWT-s6xSLQ6CTR3DzR9nz |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.limit | numeric | | |
 action_result.data.\*.name | string | | Custom Library |
-action_result.data.\*.owner.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
-action_result.data.\*.owner.user.email | string | `email` | test_user@tenant-name.ontest.com |
+action_result.data.\*.id | string | | |
 action_result.data.\*.owner.user.displayName | string | | Test User |
-action_result.data.\*.owner.group.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
-action_result.data.\*.owner.group.email | string | `email` | test_group@tenant-name.ontest.com |
-action_result.data.\*.owner.group.displayName | string | | Test Group |
+action_result.data.\*.owner.user.email | string | `email` | |
+action_result.data.\*.owner.user.id | string | | |
+action_result.data.\*.owner.group.id | string | | |
+action_result.data.\*.owner.group.email | string | `email` | |
+action_result.data.\*.owner.group.displayName | string | | |
 action_result.data.\*.quota.used | numeric | | 8546734 |
 action_result.data.\*.quota.state | string | | normal |
 action_result.data.\*.quota.total | numeric | | 274877685 |
 action_result.data.\*.quota.deleted | numeric | | 0 |
 action_result.data.\*.quota.remaining | numeric | | 266330951 |
-action_result.data.\*.createdBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
-action_result.data.\*.createdBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
 action_result.data.\*.createdBy.user.displayName | string | | Test User |
-action_result.data.\*.createdDateTime | string | | 2022-02-24T05:38:53Z |
+action_result.data.\*.createdBy.user.email | string | `email` | |
+action_result.data.\*.createdBy.user.id | string | | |
+action_result.data.\*.createdDateTime | string | | |
 action_result.data.\*.description | string | | Test List Description |
 action_result.data.\*.driveType | string | | documentLibrary |
 action_result.data.\*.lastModifiedBy.user.displayName | string | | Test User |
-action_result.data.\*.lastModifiedBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
-action_result.data.\*.lastModifiedBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
-action_result.data.\*.lastModifiedDateTime | string | | 2022-03-03T13:43:06Z |
-action_result.data.\*.webUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/SiteName/Lists/ListName |
-action_result.summary.drive_count | numeric | | 25 |
-action_result.message | string | | Drive count: 25 |
+action_result.data.\*.lastModifiedBy.user.email | string | `email` | |
+action_result.data.\*.lastModifiedBy.user.id | string | | |
+action_result.data.\*.lastModifiedDateTime | string | | |
+action_result.data.\*.webUrl | string | `url` | |
+action_result.summary.drives_count | numeric | | 1 |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -372,7 +385,7 @@ summary.total_objects_successful | numeric | | 1 |
 List the items in a drive folder by drive ID or search for a specific file name if provided
 
 Type: **investigate** <br>
-Read only: **True**
+Read only: **False**
 
 #### Action Parameters
 
@@ -384,43 +397,43 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
-action_result.data.\*.@microsoft.graph.downloadUrl | string | `url` | https://test.sharepoint.com/sites/Test/\_layouts/15/download.aspx?UniqueId=d5bfdd47-e0e8-4a7e-99a3-c96f30191b12&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvcGhhbnRvbWVuZ2luZWVyaW5nMi5zaGFyZXBvaW50LmNvbUAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJpc3MiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAiLCJuYmYiOiIxNjk5MjU1NDY4IiwiZXhwIjoiMTY5OTI1OTA2OCIsImVuZHBvaW50dXJsIjoiM1hObzdUK3U4YnFXUU1DTko0OXdiQXVDZ01ad0FNRDh3ckZvVC9yWkxKbz0iLCJlbmRwb2ludHVybExlbmd0aCI6IjE0OCIsImlzbG9vcGJhY2siOiJUcnVlIiwiY2lkIjoiUS9ZVVdDcFQvMEsrQThFOWtxeEIvQT09IiwidmVyIjoiaGFzaGVkcHJvb2Z0b2tlbiIsInNpdGVpZCI6IlpHTTJaalF6WlRrdE5UUm1ZUzAwWVRNNUxUZzNPRE10TXpFMFpUTmlZbUpsWkRReCIsImFwcF9kaXNwbGF5bmFtZSI6ImlnaGVsYW5pX3NoYXJlcG9pbnRfdGVzdCIsIm5hbWVpZCI6IjcxYjMwN2FmLTFkY2ItNGUzOS05NjQwLTUxMjlhZmM4MzE2MkAxNDBmZTQ2ZC04MTlkLTRiNmQtYjdlZi0xYzBhODI3MGY0ZjAiLCJyb2xlcyI6ImFsbGZpbGVzLndyaXRlIHNlbGVjdGVkc2l0ZXMgZ3JvdXAucmVhZCBhbGxzaXRlcy5yZWFkIGFsbHNpdGVzLndyaXRlIGdyb3VwLndyaXRlIGFsbGZpbGVzLnJlYWQgYWxsc2l0ZXMuZnVsbGNvbnRyb2wgYWxscHJvZmlsZXMucmVhZCIsInR0IjoiMSIsImlwYWRkciI6IjQwLjEyNi40LjQwIn0.y13AkyxdRPgziPhIV8_FFBGjtZGHgNpgkW0GU7MMUfA&ApiVersion=2.0 |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.drive_id | string | `sharepoint drive id` | |
+action_result.data.\*.@microsoft.graph.downloadUrl | string | `url` | https://graph.microsoft.com/v1.0/download |
 action_result.data.\*.image.width | numeric | | 1752 |
 action_result.data.\*.image.height | numeric | | 1244 |
-action_result.data.\*.cTag | string | | "c:{E1E93D43-F034-489F-8304-BAF7F064A30D},0" |
+action_result.data.\*.cTag | string | | |
 action_result.data.\*.createdBy.user.displayName | string | | SharePoint App |
-action_result.data.\*.createdBy.user.email | string | | test@gmail.com |
-action_result.data.\*.createdBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
-action_result.data.\*.createdDateTime | string | | 2020-07-28T20:15:33Z |
+action_result.data.\*.createdBy.user.email | string | | |
+action_result.data.\*.createdBy.user.id | string | | |
+action_result.data.\*.createdDateTime | string | | |
 action_result.data.\*.decorator.iconColor | string | | darkGreen |
-action_result.data.\*.eTag | string | | "{E1E93D43-F034-489F-8304-BAF7F064A30D},1" |
+action_result.data.\*.eTag | string | | |
 action_result.data.\*.file.hashes.quickXorHash | string | | 8JpxaQB3wX1/FkQ5Gt3prUbUUFU= |
 action_result.data.\*.file.mimeType | string | | application/vnd.ms-excel |
-action_result.data.\*.fileSystemInfo.createdDateTime | string | | 2020-07-28T20:15:33Z |
-action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string | | 2020-07-28T20:15:33Z |
+action_result.data.\*.fileSystemInfo.createdDateTime | string | | |
+action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string | | |
 action_result.data.\*.folder.childCount | numeric | | 1 |
 action_result.data.\*.id | string | `sharepoint drive item id` | |
-action_result.data.\*.lastModifiedBy.application.displayName | string | | Yammer |
-action_result.data.\*.lastModifiedBy.application.id | string | | 00000005-0000-0ff1-ce00-000000000000 |
-action_result.data.\*.lastModifiedBy.user.displayName | string | | SharePoint App |
-action_result.data.\*.lastModifiedBy.user.email | string | | test@gmail.com |
-action_result.data.\*.lastModifiedBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
-action_result.data.\*.lastModifiedDateTime | string | | 2020-07-28T20:15:33Z |
 action_result.data.\*.name | string | | |
-action_result.data.\*.parentReference.driveId | string | `sharepoint drive id` | b!P_PLxcYmjkiP68Fx-chtHkdhtZd0TeZPokKrsyopCWbKblNpI0pzRa5Mk398L4cc |
-action_result.data.\*.parentReference.driveType | string | | documentLibrary |
-action_result.data.\*.parentReference.id | string | `sharepoint drive item id` | 01WJINUWV6Y2GOVW7725BZO354PWSELRRZ |
-action_result.data.\*.parentReference.name | string | | Shared Documents |
-action_result.data.\*.parentReference.path | string | | /drives/b!P_PLxcYmjkiP68Fx-chtHkdhtZd0TeZPokKrsyopCWbKblNpI0pzRa5Mk398L4cc/root: |
-action_result.data.\*.parentReference.siteId | string | | c5cbf33f-26c6-488e-8feb-c171f9c86d1e |
+action_result.data.\*.webUrl | string | `url` | |
+action_result.data.\*.lastModifiedBy.application.displayName | string | | |
+action_result.data.\*.lastModifiedBy.application.id | string | | |
+action_result.data.\*.lastModifiedBy.user.displayName | string | | SharePoint App |
+action_result.data.\*.lastModifiedBy.user.email | string | | |
+action_result.data.\*.lastModifiedBy.user.id | string | | |
+action_result.data.\*.lastModifiedDateTime | string | | |
+action_result.data.\*.parentReference.driveId | string | `sharepoint drive id` | |
+action_result.data.\*.parentReference.driveType | string | | |
+action_result.data.\*.parentReference.id | string | `sharepoint drive item id` | |
+action_result.data.\*.parentReference.name | string | | |
+action_result.data.\*.parentReference.path | string | | |
+action_result.data.\*.parentReference.siteId | string | | |
 action_result.data.\*.shared.scope | string | | users |
 action_result.data.\*.size | numeric | | 775 |
 action_result.data.\*.specialFolder.name | string | | apps |
-action_result.data.\*.webUrl | string | `url` | |
-action_result.summary.drive_children_count | numeric | | 2 |
-action_result.message | string | | Drive children count: 2 |
+action_result.summary.drive_children_count | numeric | | 1 |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -429,7 +442,7 @@ summary.total_objects_successful | numeric | | 1 |
 Fetch the details of the SharePoint sites
 
 Type: **investigate** <br>
-Read only: **True**
+Read only: **False**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
 
@@ -443,8 +456,9 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.limit | numeric | | 500 |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.limit | numeric | | |
 action_result.data.\*.createdDateTime | string | | 2016-10-31T20:25:06Z |
 action_result.data.\*.displayName | string | | Test Site Name |
 action_result.data.\*.id | string | | tenant-name.sharepoint.com,595384ee-13aa-49d1-814b-00ed3e024cde,70abfe37-8aa1-4168-b83e-41b6e9721509 |
@@ -453,8 +467,7 @@ action_result.data.\*.lastModifiedDateTime | string | | 2022-02-16T12:12:25.9162
 action_result.data.\*.name | string | | Test Site Name |
 action_result.data.\*.siteCollection.hostname | string | `host name` | tenant-name.sharepoint.com |
 action_result.data.\*.webUrl | string | `url` | https://test-tenant-name.sharepoint.com/search |
-action_result.summary.sites_count | numeric | | 23 |
-action_result.message | string | | Sites count: 23 |
+action_result.summary.sites_count | numeric | | 1 |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -463,7 +476,7 @@ summary.total_objects_successful | numeric | | 1 |
 Fetch the available lists under a SharePoint site
 
 Type: **investigate** <br>
-Read only: **True**
+Read only: **False**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
 
@@ -477,9 +490,10 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.limit | numeric | | 500 |
-action_result.data.\*.@odata.etag | string | | "4896b66a-659c-4fce-a148-0b26bd718f68,5" |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.limit | numeric | | |
+action_result.data.\*.@odata.etag | string | | |
 action_result.data.\*.createdBy.user.displayName | string | | Test User |
 action_result.data.\*.createdBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
 action_result.data.\*.createdBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
@@ -498,8 +512,7 @@ action_result.data.\*.list.template | string | | genericList |
 action_result.data.\*.name | string | | ListName |
 action_result.data.\*.parentReference.siteId | string | | tenant-name.sharepoint.com,dc6f43e9-54fa-4a39-8783-314e3bbbed41,c42b48c4-59b9-48f1-b96e-e8145b5539fa |
 action_result.data.\*.webUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/SiteName/Lists/ListName |
-action_result.summary.lists_count | numeric | | 25 |
-action_result.message | string | | Lists count: 25 |
+action_result.summary.lists_count | numeric | | 1 |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -508,7 +521,7 @@ summary.total_objects_successful | numeric | | 1 |
 Retrieves a list from a SharePoint Site
 
 Type: **investigate** <br>
-Read only: **True**
+Read only: **False**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
 
@@ -523,15 +536,16 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.limit | numeric | | 500 |
-action_result.parameter.list | string | `sharepoint list id` `sharepoint list name` | 4961c496-52c1-49bd-b1fa-e1b2e976256c Test List Name |
-action_result.data.\*.@odata.context | string | `url` | https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists/$entity |
-action_result.data.\*.@odata.etag | string | | "4961c496-52c1-49bd-b1fa-e1b2e976256c,5" |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.list | string | `sharepoint list id` `sharepoint list name` | |
+action_result.parameter.limit | numeric | | |
+action_result.data.\*.@odata.context | string | `url` | |
+action_result.data.\*.@odata.etag | string | | |
 action_result.data.\*.columns.\*.calculated.format | string | | dateTime |
 action_result.data.\*.columns.\*.calculated.formula | string | | =[test] |
 action_result.data.\*.columns.\*.calculated.outputType | string | | dateTime |
-action_result.data.\*.columns.\*.choice.allowTextEntry | boolean | | False |
+action_result.data.\*.columns.\*.choice.allowTextEntry | boolean | | True False |
 action_result.data.\*.columns.\*.choice.displayAs | string | | dropDownMenu |
 action_result.data.\*.columns.\*.columnGroup | string | | Custom Columns |
 action_result.data.\*.columns.\*.dateTime.displayAs | string | | default |
@@ -558,7 +572,7 @@ action_result.data.\*.columns.\*.text.appendChangesToExistingText | boolean | | 
 action_result.data.\*.columns.\*.text.linesForEditing | numeric | | 0 |
 action_result.data.\*.columns.\*.text.maxLength | numeric | | 255 |
 action_result.data.\*.columns.\*.text.textType | string | | plain |
-action_result.data.\*.columns@odata.context | string | `url` | https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/columns |
+action_result.data.\*.columns@odata.context | string | `url` | |
 action_result.data.\*.createdBy.user.displayName | string | | Test User |
 action_result.data.\*.createdBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
 action_result.data.\*.createdBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
@@ -567,7 +581,7 @@ action_result.data.\*.description | string | | Test List Description |
 action_result.data.\*.displayName | string | `sharepoint list name` | Test List Name |
 action_result.data.\*.eTag | string | | "4961c496-52c1-49bd-b1fa-e1b2e976256c,5" |
 action_result.data.\*.id | string | `sharepoint list id` | 4961c496-52c1-49bd-b1fa-e1b2e976256c |
-action_result.data.\*.items.\*.@odata.etag | string | | "fe7e1a7c-a66a-4944-b1f1-2b7c7499603c,1" |
+action_result.data.\*.items.\*.@odata.etag | string | | |
 action_result.data.\*.items.\*.contentType.id | string | | 0x01008C9AE9AA9A043D48B717AB18E1E7180E00F8FCD4A1A57C3043B42193515148F5EC |
 action_result.data.\*.items.\*.contentType.name | string | | Item |
 action_result.data.\*.items.\*.createdBy.user.displayName | string | | Test User |
@@ -575,7 +589,7 @@ action_result.data.\*.items.\*.createdBy.user.email | string | `email` | test_us
 action_result.data.\*.items.\*.createdBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
 action_result.data.\*.items.\*.createdDateTime | string | | 2022-02-08T12:29:27Z |
 action_result.data.\*.items.\*.eTag | string | | "fe7e1a7c-a66a-4944-b1f1-2b7c7499603c,1" |
-action_result.data.\*.items.\*.fields.@odata.etag | string | | "fe7e1a7c-a66a-4944-b1f1-2b7c7499603c,1" |
+action_result.data.\*.items.\*.fields.@odata.etag | string | | |
 action_result.data.\*.items.\*.fields.AppAuthorLookupId | string | | 8 |
 action_result.data.\*.items.\*.fields.AppEditorLookupId | string | | 8 |
 action_result.data.\*.items.\*.fields.ApplicationDate | string | | 2022-02-03T08:00:00Z |
@@ -601,7 +615,7 @@ action_result.data.\*.items.\*.fields.PhoneScreenDate | string | | 2022-02-15T14
 action_result.data.\*.items.\*.fields.PhoneScreenerLookupId | string | | 17 |
 action_result.data.\*.items.\*.fields.Position | string | | Designer |
 action_result.data.\*.items.\*.fields.Progress | string | | Active |
-action_result.data.\*.items.\*.fields.PropagateAcl | boolean | | False |
+action_result.data.\*.items.\*.fields.PropagateAcl | boolean | | True False |
 action_result.data.\*.items.\*.fields.RecruiterLookupId | string | | 19 |
 action_result.data.\*.items.\*.fields.ReqByUserLookupId | string | | 10 |
 action_result.data.\*.items.\*.fields.ReqForUserLookupId | string | | 10 |
@@ -616,7 +630,7 @@ action_result.data.\*.items.\*.fields.\_ComplianceTagUserId | string | | |
 action_result.data.\*.items.\*.fields.\_ComplianceTagWrittenTime | string | | |
 action_result.data.\*.items.\*.fields._UIVersionString | string | | 1.0 |
 action_result.data.\*.items.\*.fields.id | string | | 1 |
-action_result.data.\*.items.\*.fields@odata.context | string | `url` | https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items('1')/fields/$entity |
+action_result.data.\*.items.\*.fields@odata.context | string | `url` | |
 action_result.data.\*.items.\*.id | string | | 1 |
 action_result.data.\*.items.\*.lastModifiedBy.application.displayName | string | | test |
 action_result.data.\*.items.\*.lastModifiedBy.application.id | string | | 71b307af-1dcb-4e39-9640-5129afc83162 |
@@ -624,10 +638,10 @@ action_result.data.\*.items.\*.lastModifiedBy.user.displayName | string | | Test
 action_result.data.\*.items.\*.lastModifiedBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
 action_result.data.\*.items.\*.lastModifiedBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
 action_result.data.\*.items.\*.lastModifiedDateTime | string | | 2022-02-08T12:29:27Z |
-action_result.data.\*.items.\*.parentReference.id | string | | 49f4a5c5-4c09-4ad0-b0fe-d8d27dfb9cb2 |
-action_result.data.\*.items.\*.parentReference.siteId | string | | tenant-name.sharepoint.com,dc6f43e9-54fa-4a39-8783-314e3bbbed41,c42b48c4-59b9-48f1-b96e-e8145b5539fa |
+action_result.data.\*.items.\*.parentReference.id | string | `sharepoint item id` | |
+action_result.data.\*.items.\*.parentReference.siteId | string | | |
 action_result.data.\*.items.\*.webUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name/1_.000 |
-action_result.data.\*.items@odata.context | string | `url` | https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/lists('4961c496-52c1-49bd-b1fa-e1b2e976256c')/items |
+action_result.data.\*.items@odata.context | string | `url` | |
 action_result.data.\*.lastModifiedBy.user.displayName | string | | Test User |
 action_result.data.\*.lastModifiedBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
 action_result.data.\*.lastModifiedBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
@@ -638,8 +652,7 @@ action_result.data.\*.list.template | string | | genericList |
 action_result.data.\*.name | string | | Test List Name |
 action_result.data.\*.parentReference.siteId | string | | tenant-name.sharepoint.com,dc6f43e9-54fa-4a39-8783-314e3bbbed41,c42b48c4-59b9-48f1-b96e-e8145b5539fa |
 action_result.data.\*.webUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name |
-action_result.summary.item_count | numeric | | 2 |
-action_result.message | string | | Item count: 2 |
+action_result.summary.item_count | numeric | | 1 |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -661,9 +674,10 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.item | string | | {"fields": {"Title": "Test"}} |
-action_result.parameter.list | string | `sharepoint list id` `sharepoint list name` | d52a6552-2884-4f77-9707-1badc7300ae3 |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.list | string | `sharepoint list id` `sharepoint list name` | |
+action_result.parameter.item | string | | |
 action_result.data.\*.@odata.context | string | `url` | |
 action_result.data.\*.@odata.etag | string | | |
 action_result.data.\*.contentType.id | string | | |
@@ -679,7 +693,7 @@ action_result.data.\*.fields.AssetType | string | | Laptop |
 action_result.data.\*.fields.Attachments | boolean | | True False |
 action_result.data.\*.fields.AuthorLookupId | string | | |
 action_result.data.\*.fields.Color | string | | Color of the Asset |
-action_result.data.\*.fields.Complete | boolean | | False |
+action_result.data.\*.fields.Complete | boolean | | True False |
 action_result.data.\*.fields.ConditionNotes | string | | Note for the Asset |
 action_result.data.\*.fields.ContentType | string | | |
 action_result.data.\*.fields.Created | string | | |
@@ -718,8 +732,7 @@ action_result.data.\*.lastModifiedDateTime | string | | |
 action_result.data.\*.parentReference.id | string | | a86797a9-c9a9-47e7-891b-8413b2d758fc |
 action_result.data.\*.parentReference.siteId | string | | |
 action_result.data.\*.webUrl | string | `url` | |
-action_result.summary.sites_count | numeric | | |
-action_result.message | string | | Sites count: 1 |
+action_result.summary.sites_count | numeric | | 1 |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -742,10 +755,11 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.item | string | | {"fields": {"Title": "Test"}} |
-action_result.parameter.item_id | numeric | `sharepoint item id` | 37 |
-action_result.parameter.list | string | `sharepoint list id` `sharepoint list name` | 075d79f1-a11f-44ed-a794-331a1d9138f0 |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.list | string | `sharepoint list id` `sharepoint list name` | |
+action_result.parameter.item_id | numeric | `sharepoint item id` | |
+action_result.parameter.item | string | | |
 action_result.data.\*.@odata.context | string | `url` | |
 action_result.data.\*.@odata.etag | string | | |
 action_result.data.\*.contentType.id | string | | |
@@ -796,8 +810,7 @@ action_result.data.\*.lastModifiedDateTime | string | | |
 action_result.data.\*.parentReference.id | string | | a86797a9-c9a9-47e7-891b-8413b2d758fc |
 action_result.data.\*.parentReference.siteId | string | | |
 action_result.data.\*.webUrl | string | `url` | |
-action_result.summary.sites_count | numeric | | |
-action_result.message | string | | Sites count: 1 |
+action_result.summary.sites_count | numeric | | 1 |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -822,15 +835,17 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.file_name | string | | test_file_name.txt |
-action_result.parameter.file_path | string | | /test_folder_name/ |
-action_result.parameter.drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.file_name | string | | |
+action_result.parameter.file_path | string | | |
+action_result.parameter.drive_id | string | `sharepoint drive id` | |
 action_result.data.\*.@microsoft.graph.downloadUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/TestSiteName/\_layouts/15/download.aspx?UniqueId=c743b2e0-36ec-4c8a-9ce0-190c2fd4dd97&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub0&ApiVersion=2.0 |
-action_result.data.\*.@odata.context | string | `url` | https://graph.test.com/v1.0/$metadata#sites('tenant-name.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fb')/drive/root/$entity |
+action_result.data.\*.@odata.context | string | `url` | |
 action_result.data.\*.image.width | numeric | | 256 |
 action_result.data.\*.image.height | numeric | | 266 |
 action_result.data.\*.cTag | string | | "c:{C743B2E0-36EB-4C9A-9CE0-190C2FD4DD97},1" |
+action_result.data.\*.id | string | `sharepoint drive item id` | 01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX |
 action_result.data.\*.createdBy.user.displayName | string | | Test User |
 action_result.data.\*.createdBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
 action_result.data.\*.createdBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
@@ -840,7 +855,6 @@ action_result.data.\*.file.hashes.quickXorHash | string | | EIDYEgye8dEx3XhA7xc1
 action_result.data.\*.file.mimeType | string | | text/plain |
 action_result.data.\*.fileSystemInfo.createdDateTime | string | | 2022-02-10T15:25:21Z |
 action_result.data.\*.fileSystemInfo.lastModifiedDateTime | string | | 2022-02-10T15:25:21Z |
-action_result.data.\*.id | string | `sharepoint drive item id` | 01SNFLYIXAWJB4P2ZWTJGJZYAZBQX5JXMX |
 action_result.data.\*.lastModifiedBy.user.displayName | string | | Test User |
 action_result.data.\*.lastModifiedBy.user.email | string | `email` | test_user@tenant-name.ontest.com |
 action_result.data.\*.lastModifiedBy.user.id | string | | eeb3645f-df19-47a1-8e8c-fcd234cb5f6f |
@@ -855,8 +869,7 @@ action_result.data.\*.parentReference.siteId | string | | dc6f43e9-54fa-4a39-878
 action_result.data.\*.shared.scope | string | | users |
 action_result.data.\*.size | numeric | | 1422 |
 action_result.data.\*.webUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt |
-action_result.summary.vault_id | string | `sha1` `vault id` | 8b11ac28c0e276a4f9fa8a2fd2a17b499a415786 |
-action_result.message | string | | Vault id: 8b11ac28c0e276a4f9fa8a2fd2a17b499a415786 |
+action_result.summary.vault_id | string | `sha1` `vault id` | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -881,13 +894,11 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.file_name | string | | test_file_name.txt |
-action_result.parameter.file_path | string | | /test_folder_name/ |
-action_result.parameter.drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
-action_result.data | string | | |
-action_result.summary | string | | |
-action_result.message | string | | Successfully deleted file |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.file_name | string | | |
+action_result.parameter.file_path | string | | |
+action_result.parameter.drive_id | string | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -911,12 +922,53 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
-action_result.status | string | | success failed |
-action_result.parameter.folder_path | string | | /test_folder_name/ |
-action_result.parameter.drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
-action_result.data | string | | |
-action_result.summary | string | | |
-action_result.message | string | | Successfully deleted folder |
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.folder_path | string | | |
+action_result.parameter.drive_id | string | | |
+summary.total_objects | numeric | | 1 |
+summary.total_objects_successful | numeric | | 1 |
+
+## action: 'make request'
+
+Call Microsoft Graph with the asset's authentication and return status and raw body.
+
+Supply a relative /v1.0/ or /beta/ path. Redirects are not followed. HTTP
+error responses are returned as data; invalid input, authentication and
+transport failures fail the action. Pagination is not followed.
+
+Type: **generic** <br>
+Read only: **False**
+
+'make request' action for the app. Used to handle arbitrary HTTP requests with the app's asset
+
+#### Action Parameters
+
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**http_method** | required | The HTTP method to use for the request. | string | |
+**endpoint** | required | Microsoft Graph path beginning with /v1.0/ or /beta/. Do not include the base URL. | string | |
+**headers** | optional | The headers to send with the request (JSON object). An example is {'Content-Type': 'application/json'} | string | |
+**query_parameters** | optional | Parameters to append to the URL (JSON object or query string). An example is ?key=value&key2=value2 | string | |
+**body** | optional | The body to send with the request (JSON object). An example is {'key': 'value', 'key2': 'value2'} | string | |
+**timeout** | optional | The timeout for the request in seconds. | numeric | |
+**verify_ssl** | optional | Whether to verify the SSL certificate. Default is True. | boolean | |
+
+#### Action Output
+
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.http_method | string | | |
+action_result.parameter.endpoint | string | | |
+action_result.parameter.headers | string | | |
+action_result.parameter.query_parameters | string | | |
+action_result.parameter.body | string | | |
+action_result.parameter.timeout | numeric | | |
+action_result.parameter.verify_ssl | boolean | | |
+action_result.data.\*.status_code | numeric | | 200 404 500 |
+action_result.data.\*.response_body | string | | {"key": "value"} |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
