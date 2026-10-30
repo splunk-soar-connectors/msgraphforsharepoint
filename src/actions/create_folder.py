@@ -1,13 +1,12 @@
 """SDK action boundary for the SharePoint create_folder action."""
 
-import httpx
-from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
+from soar_sdk.action_results import OutputField, PermissiveActionOutput
 from soar_sdk.params import Params, Param
 import json
 from soar_sdk.abstract import SOARClient
 from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
-from ..graph_response import GraphResponseError, get_graph_response
+from ._graph import _request_graph
 from ._paths import encode_path_segment
 from .drives import drive_root_endpoint
 from ..asset import Asset
@@ -135,22 +134,6 @@ class CreateFolderOutput(PermissiveActionOutput):
     parentReference: ParentreferenceOutput
     shared: SharedOutput
     size: float = OutputField(example_values=[0])
-
-
-def _request_graph(client: httpx.Client, method: str, endpoint: str, **kwargs):
-    headers = {"Accept": "application/json", "Content-Type": "application/json"}
-    request_headers = kwargs.pop("headers", {})
-    headers.update(request_headers)
-    try:
-        response = client.request(
-            method, endpoint, headers=headers, follow_redirects=False, **kwargs
-        )
-    except httpx.RequestError as exc:
-        raise ActionFailure("Error connecting to Microsoft Graph") from exc
-    try:
-        return get_graph_response(response)
-    except GraphResponseError as exc:
-        raise ActionFailure(str(exc)) from exc
 
 
 def create_folder(

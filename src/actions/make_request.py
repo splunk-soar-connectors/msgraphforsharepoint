@@ -147,7 +147,7 @@ def make_request(
         )
     except ActionFailure:
         raise
-    except (httpx.HTTPError, OAuthClientError, ValueError):
+    except (httpx.HTTPError, OAuthClientError, ValueError) as error:
         # Do not echo request URLs, bodies, headers, or token responses.
         raise ActionFailure(
             f"Microsoft Graph request failed ({type(error).__name__})"

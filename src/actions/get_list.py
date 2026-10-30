@@ -1,12 +1,13 @@
 """SDK action boundary for the SharePoint get_list action."""
 
-import httpx
+from typing import Annotated
+
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
-from ..graph_response import GraphResponseError, get_graph_response
+from ._graph import _paginate, _request_graph
 from ._paths import encode_path_segment
 from ._limits import validate_limit
 from ..asset import Asset
@@ -110,45 +111,75 @@ class InterviewersOutput(PermissiveActionOutput):
 
 
 class FieldsOutput(PermissiveActionOutput):
-    etag: str = OutputField(alias="@odata.etag")
-    AppAuthorLookupId: str = OutputField(example_values=["8"])
-    AppEditorLookupId: str = OutputField(example_values=["8"])
-    ApplicationDate: str = OutputField(example_values=["2022-02-03T08:00:00Z"])
-    Attachments: bool
-    AuthorLookupId: str = OutputField(example_values=["9"])
-    ContentType: str = OutputField(example_values=["Item"])
-    Conversation: str = OutputField(example_values=["I'd like access, please."])
-    Created: str = OutputField(example_values=["2022-02-08T12:29:27Z"])
-    Edit: str
-    EditorLookupId: str = OutputField(example_values=["9"])
-    FolderChildCount: str = OutputField(example_values=["0"])
-    InterviewDate: str = OutputField(example_values=["2022-02-28T11:30:00Z"])
-    Interviewers: list[InterviewersOutput]
-    ItemChildCount: str = OutputField(example_values=["0"])
-    LinkTitle: str = OutputField(example_values=["List Item 1"])
-    LinkTitleNoMenu: str = OutputField(example_values=["List Item 1"])
-    Modified: str = OutputField(example_values=["2022-02-08T12:29:27Z"])
-    Notes: str = OutputField(example_values=["Test Notes"])
-    PermissionLevelRequested: float = OutputField(example_values=[8])
-    PhoneScreenDate: str = OutputField(example_values=["2022-02-15T14:00:00Z"])
-    PhoneScreenerLookupId: str = OutputField(example_values=["17"])
-    Position: str = OutputField(example_values=["Designer"])
-    Progress: str = OutputField(example_values=["Active"])
-    PropagateAcl: bool = OutputField(example_values=[False])
-    RecruiterLookupId: str = OutputField(example_values=["19"])
-    ReqByUserLookupId: str = OutputField(example_values=["10"])
-    ReqForUserLookupId: str = OutputField(example_values=["10"])
-    RequestDate: str = OutputField(example_values=["2022-08-04T12:14:03Z"])
-    RequestedByDisplayNameDisp: str = OutputField(example_values=["Test User"])
-    RequestedForDisplayNameDisp: str = OutputField(example_values=["Test User"])
-    StatusDisp: str = OutputField(example_values=["0"])
-    Title: str = OutputField(example_values=["List Item 1"])
-    ComplianceFlags: str = OutputField(alias="_ComplianceFlags")
-    ComplianceTag: str = OutputField(alias="_ComplianceTag")
-    ComplianceTagUserId: str = OutputField(alias="_ComplianceTagUserId")
-    ComplianceTagWrittenTime: str = OutputField(alias="_ComplianceTagWrittenTime")
-    UIVersionString: str = OutputField(example_values=["1.0"], alias="_UIVersionString")
-    id: str = OutputField(example_values=["1"])
+    etag: Annotated[str | None, OutputField(alias="@odata.etag")] = None
+    AppAuthorLookupId: Annotated[str | None, OutputField(example_values=["8"])] = None
+    AppEditorLookupId: Annotated[str | None, OutputField(example_values=["8"])] = None
+    ApplicationDate: Annotated[
+        str | None, OutputField(example_values=["2022-02-03T08:00:00Z"])
+    ] = None
+    Attachments: Annotated[bool | None, OutputField()] = None
+    AuthorLookupId: Annotated[str | None, OutputField(example_values=["9"])] = None
+    ContentType: Annotated[str | None, OutputField(example_values=["Item"])] = None
+    Conversation: Annotated[
+        str | None, OutputField(example_values=["I'd like access, please."])
+    ] = None
+    Created: Annotated[
+        str | None, OutputField(example_values=["2022-02-08T12:29:27Z"])
+    ] = None
+    Edit: Annotated[str | None, OutputField()] = None
+    EditorLookupId: Annotated[str | None, OutputField(example_values=["9"])] = None
+    FolderChildCount: Annotated[str | None, OutputField(example_values=["0"])] = None
+    InterviewDate: Annotated[
+        str | None, OutputField(example_values=["2022-02-28T11:30:00Z"])
+    ] = None
+    Interviewers: Annotated[list[InterviewersOutput] | None, OutputField()] = None
+    ItemChildCount: Annotated[str | None, OutputField(example_values=["0"])] = None
+    LinkTitle: Annotated[str | None, OutputField(example_values=["List Item 1"])] = None
+    LinkTitleNoMenu: Annotated[
+        str | None, OutputField(example_values=["List Item 1"])
+    ] = None
+    Modified: Annotated[
+        str | None, OutputField(example_values=["2022-02-08T12:29:27Z"])
+    ] = None
+    Notes: Annotated[str | None, OutputField(example_values=["Test Notes"])] = None
+    PermissionLevelRequested: Annotated[
+        float | None, OutputField(example_values=[8])
+    ] = None
+    PhoneScreenDate: Annotated[
+        str | None, OutputField(example_values=["2022-02-15T14:00:00Z"])
+    ] = None
+    PhoneScreenerLookupId: Annotated[str | None, OutputField(example_values=["17"])] = (
+        None
+    )
+    Position: Annotated[str | None, OutputField(example_values=["Designer"])] = None
+    Progress: Annotated[str | None, OutputField(example_values=["Active"])] = None
+    PropagateAcl: Annotated[bool | None, OutputField(example_values=[False])] = None
+    RecruiterLookupId: Annotated[str | None, OutputField(example_values=["19"])] = None
+    ReqByUserLookupId: Annotated[str | None, OutputField(example_values=["10"])] = None
+    ReqForUserLookupId: Annotated[str | None, OutputField(example_values=["10"])] = None
+    RequestDate: Annotated[
+        str | None, OutputField(example_values=["2022-08-04T12:14:03Z"])
+    ] = None
+    RequestedByDisplayNameDisp: Annotated[
+        str | None, OutputField(example_values=["Test User"])
+    ] = None
+    RequestedForDisplayNameDisp: Annotated[
+        str | None, OutputField(example_values=["Test User"])
+    ] = None
+    StatusDisp: Annotated[str | None, OutputField(example_values=["0"])] = None
+    Title: Annotated[str | None, OutputField(example_values=["List Item 1"])] = None
+    ComplianceFlags: Annotated[str | None, OutputField(alias="_ComplianceFlags")] = None
+    ComplianceTag: Annotated[str | None, OutputField(alias="_ComplianceTag")] = None
+    ComplianceTagUserId: Annotated[
+        str | None, OutputField(alias="_ComplianceTagUserId")
+    ] = None
+    ComplianceTagWrittenTime: Annotated[
+        str | None, OutputField(alias="_ComplianceTagWrittenTime")
+    ] = None
+    UIVersionString: Annotated[
+        str | None, OutputField(example_values=["1.0"], alias="_UIVersionString")
+    ] = None
+    id: Annotated[str | None, OutputField(example_values=["1"])] = None
 
 
 class ApplicationOutput(PermissiveActionOutput):
@@ -236,63 +267,6 @@ class GetListOutput(PermissiveActionOutput):
             "https://test-tenant-name.sharepoint.com/sites/TestSiteName/Lists/Test%20List%20Name"
         ],
     )
-
-
-def _request_graph(client: httpx.Client, method: str, endpoint: str, **kwargs):
-    headers = {"Accept": "application/json", "Content-Type": "application/json"}
-    request_headers = kwargs.pop("headers", {})
-    headers.update(request_headers)
-    try:
-        response = client.request(
-            method, endpoint, headers=headers, follow_redirects=False, **kwargs
-        )
-    except httpx.RequestError as exc:
-        raise ActionFailure("Error connecting to Microsoft Graph") from exc
-    try:
-        return get_graph_response(response)
-    except GraphResponseError as exc:
-        raise ActionFailure(str(exc)) from exc
-
-
-def _paginate(
-    client: httpx.Client,
-    endpoint: str,
-    *,
-    limit: int | None = None,
-    params: dict[str, str] | None = None,
-) -> list[dict[str, object]]:
-    """Follow Graph pages for this action, guarding against loops and runaway pages."""
-    page_params = dict(params or {})
-    page_params["$top"] = min(limit, 1000) if limit else 1000
-    results: list[dict[str, object]] = []
-    next_link: str | None = None
-    seen_links: set[str] = set()
-    for _ in range(1000):
-        page = _request_graph(
-            client,
-            "GET",
-            next_link or endpoint,
-            **({} if next_link else {"params": page_params}),
-        )
-        if not isinstance(page, dict):
-            raise ActionFailure("Microsoft Graph returned an invalid page")
-        value = page.get("value", [])
-        if not isinstance(value, list) or not all(
-            isinstance(item, dict) for item in value
-        ):
-            raise ActionFailure("Microsoft Graph returned an invalid page value")
-        results.extend(value)
-        if limit is not None and len(results) >= limit:
-            return results[:limit]
-        next_link = page.get("@odata.nextLink")
-        if not next_link:
-            return results
-        if not isinstance(next_link, str) or next_link in seen_links:
-            raise ActionFailure(
-                "Rejected repeated or invalid Microsoft Graph pagination URL"
-            )
-        seen_links.add(next_link)
-    raise ActionFailure("Microsoft Graph pagination exceeded its safety limit")
 
 
 def get_list(params: GetListParams, soar: SOARClient, asset: Asset) -> GetListOutput:

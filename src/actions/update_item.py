@@ -1,12 +1,12 @@
 """SDK action boundary for the SharePoint update_item action."""
 
-import httpx
+from typing import Annotated
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
-from ..graph_response import GraphResponseError, get_graph_response
+from ._graph import _request_graph
 from ._paths import encode_path_segment
 from ..asset import Asset
 
@@ -29,10 +29,6 @@ class UpdateItemParams(Params):
     item: str = Param(description="JSON string of item")
 
 
-class OdataOutput(PermissiveActionOutput):
-    etag: str
-
-
 class ContenttypeOutput(PermissiveActionOutput):
     id: str
     name: str
@@ -47,44 +43,64 @@ class CreatedbyOutput(PermissiveActionOutput):
 
 
 class FieldsOutput(PermissiveActionOutput):
-    odata: OdataOutput
-    AppAuthorLookupId: str
-    AppEditorLookupId: str
-    AssetType: str = OutputField(example_values=["Mobile"])
-    Attachments: bool
-    AuthorLookupId: str
-    Color: str = OutputField(example_values=["Red"])
-    ConditionNotes: str = OutputField(example_values=["Note for the Updated Asset"])
-    ContentType: str
-    Created: str
-    CurrentOwnerLookupId: str = OutputField(example_values=["18"])
-    DueDate: str = OutputField(example_values=["2023-08-05T07:00:00Z"])
-    Edit: str
-    EditorLookupId: str
-    FolderChildCount: str
-    ItemChildCount: str
-    LinkTitle: str
-    LinkTitleNoMenu: str
-    Manufacturer: str = OutputField(example_values=["Test-Updated-Manufacturer"])
-    Model: str = OutputField(example_values=["Model of the Updated Asset"])
-    Modified: str
-    OrderNumber: str = OutputField(example_values=["2"])
-    PreviousOwnerLookupId: str = OutputField(example_values=["17"])
-    PurchaseDate: str = OutputField(example_values=["2022-08-05T07:00:00Z"])
-    PurchasePrice: float = OutputField(example_values=[1])
-    SerialNumber: str = OutputField(example_values=["Test-SerialNumber-Updated"])
-    Status: str = OutputField(example_values=["Status of the Asset"])
-    Title: str = OutputField(example_values=["Test-Updated-Title"])
-    ComplianceFlags: str = OutputField(alias="_ComplianceFlags")
-    ComplianceTag: str = OutputField(alias="_ComplianceTag")
-    ComplianceTagUserId: str = OutputField(alias="_ComplianceTagUserId")
-    ComplianceTagWrittenTime: str = OutputField(alias="_ComplianceTagWrittenTime")
-    UIVersionString: str = OutputField(alias="_UIVersionString")
-    id: str
-
-
-class Fields_OdataOutput(PermissiveActionOutput):
-    context: str = OutputField(cef_types=["url"])
+    etag: Annotated[str | None, OutputField(alias="@odata.etag")] = None
+    AppAuthorLookupId: Annotated[str | None, OutputField()] = None
+    AppEditorLookupId: Annotated[str | None, OutputField()] = None
+    AssetType: Annotated[str | None, OutputField(example_values=["Mobile"])] = None
+    Attachments: Annotated[bool | None, OutputField()] = None
+    AuthorLookupId: Annotated[str | None, OutputField()] = None
+    Color: Annotated[str | None, OutputField(example_values=["Red"])] = None
+    ConditionNotes: Annotated[
+        str | None, OutputField(example_values=["Note for the Updated Asset"])
+    ] = None
+    ContentType: Annotated[str | None, OutputField()] = None
+    Created: Annotated[str | None, OutputField()] = None
+    CurrentOwnerLookupId: Annotated[str | None, OutputField(example_values=["18"])] = (
+        None
+    )
+    DueDate: Annotated[
+        str | None, OutputField(example_values=["2023-08-05T07:00:00Z"])
+    ] = None
+    Edit: Annotated[str | None, OutputField()] = None
+    EditorLookupId: Annotated[str | None, OutputField()] = None
+    FolderChildCount: Annotated[str | None, OutputField()] = None
+    ItemChildCount: Annotated[str | None, OutputField()] = None
+    LinkTitle: Annotated[str | None, OutputField()] = None
+    LinkTitleNoMenu: Annotated[str | None, OutputField()] = None
+    Manufacturer: Annotated[
+        str | None, OutputField(example_values=["Test-Updated-Manufacturer"])
+    ] = None
+    Model: Annotated[
+        str | None, OutputField(example_values=["Model of the Updated Asset"])
+    ] = None
+    Modified: Annotated[str | None, OutputField()] = None
+    OrderNumber: Annotated[str | None, OutputField(example_values=["2"])] = None
+    PreviousOwnerLookupId: Annotated[str | None, OutputField(example_values=["17"])] = (
+        None
+    )
+    PurchaseDate: Annotated[
+        str | None, OutputField(example_values=["2022-08-05T07:00:00Z"])
+    ] = None
+    PurchasePrice: Annotated[float | None, OutputField(example_values=[1])] = None
+    SerialNumber: Annotated[
+        str | None, OutputField(example_values=["Test-SerialNumber-Updated"])
+    ] = None
+    Status: Annotated[
+        str | None, OutputField(example_values=["Status of the Asset"])
+    ] = None
+    Title: Annotated[str | None, OutputField(example_values=["Test-Updated-Title"])] = (
+        None
+    )
+    ComplianceFlags: Annotated[str | None, OutputField(alias="_ComplianceFlags")] = None
+    ComplianceTag: Annotated[str | None, OutputField(alias="_ComplianceTag")] = None
+    ComplianceTagUserId: Annotated[
+        str | None, OutputField(alias="_ComplianceTagUserId")
+    ] = None
+    ComplianceTagWrittenTime: Annotated[
+        str | None, OutputField(alias="_ComplianceTagWrittenTime")
+    ] = None
+    UIVersionString: Annotated[str | None, OutputField(alias="_UIVersionString")] = None
+    id: Annotated[str | None, OutputField()] = None
 
 
 class ApplicationOutput(PermissiveActionOutput):
@@ -103,34 +119,23 @@ class ParentreferenceOutput(PermissiveActionOutput):
 
 
 class UpdateItemOutput(PermissiveActionOutput):
-    odata: OdataOutput
+    odata_context: Annotated[
+        str | None, OutputField(alias="@odata.context", cef_types=["url"])
+    ] = None
+    odata_etag: Annotated[str | None, OutputField(alias="@odata.etag")] = None
     contentType: ContenttypeOutput
     createdBy: CreatedbyOutput
     createdDateTime: str
     eTag: str
     fields: FieldsOutput
-    fields_odata: Fields_OdataOutput
+    fields_odata_context: Annotated[
+        str | None, OutputField(alias="fields@odata.context", cef_types=["url"])
+    ] = None
     id: str = OutputField(cef_types=["sharepoint item id"], column_name="ID")
     lastModifiedBy: LastmodifiedbyOutput
     lastModifiedDateTime: str
     parentReference: ParentreferenceOutput
     webUrl: str = OutputField(cef_types=["url"])
-
-
-def _request_graph(client: httpx.Client, method: str, endpoint: str, **kwargs):
-    headers = {"Accept": "application/json", "Content-Type": "application/json"}
-    request_headers = kwargs.pop("headers", {})
-    headers.update(request_headers)
-    try:
-        response = client.request(
-            method, endpoint, headers=headers, follow_redirects=False, **kwargs
-        )
-    except httpx.RequestError as exc:
-        raise ActionFailure("Error connecting to Microsoft Graph") from exc
-    try:
-        return get_graph_response(response)
-    except GraphResponseError as exc:
-        raise ActionFailure(str(exc)) from exc
 
 
 def update_item(
