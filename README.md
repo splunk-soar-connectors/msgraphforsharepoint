@@ -148,6 +148,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [add item](#action-add-item) - Add an item to a list on a SharePoint Site <br>
 [update item](#action-update-item) - Update an item in a list on a SharePoint Site <br>
 [get file](#action-get-file) - Retrieves a file from a SharePoint site <br>
+[upload file](#action-upload-file) - Upload a file from the vault to a SharePoint site <br>
 [remove file](#action-remove-file) - Removes a file from a SharePoint site <br>
 [remove folder](#action-remove-folder) - Removes a folder from a SharePoint site
 
@@ -857,6 +858,43 @@ action_result.data.\*.size | numeric | | 1422 |
 action_result.data.\*.webUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt |
 action_result.summary.vault_id | string | `sha1` `vault id` | 8b11ac28c0e276a4f9fa8a2fd2a17b499a415786 |
 action_result.message | string | | Vault id: 8b11ac28c0e276a4f9fa8a2fd2a17b499a415786 |
+summary.total_objects | numeric | | 1 |
+summary.total_objects_successful | numeric | | 1 |
+
+## action: 'upload file'
+
+Upload a file from the vault to a SharePoint site
+
+Type: **generic** <br>
+Read only: **False**
+
+The file is uploaded to the 'file path' folder of the <b>Shared Document</b> library in the configured Site, or of the drive given in 'drive id'. Leave 'file path' empty to upload to the library root. An existing file with the same name is replaced. Files up to 250 MB are supported.
+
+#### Action Parameters
+
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**vault_id** | required | Vault ID of the file to upload | string | `vault id` |
+**file_path** | optional | Destination folder path on site | string | |
+**file_name** | optional | File name on SharePoint. If empty, the vault file name is used | string | |
+**drive_id** | optional | The file is uploaded to this drive. If no drive is specified, the default drive will be used | string | `sharepoint drive id` |
+
+#### Action Output
+
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string | | success failed |
+action_result.parameter.vault_id | string | `vault id` | e5d3dc2b4b1fb1bc4ac8a5b9b2c0b0a8b1bb8a01 |
+action_result.parameter.file_path | string | | /test_folder_name/ |
+action_result.parameter.file_name | string | | test_file_name.txt |
+action_result.parameter.drive_id | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
+action_result.data.\*.id | string | | 01ABCDEFGHIJKLMNOPQRSTUVWXYZ012345 |
+action_result.data.\*.name | string | | test_file_name.txt |
+action_result.data.\*.size | numeric | | 1024 |
+action_result.data.\*.webUrl | string | `url` | https://test.sharepoint.com/sites/test/Shared%20Documents/test_folder_name/test_file_name.txt |
+action_result.summary.file_name | string | | test_file_name.txt |
+action_result.summary.web_url | string | `url` | https://test.sharepoint.com/sites/test/Shared%20Documents/test_folder_name/test_file_name.txt |
+action_result.message | string | | Successfully uploaded file |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 

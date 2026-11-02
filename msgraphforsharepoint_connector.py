@@ -538,6 +538,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         download=False,
         next_link=None,
         is_force=False,
+        content_type="application/json",
     ):
         """Function that helps to set a REST call to the app.
         :param endpoint: REST endpoint that needs to appended to the service address
@@ -551,6 +552,7 @@ class MsGraphForSharepointConnector(BaseConnector):
         :param download: use streaming for the file download to handle large files
         :param next_link: used for pagination, next_link is returned in the API response
         :param is_force: ignore the token available in the state file
+        :param content_type: Content-Type header of the request body
         :return: status phantom.APP_ERROR/phantom.APP_SUCCESS(along with appropriate message),
         response obtained by making an API call
         """
@@ -575,7 +577,7 @@ class MsGraphForSharepointConnector(BaseConnector):
             if phantom.is_fail(ret_val):
                 return action_result.get_status(), None
 
-        headers.update({"Authorization": f"Bearer {self._access_token}", "Accept": "application/json", "Content-Type": "application/json"})
+        headers.update({"Authorization": f"Bearer {self._access_token}", "Accept": "application/json", "Content-Type": content_type})
 
         self.save_progress(f"Connecting to endpoint {endpoint}")
         ret_val, resp_json = self._make_rest_call(url, action_result, verify, headers, params, data, json, method, download)
@@ -1080,6 +1082,57 @@ class MsGraphForSharepointConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _handle_upload_file(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        if not self._site_id:
+            return action_result.set_status(phantom.APP_ERROR, MS_SHAREPOINT_ERROR_MISSING_SITE_ID.format("uploading a file"))
+
+        vault_id = param[MS_SHAREPOINT_JSON_VAULT_ID]
+        try:
+            success, message, vault_list = ph_rules.vault_info(vault_id=vault_id, container_id=self.get_container_id())
+        except Exception as e:
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Unable to retrieve file from the vault. Error: {self._get_error_message_from_exception(e)}"
+            )
+        if not success or not vault_list:
+            return action_result.set_status(phantom.APP_ERROR, f"Unable to find vault ID {vault_id} in this container. {message}")
+
+        vault_item = vault_list[0]
+        vault_file_path = vault_item.get("path")
+        if not vault_file_path:
+            return action_result.set_status(phantom.APP_ERROR, "Vault file path not found")
+
+        file_name = param.get(MS_SHAREPOINT_JSON_FILE_NAME) or vault_item.get("name") or vault_id
+        try:
+            sp_path = _encode_graph_path(param.get(MS_SHAREPOINT_JSON_FILE_PATH, ""), allow_empty=True)
+            sp_file = _encode_graph_path_segment(file_name)
+        except ValueError as exc:
+            return action_result.set_status(phantom.APP_ERROR, f"Invalid file path or name: {exc}")
+
+        target = f"{sp_path}/{sp_file}" if sp_path else sp_file
+        sp_drive = param.get(MS_SHAREPOINT_JSON_DRIVE_ID, "")
+        endpoint = f"{self.build_drive_endpoint(sp_drive)}{MS_UPLOAD_FILE_ENDPOINT.format(path=target)}"
+
+        try:
+            with open(vault_file_path, "rb") as fp:
+                file_content = fp.read()
+        except Exception as e:
+            return action_result.set_status(phantom.APP_ERROR, f"Unable to read vault file. Error: {self._get_error_message_from_exception(e)}")
+
+        ret_val, response = self._make_rest_call_helper(
+            endpoint, action_result, method="put", data=file_content, content_type="application/octet-stream"
+        )
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        action_result.add_data(response)
+        summary = action_result.update_summary({})
+        summary[MS_SHAREPOINT_JSON_FILE_NAME] = file_name
+        summary["web_url"] = response.get("webUrl", "")
+
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully uploaded file")
+
     def _handle_remove_file(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
@@ -1177,6 +1230,8 @@ class MsGraphForSharepointConnector(BaseConnector):
             ret_val = self._handle_get_list(param)
         elif action_id == "get_file":
             ret_val = self._handle_get_file(param)
+        elif action_id == "upload_file":
+            ret_val = self._handle_upload_file(param)
         elif action_id == "remove_file":
             ret_val = self._handle_remove_file(param)
         elif action_id == "list_lists":

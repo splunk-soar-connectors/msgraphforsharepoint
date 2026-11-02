@@ -3774,6 +3774,171 @@
             "versions": "EQ(*)"
         },
         {
+            "action": "upload file",
+            "identifier": "upload_file",
+            "description": "Upload a file from the vault to a SharePoint site",
+            "verbose": "The file is uploaded to the 'file path' folder of the <b>Shared Document</b> library in the configured Site, or of the drive given in 'drive id'. Leave 'file path' empty to upload to the library root. An existing file with the same name is replaced. Files up to 250 MB are supported.",
+            "type": "generic",
+            "read_only": false,
+            "parameters": {
+                "vault_id": {
+                    "description": "Vault ID of the file to upload",
+                    "data_type": "string",
+                    "required": true,
+                    "primary": true,
+                    "contains": [
+                        "vault id"
+                    ],
+                    "order": 0
+                },
+                "file_path": {
+                    "description": "Destination folder path on site",
+                    "data_type": "string",
+                    "required": false,
+                    "order": 1
+                },
+                "file_name": {
+                    "description": "File name on SharePoint. If empty, the vault file name is used",
+                    "data_type": "string",
+                    "required": false,
+                    "order": 2
+                },
+                "drive_id": {
+                    "description": "The file is uploaded to this drive. If no drive is specified, the default drive will be used",
+                    "data_type": "string",
+                    "required": false,
+                    "order": 3,
+                    "example_values": [
+                        "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi"
+                    ],
+                    "contains": [
+                        "sharepoint drive id"
+                    ]
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.vault_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "e5d3dc2b4b1fb1bc4ac8a5b9b2c0b0a8b1bb8a01"
+                    ],
+                    "contains": [
+                        "vault id"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.file_path",
+                    "data_type": "string",
+                    "example_values": [
+                        "/test_folder_name/"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.file_name",
+                    "data_type": "string",
+                    "example_values": [
+                        "test_file_name.txt"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.drive_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi"
+                    ],
+                    "contains": [
+                        "sharepoint drive id"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "example_values": [
+                        "01ABCDEFGHIJKLMNOPQRSTUVWXYZ012345"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string",
+                    "example_values": [
+                        "test_file_name.txt"
+                    ],
+                    "column_name": "File Name",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.size",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1024
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.webUrl",
+                    "data_type": "string",
+                    "example_values": [
+                        "https://test.sharepoint.com/sites/test/Shared%20Documents/test_folder_name/test_file_name.txt"
+                    ],
+                    "contains": [
+                        "url"
+                    ],
+                    "column_name": "Web URL",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.summary.file_name",
+                    "data_type": "string",
+                    "example_values": [
+                        "test_file_name.txt"
+                    ]
+                },
+                {
+                    "data_path": "action_result.summary.web_url",
+                    "data_type": "string",
+                    "example_values": [
+                        "https://test.sharepoint.com/sites/test/Shared%20Documents/test_folder_name/test_file_name.txt"
+                    ],
+                    "contains": [
+                        "url"
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string",
+                    "example_values": [
+                        "Successfully uploaded file"
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric",
+                    "example_values": [
+                        1
+                    ]
+                }
+            ],
+            "render": {
+                "type": "table"
+            },
+            "versions": "EQ(*)"
+        },
+        {
             "action": "remove file",
             "identifier": "remove_file",
             "description": "Removes a file from a SharePoint site",
