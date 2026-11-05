@@ -9,7 +9,7 @@ authors = [
     { name = "Chris Hutto" },
 ]
 dependencies = [
-    "splunk-soar-sdk==7.0.3",
+    "splunk-soar-sdk==7.1.2",
 ]
 
 [tool.soar.app]
