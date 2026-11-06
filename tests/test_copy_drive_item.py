@@ -23,7 +23,7 @@ import pytest
 from soar_sdk.exceptions import ActionFailure
 
 from src.actions.copy_drive_item import (
-    _safe_copy_monitor_path_shape,
+    _is_copy_status_path,
     _validate_copy_monitor_url,
     _wait_for_copy_completion,
 )
@@ -116,12 +116,17 @@ def test_copy_monitor_rejects_untrusted_urls(location: str) -> None:
 
 def test_copy_monitor_accepts_trailing_slash_after_operation_id() -> None:
     assert _validate_copy_monitor_url(
-        "http://127.0.0.1:8123/_api/v2.1/monitor/operation-id/",
+        "http://127.0.0.1:8123/sites/site-id/_api/v2.1/drives/drive-id/operations/operation-id/",
         allowed_hosts={"127.0.0.1"},
-    ) == "http://127.0.0.1:8123/_api/v2.1/monitor/operation-id/"
+    ) == (
+        "http://127.0.0.1:8123/sites/site-id/_api/v2.1/drives/drive-id/operations/operation-id/"
+    )
 
 
-def test_copy_monitor_path_diagnostic_redacts_variable_segments() -> None:
-    assert _safe_copy_monitor_path_shape(
-        "/sites/private-site/_api/v2.1/operations/secret-operation"
-    ) == "/sites/{value}/_api/v2.1/operations/{value}"
+def test_copy_status_path_accepts_the_documented_monitor_route() -> None:
+    assert _is_copy_status_path("/monitor/operation-id")
+    assert _is_copy_status_path("/sites/site-id/_api/v2.1/monitor/operation-id")
+
+
+def test_copy_status_path_rejects_non_operation_routes() -> None:
+    assert not _is_copy_status_path("/sites/site-id/_api/v2.1/drives/drive-id/items/item-id")

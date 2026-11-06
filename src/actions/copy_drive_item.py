@@ -21,22 +21,6 @@ COPY_OPERATION_INITIAL_POLL_INTERVAL_SECONDS = 1.0
 COPY_OPERATION_MAX_POLL_INTERVAL_SECONDS = 5.0
 COPY_MONITOR_HOSTS = {"api.onedrive.com"}
 COPY_MONITOR_HOST_SUFFIXES = (".sharepoint.com",)
-COPY_MONITOR_PATH_SEGMENTS = {
-    "_api",
-    "copy",
-    "drive",
-    "drives",
-    "items",
-    "monitor",
-    "monitoring",
-    "operation",
-    "operations",
-    "sites",
-    "status",
-    "v1.0",
-    "v2.0",
-    "v2.1",
-}
 
 
 class CopyDriveItemOutput(PermissiveActionOutput):
@@ -69,15 +53,17 @@ class CopyDriveItemParams(Params):
     )
 
 
-def _safe_copy_monitor_path_shape(path: str) -> str:
-    """Keep known route segments and replace every variable path component."""
-    segments = [segment for segment in path.split("/") if segment]
-    return "/" + "/".join(
-        segment
-        if segment.casefold() in COPY_MONITOR_PATH_SEGMENTS
-        else "{value}"
-        for segment in segments
-    )
+def _is_copy_status_path(path: str) -> bool:
+    """Accept Graph's monitor route and SharePoint's operations route."""
+    segments = [segment.casefold() for segment in path.split("/") if segment]
+    for index, segment in enumerate(segments):
+        if segment == "monitor" and index < len(segments) - 1:
+            return True
+        if segment == "operations" and index < len(segments) - 1:
+            preceding_segments = segments[:index]
+            if "_api" in preceding_segments and "drives" in preceding_segments:
+                return True
+    return False
 
 
 def _validate_copy_monitor_url(
@@ -102,13 +88,7 @@ def _validate_copy_monitor_url(
         test_host and url.scheme in {"http", "https"}
     ) or (url.scheme == "https" and url.port in (None, 443))
 
-    path_segments = [segment for segment in url.path.split("/") if segment]
-    try:
-        monitor_index = path_segments.index("monitor")
-    except ValueError:
-        valid_monitor_path = False
-    else:
-        valid_monitor_path = monitor_index < len(path_segments) - 1
+    valid_monitor_path = _is_copy_status_path(url.path)
     rejection_reasons = []
     if not url.is_absolute_url:
         rejection_reasons.append("not_absolute")
@@ -117,9 +97,7 @@ def _validate_copy_monitor_url(
     if not valid_transport:
         rejection_reasons.append("scheme_or_port_not_allowed")
     if not valid_monitor_path:
-        rejection_reasons.append(
-            f"not_monitor_path:{_safe_copy_monitor_path_shape(url.path)}"
-        )
+        rejection_reasons.append("not_status_path")
     if url.username or url.password:
         rejection_reasons.append("userinfo_present")
     if url.fragment:
