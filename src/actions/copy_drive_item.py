@@ -76,16 +76,25 @@ def _validate_copy_monitor_url(
     ) or (url.scheme == "https" and url.port in (None, 443))
 
     valid_monitor_path = "/monitor/" in url.path and url.path.rsplit("/", 1)[-1] != ""
-    if (
-        not url.is_absolute_url
-        or not allowlisted_host
-        or not valid_transport
-        or not valid_monitor_path
-        or url.username
-        or url.password
-        or url.fragment
-    ):
-        raise ActionFailure("Rejected Microsoft Graph copy monitor URL")
+    rejection_reasons = []
+    if not url.is_absolute_url:
+        rejection_reasons.append("not_absolute")
+    if not allowlisted_host:
+        rejection_reasons.append("host_not_allowed")
+    if not valid_transport:
+        rejection_reasons.append("scheme_or_port_not_allowed")
+    if not valid_monitor_path:
+        rejection_reasons.append("not_monitor_path")
+    if url.username or url.password:
+        rejection_reasons.append("userinfo_present")
+    if url.fragment:
+        rejection_reasons.append("fragment_present")
+    if rejection_reasons:
+        # Report only validation categories; the monitor URL itself is access-bearing.
+        reasons = ", ".join(rejection_reasons)
+        raise ActionFailure(
+            f"Rejected Microsoft Graph copy monitor URL ({reasons})"
+        )
 
     return str(url)
 
