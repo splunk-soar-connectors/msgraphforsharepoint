@@ -23,6 +23,7 @@ import pytest
 from soar_sdk.exceptions import ActionFailure
 
 from src.actions.copy_drive_item import (
+    _safe_copy_monitor_path_shape,
     _validate_copy_monitor_url,
     _wait_for_copy_completion,
 )
@@ -118,3 +119,9 @@ def test_copy_monitor_accepts_trailing_slash_after_operation_id() -> None:
         "http://127.0.0.1:8123/_api/v2.1/monitor/operation-id/",
         allowed_hosts={"127.0.0.1"},
     ) == "http://127.0.0.1:8123/_api/v2.1/monitor/operation-id/"
+
+
+def test_copy_monitor_path_diagnostic_redacts_variable_segments() -> None:
+    assert _safe_copy_monitor_path_shape(
+        "/sites/private-site/_api/v2.1/operations/secret-operation"
+    ) == "/sites/{value}/_api/v2.1/operations/{value}"

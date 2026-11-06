@@ -21,6 +21,22 @@ COPY_OPERATION_INITIAL_POLL_INTERVAL_SECONDS = 1.0
 COPY_OPERATION_MAX_POLL_INTERVAL_SECONDS = 5.0
 COPY_MONITOR_HOSTS = {"api.onedrive.com"}
 COPY_MONITOR_HOST_SUFFIXES = (".sharepoint.com",)
+COPY_MONITOR_PATH_SEGMENTS = {
+    "_api",
+    "copy",
+    "drive",
+    "drives",
+    "items",
+    "monitor",
+    "monitoring",
+    "operation",
+    "operations",
+    "sites",
+    "status",
+    "v1.0",
+    "v2.0",
+    "v2.1",
+}
 
 
 class CopyDriveItemOutput(PermissiveActionOutput):
@@ -50,6 +66,17 @@ class CopyDriveItemParams(Params):
     )
     file_name: str | None = Param(
         description="Optional new folder/file name for the copy. If not provided will use the original name"
+    )
+
+
+def _safe_copy_monitor_path_shape(path: str) -> str:
+    """Keep known route segments and replace every variable path component."""
+    segments = [segment for segment in path.split("/") if segment]
+    return "/" + "/".join(
+        segment
+        if segment.casefold() in COPY_MONITOR_PATH_SEGMENTS
+        else "{value}"
+        for segment in segments
     )
 
 
@@ -90,7 +117,9 @@ def _validate_copy_monitor_url(
     if not valid_transport:
         rejection_reasons.append("scheme_or_port_not_allowed")
     if not valid_monitor_path:
-        rejection_reasons.append("not_monitor_path")
+        rejection_reasons.append(
+            f"not_monitor_path:{_safe_copy_monitor_path_shape(url.path)}"
+        )
     if url.username or url.password:
         rejection_reasons.append("userinfo_present")
     if url.fragment:
