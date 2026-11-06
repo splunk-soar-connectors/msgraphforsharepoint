@@ -75,7 +75,13 @@ def _validate_copy_monitor_url(
         test_host and url.scheme in {"http", "https"}
     ) or (url.scheme == "https" and url.port in (None, 443))
 
-    valid_monitor_path = "/monitor/" in url.path and url.path.rsplit("/", 1)[-1] != ""
+    path_segments = [segment for segment in url.path.split("/") if segment]
+    try:
+        monitor_index = path_segments.index("monitor")
+    except ValueError:
+        valid_monitor_path = False
+    else:
+        valid_monitor_path = monitor_index < len(path_segments) - 1
     rejection_reasons = []
     if not url.is_absolute_url:
         rejection_reasons.append("not_absolute")

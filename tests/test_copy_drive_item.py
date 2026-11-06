@@ -111,3 +111,10 @@ def test_copy_monitor_raises_when_operation_fails(monitor_server) -> None:
 def test_copy_monitor_rejects_untrusted_urls(location: str) -> None:
     with pytest.raises(ActionFailure):
         _validate_copy_monitor_url(location)
+
+
+def test_copy_monitor_accepts_trailing_slash_after_operation_id() -> None:
+    assert _validate_copy_monitor_url(
+        "http://127.0.0.1:8123/_api/v2.1/monitor/operation-id/",
+        allowed_hosts={"127.0.0.1"},
+    ) == "http://127.0.0.1:8123/_api/v2.1/monitor/operation-id/"
