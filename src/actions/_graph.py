@@ -8,30 +8,20 @@ from soar_sdk.exceptions import ActionFailure
 from ..graph_response import GraphResponseError, get_graph_response
 
 
-def _send_graph_request(
-    client: httpx.Client, method: str, endpoint: str, **kwargs
-) -> httpx.Response:
+def _request_graph(client: httpx.Client, method: str, endpoint: str, **kwargs):
     headers = {"Accept": "application/json", "Content-Type": "application/json"}
     request_headers = kwargs.pop("headers", {})
     headers.update(request_headers)
     try:
-        return client.request(
+        response = client.request(
             method, endpoint, headers=headers, follow_redirects=False, **kwargs
         )
     except httpx.RequestError as exc:
         raise ActionFailure("Error connecting to Microsoft Graph") from exc
-
-
-def _parse_graph_response(response: httpx.Response):
     try:
         return get_graph_response(response)
     except GraphResponseError as exc:
         raise ActionFailure(str(exc)) from exc
-
-
-def _request_graph(client: httpx.Client, method: str, endpoint: str, **kwargs):
-    response = _send_graph_request(client, method, endpoint, **kwargs)
-    return _parse_graph_response(response)
 
 
 def _page_contents(
