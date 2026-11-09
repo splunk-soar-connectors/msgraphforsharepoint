@@ -8,6 +8,14 @@ Minimum Product Version: 8.7.0
 
 This app connects to SharePoint using the MS Graph API to support investigate and generic actions
 
+## SDK compatibility and output
+
+This SDK-based app requires Splunk SOAR 8.7.0 or later and uses Python 3.13.
+
+The **get list** action uses the SDK built-in table renderer. Its `columns` and `items` data remain
+available in the action result, while the table presentation is simplified compared with the legacy
+separate **Column Info** and **Items Info** tables.
+
 ## Authentication
 
 You will first need to create an application on the Azure AD Admin Portal. Follow the steps outlined
@@ -242,7 +250,7 @@ action_result.message | string | | |
 action_result.parameter.parent_item_id | string | `sharepoint drive item id` | |
 action_result.parameter.folder_name | string | | |
 action_result.parameter.drive_id | string | `sharepoint drive id` | |
-action_result.data.\*.@odata.context | string | | https://test.microsoft.com/v1.0/$metadata#sites('test.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/drive/items('01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N')/children/$entity |
+action_result.data.\*.@odata.context | string | | |
 action_result.data.\*.@odata.etag | string | | "{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},1" |
 action_result.data.\*.cTag | string | | "c:{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},0" |
 action_result.data.\*.commentSettings.commentingDisabled.isDisabled | boolean | | True False |
@@ -262,10 +270,10 @@ action_result.data.\*.lastModifiedBy.user.displayName | string | | SharePoint Ap
 action_result.data.\*.lastModifiedDateTime | string | | 2023-10-25T08:55:48Z |
 action_result.data.\*.name | string | | test2 |
 action_result.data.\*.webUrl | string | `url` | |
-action_result.data.\*.parentReference.driveId | string | `sharepoint drive id` | b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi |
+action_result.data.\*.parentReference.driveId | string | `sharepoint drive id` | |
 action_result.data.\*.parentReference.driveType | string | | documentLibrary |
-action_result.data.\*.parentReference.id | string | `sharepoint drive item id` | 01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N |
-action_result.data.\*.parentReference.path | string | | /drives/b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi/root:/SizeTest-Playbook-Don't Delete |
+action_result.data.\*.parentReference.id | string | `sharepoint drive item id` | |
+action_result.data.\*.parentReference.path | string | | |
 action_result.data.\*.parentReference.sharepointIds.listId | string | | 498fd15d-ef79-4c0b-8ac4-c4ea27ed8be2 |
 action_result.data.\*.parentReference.sharepointIds.listItemUniqueId | string | | 916162a1-5e65-41c9-9ebe-a4bb86d8d76d |
 action_result.data.\*.parentReference.sharepointIds.siteId | string | | dc6f43e9-54fa-4a39-8783-314e3bbbed41 |
@@ -282,7 +290,7 @@ summary.total_objects_successful | numeric | | 1 |
 List items in a folder
 
 Type: **investigate** <br>
-Read only: **False**
+Read only: **True**
 
 List all direct children in a folder.
 
@@ -335,7 +343,7 @@ summary.total_objects_successful | numeric | | 1 |
 Fetch the available drives (libraries) under a SharePoint site
 
 Type: **investigate** <br>
-Read only: **False**
+Read only: **True**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
 
@@ -385,7 +393,7 @@ summary.total_objects_successful | numeric | | 1 |
 List the items in a drive folder by drive ID or search for a specific file name if provided
 
 Type: **investigate** <br>
-Read only: **False**
+Read only: **True**
 
 #### Action Parameters
 
@@ -442,7 +450,7 @@ summary.total_objects_successful | numeric | | 1 |
 Fetch the details of the SharePoint sites
 
 Type: **investigate** <br>
-Read only: **False**
+Read only: **True**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
 
@@ -476,7 +484,7 @@ summary.total_objects_successful | numeric | | 1 |
 Fetch the available lists under a SharePoint site
 
 Type: **investigate** <br>
-Read only: **False**
+Read only: **True**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
 
@@ -521,7 +529,7 @@ summary.total_objects_successful | numeric | | 1 |
 Retrieves a list from a SharePoint Site
 
 Type: **investigate** <br>
-Read only: **False**
+Read only: **True**
 
 The 'limit' parameter controls the number of records to return. Leave the parameter value blank in order to fetch all the records.
 

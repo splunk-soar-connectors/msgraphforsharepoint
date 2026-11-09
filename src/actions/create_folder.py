@@ -1,3 +1,16 @@
+# Copyright (c) 2026 Splunk Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """SDK action boundary for the SharePoint create_folder action."""
 
 from soar_sdk.action_results import OutputField, PermissiveActionOutput
@@ -78,21 +91,11 @@ class SharepointidsOutput(PermissiveActionOutput):
 class ParentreferenceOutput(PermissiveActionOutput):
     driveId: str = OutputField(
         cef_types=["sharepoint drive id"],
-        example_values=[
-            "b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi"
-        ],
         column_name="Drive ID",
     )
     driveType: str = OutputField(example_values=["documentLibrary"])
-    id: str = OutputField(
-        cef_types=["sharepoint drive item id"],
-        example_values=["01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N"],
-    )
-    path: str = OutputField(
-        example_values=[
-            "/drives/b!6UNv3PpUOUqHgzFOO7vtQcRIK8S5WfFIuW7oFFtVOfpd0Y9Jee8LTIrExOon7Yvi/root:/SizeTest-Playbook-Don't Delete"
-        ]
-    )
+    id: str = OutputField(cef_types=["sharepoint drive item id"])
+    path: str
     sharepointIds: SharepointidsOutput
 
 
@@ -101,12 +104,7 @@ class SharedOutput(PermissiveActionOutput):
 
 
 class CreateFolderOutput(PermissiveActionOutput):
-    context: str = OutputField(
-        alias="@odata.context",
-        example_values=[
-            "https://test.microsoft.com/v1.0/$metadata#sites('test.sharepoint.com%2Cdc6f43e9-54fa-4a39-8783-314e3bbbed41%2Cc42b48c4-59b9-48f1-b96e-e8145b5539fa')/drive/items('01SNFLYIVBMJQZCZK6ZFAZ5PVEXODNRV3N')/children/$entity"
-        ],
-    )
+    context: str = OutputField(alias="@odata.context")
     etag: str = OutputField(
         alias="@odata.etag",
         example_values=['"{24A7DBF0-E193-4E0A-A960-ECF5DB994FFF},1"'],

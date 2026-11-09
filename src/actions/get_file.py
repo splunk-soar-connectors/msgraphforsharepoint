@@ -1,3 +1,16 @@
+# Copyright (c) 2026 Splunk Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """SDK action boundary for the SharePoint get_file action."""
 
 import httpx
@@ -5,6 +18,7 @@ from soar_sdk.params import Params, Param
 import os
 import tempfile
 from pathlib import Path
+from contextlib import suppress
 from urllib.parse import urlsplit
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
@@ -259,11 +273,8 @@ def get_file(params: GetFileParams, soar: SOARClient, asset: Asset) -> GetFileOu
             ) from exc
     finally:
         if temporary_path is not None:
-            try:
+            with suppress(OSError):
                 Path(temporary_path).unlink(missing_ok=True)
-            except OSError:
-                # Cleanup must not hide a vault attachment that already succeeded.
-                pass
 
     output = GetFileOutput.model_validate(metadata)
     soar.set_summary(GetFileSummary(vault_id=vault_id))
