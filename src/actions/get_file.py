@@ -273,6 +273,7 @@ def get_file(params: GetFileParams, soar: SOARClient, asset: Asset) -> GetFileOu
             ) from exc
     finally:
         if temporary_path is not None:
+            # Cleanup errors must not hide a vault attachment that succeeded.
             with suppress(OSError):
                 Path(temporary_path).unlink(missing_ok=True)
 
