@@ -26,6 +26,7 @@ from soar_sdk.params import MakeRequestParams, Param
 from ..asset import Asset
 from ..auth import get_graph_client
 from ..consts import GRAPH_BASE_URL
+from ._results import failure_result
 
 
 class GraphMakeRequestParams(MakeRequestParams):
@@ -155,13 +156,19 @@ def make_request(
     """
     try:
         request = _build_request(params)
+    except ActionFailure as error:
+        error.set_action_name("make_request")
+        return failure_result(params, str(error))  # type: ignore[return-value]
+
+    try:
         with get_graph_client(asset, verify=params.verify_ssl) as client:
             response = _send_request(client, request, timeout=params.timeout or 30)
-        return MakeRequestOutput(
-            status_code=response.status_code, response_body=response.text
-        )
-    except ActionFailure:
-        raise
     except (httpx.HTTPError, OAuthClientError, ValueError) as error:
         # Do not echo request URLs, bodies, headers, or token responses.
-        raise _request_failure(error) from None
+        failure = _request_failure(error)
+        failure.set_action_name("make_request")
+        return failure_result(params, str(failure))  # type: ignore[return-value]
+
+    return MakeRequestOutput(
+        status_code=response.status_code, response_body=response.text
+    )

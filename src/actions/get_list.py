@@ -18,11 +18,11 @@ from typing import Annotated
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
-from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _paginate, _request_graph
 from ._paths import encode_path_segment
 from ._limits import validate_limit
+from ._results import failure_result
 from ..asset import Asset
 
 
@@ -285,19 +285,21 @@ class GetListOutput(PermissiveActionOutput):
 def get_list(params: GetListParams, soar: SOARClient, asset: Asset) -> GetListOutput:
     """Retrieve one list, its columns, and its fields-expanded items."""
     if not asset.site_id:
-        raise ActionFailure(
+        return failure_result(
+            params,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
-            "for retrieving a list from specific site"
-        )
+            "for retrieving a list from specific site",
+        )  # type: ignore[return-value]
 
     try:
         limit = validate_limit(params.limit)
     except ValueError as exc:
-        raise ActionFailure(str(exc)) from exc
+        return failure_result(params, str(exc))  # type: ignore[return-value]
+
     try:
         encoded_list_id = encode_path_segment(params.list)
     except ValueError as exc:
-        raise ActionFailure(f"Invalid list ID: {exc}") from exc
+        return failure_result(params, f"Invalid list ID: {exc}")  # type: ignore[return-value]
 
     endpoint = f"/sites/{asset.site_id}/lists/{encoded_list_id}"
     with get_graph_client(asset) as graph:

@@ -15,11 +15,11 @@
 
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.exceptions import ActionFailure
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from ..auth import get_graph_client
 from ._graph import _paginate
 from ._limits import validate_limit
+from ._results import failure_result
 from ..asset import Asset
 
 
@@ -70,7 +70,7 @@ def list_sites(
     try:
         limit = validate_limit(params.limit)
     except ValueError as exc:
-        raise ActionFailure(str(exc)) from exc
+        return failure_result(params, str(exc))  # type: ignore[return-value]
     with get_graph_client(asset) as graph:
         sites = _paginate(graph, "/sites", limit=limit)
     outputs = [ListSitesOutput.model_validate(site) for site in sites]

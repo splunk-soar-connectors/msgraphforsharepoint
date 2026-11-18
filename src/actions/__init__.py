@@ -28,11 +28,12 @@ from .get_file import get_file, GetFileSummary
 from .remove_file import remove_file
 from .remove_folder import remove_folder
 from .make_request import make_request
+from ._results import preserve_action_failure_params
 
 
 def register_actions(app: App) -> App:
     app.register_action(
-        action=copy_drive_item,
+        action=preserve_action_failure_params(copy_drive_item),
         description="Using SharePoint Site ID app config value, and given source_drive_id, copy source_item_id into a folder identified with dest values",
         action_type="generic",
         read_only=False,
@@ -40,14 +41,14 @@ def register_actions(app: App) -> App:
         verbose="While copying the file if file_name is provided without file extension, the copied file will not have any extension.",
     )
     app.register_action(
-        action=create_folder,
+        action=preserve_action_failure_params(create_folder),
         description="Create new Drive item Folder using SharePoint site in asset config and provided Parent Item ID",
         action_type="generic",
         read_only=False,
         render_as="table",
     )
     app.register_action(
-        action=list_folder_items,
+        action=preserve_action_failure_params(list_folder_items),
         description="List items in a folder",
         action_type="investigate",
         read_only=True,
@@ -56,7 +57,7 @@ def register_actions(app: App) -> App:
         summary_type=FolderItemsSummary,
     )
     app.register_action(
-        action=list_drives,
+        action=preserve_action_failure_params(list_drives),
         description="Fetch the available drives (libraries) under a SharePoint site",
         action_type="investigate",
         read_only=True,
@@ -65,7 +66,7 @@ def register_actions(app: App) -> App:
         summary_type=DrivesSummary,
     )
     app.register_action(
-        action=list_drive_children,
+        action=preserve_action_failure_params(list_drive_children),
         description="List the items in a drive folder by drive ID or search for a specific file name if provided",
         action_type="investigate",
         read_only=True,
@@ -73,7 +74,7 @@ def register_actions(app: App) -> App:
         summary_type=DriveChildrenSummary,
     )
     app.register_action(
-        action=list_sites,
+        action=preserve_action_failure_params(list_sites),
         description="Fetch the details of the SharePoint sites",
         action_type="investigate",
         read_only=True,
@@ -82,7 +83,7 @@ def register_actions(app: App) -> App:
         summary_type=SitesSummary,
     )
     app.register_action(
-        action=list_lists,
+        action=preserve_action_failure_params(list_lists),
         description="Fetch the available lists under a SharePoint site",
         action_type="investigate",
         read_only=True,
@@ -91,7 +92,7 @@ def register_actions(app: App) -> App:
         summary_type=ListListsSummary,
     )
     app.register_action(
-        action=get_list,
+        action=preserve_action_failure_params(get_list),
         description="Retrieves a list from a SharePoint Site",
         action_type="investigate",
         read_only=True,
@@ -100,7 +101,7 @@ def register_actions(app: App) -> App:
         summary_type=GetListSummary,
     )
     app.register_action(
-        action=add_item,
+        action=preserve_action_failure_params(add_item),
         description="Add an item to a list on a SharePoint Site",
         action_type="generic",
         read_only=False,
@@ -108,7 +109,7 @@ def register_actions(app: App) -> App:
         summary_type=AddItemSummary,
     )
     app.register_action(
-        action=update_item,
+        action=preserve_action_failure_params(update_item),
         description="Update an item in a list on a SharePoint Site",
         action_type="generic",
         read_only=False,
@@ -116,7 +117,7 @@ def register_actions(app: App) -> App:
         summary_type=UpdateItemSummary,
     )
     app.register_action(
-        action=get_file,
+        action=preserve_action_failure_params(get_file),
         description="Retrieves a file from a SharePoint site",
         action_type="generic",
         read_only=False,
@@ -125,7 +126,7 @@ def register_actions(app: App) -> App:
         summary_type=GetFileSummary,
     )
     app.register_action(
-        action=remove_file,
+        action=preserve_action_failure_params(remove_file),
         description="Removes a file from a SharePoint site",
         action_type="generic",
         read_only=False,
@@ -133,12 +134,12 @@ def register_actions(app: App) -> App:
         verbose="The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
     )
     app.register_action(
-        action=remove_folder,
+        action=preserve_action_failure_params(remove_folder),
         description="Removes a folder from a SharePoint site",
         action_type="generic",
         read_only=False,
         render_as="table",
         verbose="The 'folder path' parameter will be considered from the root of the document library specified in drive_id.",
     )
-    app.make_request()(make_request)
+    app.make_request()(preserve_action_failure_params(make_request))
     return app

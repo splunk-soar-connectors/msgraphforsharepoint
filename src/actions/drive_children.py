@@ -19,6 +19,7 @@ from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionO
 from ..auth import get_graph_client
 from ._graph import _paginate
 from .drives import drive_children_endpoint
+from ._results import failure_result
 from ..asset import Asset
 
 
@@ -134,7 +135,10 @@ def list_drive_children(
     params: ListDriveChildrenParams, soar: SOARClient, asset: Asset
 ) -> list[ListDriveChildrenOutput]:
     """List items directly under a drive's root folder."""
-    endpoint = drive_children_endpoint(str(asset.site_id), params.drive_id)
+    try:
+        endpoint = drive_children_endpoint(str(asset.site_id), params.drive_id)
+    except ValueError as exc:
+        return failure_result(params, f"Invalid drive ID: {exc}")  # type: ignore[return-value]
     with get_graph_client(asset) as graph:
         children = _paginate(graph, endpoint)
 

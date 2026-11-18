@@ -16,10 +16,10 @@
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
-from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _paginate
 from ._paths import encode_path, encode_path_segment
+from ._results import failure_result
 from ..asset import Asset
 
 
@@ -103,10 +103,11 @@ def list_folder_items(
 ) -> list[ListFolderItemsOutput]:
     """List direct children at a path within the configured site drive."""
     if not asset.site_id:
-        raise ActionFailure(
+        return failure_result(
+            params,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
-            "for removing a file from specific site"
-        )
+            "for removing a file from specific site",
+        )  # type: ignore[return-value]
 
     try:
         encoded_path = encode_path(params.folder_path)
@@ -114,7 +115,7 @@ def list_folder_items(
             encode_path_segment(params.drive_id) if params.drive_id else None
         )
     except ValueError as exc:
-        raise ActionFailure(f"Invalid folder path: {exc}") from exc
+        return failure_result(params, f"Invalid folder path: {exc}")  # type: ignore[return-value]
 
     drive_endpoint = (
         f"/sites/{asset.site_id}/drives/{encoded_drive_id}"

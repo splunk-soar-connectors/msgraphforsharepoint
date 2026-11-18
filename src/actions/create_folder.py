@@ -17,11 +17,11 @@ from soar_sdk.action_results import OutputField, PermissiveActionOutput
 from soar_sdk.params import Params, Param
 import json
 from soar_sdk.abstract import SOARClient
-from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _request_graph
 from ._paths import encode_path_segment
 from .drives import drive_root_endpoint
+from ._results import failure_result
 from ..asset import Asset
 
 
@@ -141,9 +141,12 @@ def create_folder(
     try:
         parent_item_id = encode_path_segment(params.parent_item_id)
     except ValueError as exc:
-        raise ActionFailure(f"Invalid parent item ID: {exc}") from exc
+        return failure_result(params, f"Invalid parent item ID: {exc}")  # type: ignore[return-value]
 
-    drive_endpoint = drive_root_endpoint(str(asset.site_id), params.drive_id)
+    try:
+        drive_endpoint = drive_root_endpoint(str(asset.site_id), params.drive_id)
+    except ValueError as exc:
+        return failure_result(params, f"Invalid drive ID: {exc}")  # type: ignore[return-value]
     endpoint = f"{drive_endpoint}/items/{parent_item_id}/children"
     request_body = {
         "name": params.folder_name,

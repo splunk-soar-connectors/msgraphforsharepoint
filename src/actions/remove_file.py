@@ -16,10 +16,10 @@
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput
-from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _request_graph
 from ._paths import encode_path, encode_path_segment
+from ._results import failure_result
 from .drives import drive_root_endpoint
 from ..asset import Asset
 
@@ -39,12 +39,12 @@ def _file_endpoint(
         encoded_path = encode_path(file_path, allow_empty=True)
         encoded_name = encode_path_segment(file_name)
     except ValueError as exc:
-        raise ActionFailure(f"Invalid file path: {exc}") from exc
+        raise ValueError(f"Invalid file path: {exc}") from exc
     if drive_id:
         try:
             encode_path_segment(drive_id)
         except ValueError as exc:
-            raise ActionFailure(f"Invalid drive id: {exc}") from exc
+            raise ValueError(f"Invalid drive id: {exc}") from exc
     metadata_endpoint = (
         f"{drive_root_endpoint(site_id, drive_id)}/root:/{encoded_path}/{encoded_name}"
     )
@@ -56,14 +56,18 @@ def remove_file(
 ) -> list[ActionOutput]:
     """Delete a file using the legacy metadata endpoint and success message."""
     if not asset.site_id:
-        raise ActionFailure(
+        return failure_result(
+            params,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
-            "for removing a file from specific site"
-        )
+            "for removing a file from specific site",
+        )  # type: ignore[return-value]
 
-    metadata_endpoint, _ = _file_endpoint(
-        asset.site_id, params.drive_id, params.file_path, params.file_name
-    )
+    try:
+        metadata_endpoint, _ = _file_endpoint(
+            asset.site_id, params.drive_id, params.file_path, params.file_name
+        )
+    except ValueError as exc:
+        return failure_result(params, str(exc))  # type: ignore[return-value]
     with get_graph_client(asset) as graph:
         _request_graph(graph, "DELETE", metadata_endpoint)
 

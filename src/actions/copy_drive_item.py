@@ -18,11 +18,11 @@ import json
 from typing import Any
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import PermissiveActionOutput
-from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _request_graph
 from ._paths import encode_path_segment
 from .drives import drive_root_endpoint
+from ._results import failure_result
 from ..asset import Asset
 
 
@@ -63,12 +63,15 @@ def copy_drive_item(
     try:
         source_item_id = encode_path_segment(params.source_item_id)
     except ValueError as exc:
-        raise ActionFailure(f"Invalid source item ID: {exc}") from exc
+        return failure_result(params, f"Invalid source item ID: {exc}")  # type: ignore[return-value]
 
-    endpoint = (
-        f"{drive_root_endpoint(str(asset.site_id), params.source_drive_id)}"
-        f"/items/{source_item_id}/copy"
-    )
+    try:
+        endpoint = (
+            f"{drive_root_endpoint(str(asset.site_id), params.source_drive_id)}"
+            f"/items/{source_item_id}/copy"
+        )
+    except ValueError as exc:
+        return failure_result(params, f"Invalid drive ID: {exc}")  # type: ignore[return-value]
     parent_reference: dict[str, Any] = {"id": params.dest_folder_id}
     if params.dest_drive_id:
         parent_reference["driveId"] = params.dest_drive_id

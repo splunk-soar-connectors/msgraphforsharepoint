@@ -16,10 +16,10 @@
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
-from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _paginate
 from ._limits import validate_limit
+from ._results import failure_result
 from ..asset import Asset
 
 
@@ -95,15 +95,16 @@ def list_lists(
 ) -> list[ListListsOutput]:
     """List SharePoint lists and set the legacy `lists_count` summary."""
     if not asset.site_id:
-        raise ActionFailure(
+        return failure_result(
+            params,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
-            "for retrieving lists information from specific site"
-        )
+            "for retrieving lists information from specific site",
+        )  # type: ignore[return-value]
 
     try:
         limit = validate_limit(params.limit)
     except ValueError as exc:
-        raise ActionFailure(str(exc)) from exc
+        return failure_result(params, str(exc))  # type: ignore[return-value]
     with get_graph_client(asset) as graph:
         lists = _paginate(graph, f"/sites/{asset.site_id}/lists", limit=limit)
 

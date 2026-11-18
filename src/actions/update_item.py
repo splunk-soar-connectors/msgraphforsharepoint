@@ -17,10 +17,10 @@ from typing import Annotated
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
-from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _request_graph
 from ._paths import encode_path_segment
+from ._results import failure_result
 from ..asset import Asset
 
 
@@ -159,7 +159,7 @@ def update_item(
         list_id = encode_path_segment(params.list)
         item_id = encode_path_segment(params.item_id)
     except ValueError as exc:
-        raise ActionFailure(f"Invalid list or item ID: {exc}") from exc
+        return failure_result(params, f"Invalid list or item ID: {exc}")  # type: ignore[return-value]
 
     endpoint = f"/sites/{asset.site_id}/lists/{list_id}/items/{item_id}"
     with get_graph_client(asset) as graph:

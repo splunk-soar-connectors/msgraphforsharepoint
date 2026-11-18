@@ -27,6 +27,7 @@ from ..auth import get_graph_client
 from ..graph_response import GraphResponseError, get_graph_response
 from ._graph import _request_graph
 from ._paths import encode_path, encode_path_segment
+from ._results import failure_result
 from .drives import drive_root_endpoint
 from ..asset import Asset
 
@@ -227,12 +228,12 @@ def _file_endpoint(
         encoded_path = encode_path(file_path, allow_empty=True)
         encoded_name = encode_path_segment(file_name)
     except ValueError as exc:
-        raise ActionFailure(f"Invalid file path: {exc}") from exc
+        raise ValueError(f"Invalid file path: {exc}") from exc
     if drive_id:
         try:
             encode_path_segment(drive_id)
         except ValueError as exc:
-            raise ActionFailure(f"Invalid drive id: {exc}") from exc
+            raise ValueError(f"Invalid drive id: {exc}") from exc
     metadata_endpoint = (
         f"{drive_root_endpoint(site_id, drive_id)}/root:/{encoded_path}/{encoded_name}"
     )
@@ -242,14 +243,18 @@ def _file_endpoint(
 def get_file(params: GetFileParams, soar: SOARClient, asset: Asset) -> GetFileOutput:
     """Retrieve file metadata and store the file content in the SOAR vault."""
     if not asset.site_id:
-        raise ActionFailure(
+        return failure_result(
+            params,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
-            "for retrieving a file from specific site"
-        )
+            "for retrieving a file from specific site",
+        )  # type: ignore[return-value]
 
-    metadata_endpoint, encoded_name = _file_endpoint(
-        asset.site_id, params.drive_id, params.file_path, params.file_name
-    )
+    try:
+        metadata_endpoint, encoded_name = _file_endpoint(
+            asset.site_id, params.drive_id, params.file_path, params.file_name
+        )
+    except ValueError as exc:
+        return failure_result(params, str(exc))  # type: ignore[return-value]
     temporary_path: str | None = None
     try:
         descriptor, temporary_path = tempfile.mkstemp(
@@ -267,10 +272,11 @@ def get_file(params: GetFileParams, soar: SOARClient, asset: Asset) -> GetFileOu
                 file_name=encoded_name,
             )
         except Exception as exc:
-            raise ActionFailure(
+            return failure_result(
+                params,
                 "Unable to add file to the vault for attachment name: "
-                f"{encoded_name}. Error: {_vault_exception_detail(exc)}"
-            ) from exc
+                f"{encoded_name}. Error: {_vault_exception_detail(exc)}",
+            )  # type: ignore[return-value]
     finally:
         if temporary_path is not None:
             with suppress(OSError):
