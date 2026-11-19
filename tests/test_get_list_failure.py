@@ -59,7 +59,7 @@ def test_registered_get_list_failure_preserves_parameters(
         tenant_id="test-tenant",
         site_id=site_id,
         client_id="test-client",
-        client_secret="test-secret",
+        client_secret="placeholder",  # pragma: allowlist secret
     )
 
     assert action(params, soar=app.soar_client, asset=asset) is False
