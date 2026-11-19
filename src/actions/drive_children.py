@@ -15,11 +15,16 @@
 
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
+from soar_sdk.action_results import (
+    ActionOutput,
+    ActionResult,
+    OutputField,
+    PermissiveActionOutput,
+)
+from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _paginate
 from .drives import drive_children_endpoint
-from ._results import failure_result
 from ..asset import Asset
 
 
@@ -138,9 +143,15 @@ def list_drive_children(
     try:
         endpoint = drive_children_endpoint(str(asset.site_id), params.drive_id)
     except ValueError as exc:
-        return failure_result(params, f"Invalid drive ID: {exc}")  # type: ignore[return-value]
-    with get_graph_client(asset) as graph:
-        children = _paginate(graph, endpoint)
+        return ActionResult(
+            False, f"Invalid drive ID: {exc}", params.model_dump(by_alias=True)
+        )
+    try:
+        with get_graph_client(asset) as graph:
+            children = _paginate(graph, endpoint)
+    except ActionFailure as exc:
+        exc.set_action_name("list_drive_children")
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
 
     outputs = [ListDriveChildrenOutput.model_validate(item) for item in children]
     soar.set_summary(DriveChildrenSummary(drive_children_count=len(outputs)))

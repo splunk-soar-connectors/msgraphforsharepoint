@@ -15,12 +15,17 @@
 
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
+from soar_sdk.action_results import (
+    ActionOutput,
+    ActionResult,
+    OutputField,
+    PermissiveActionOutput,
+)
+from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _paginate
 from ._paths import encode_path_segment
 from ._limits import validate_limit
-from ._results import failure_result
 from ..asset import Asset
 
 
@@ -86,18 +91,23 @@ def list_drives(
 ) -> list[ListDrivesOutput]:
     """List drives for the configured SharePoint site."""
     if not asset.site_id:
-        return failure_result(
-            params,
+        return ActionResult(
+            False,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
             "for retrieving drives information from specific site",
-        )  # type: ignore[return-value]
+            params.model_dump(by_alias=True),
+        )
 
     try:
         limit = validate_limit(params.limit)
     except ValueError as exc:
-        return failure_result(params, str(exc))  # type: ignore[return-value]
-    with get_graph_client(asset) as graph:
-        drives = _paginate(graph, f"/sites/{asset.site_id}/drives", limit=limit)
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
+    try:
+        with get_graph_client(asset) as graph:
+            drives = _paginate(graph, f"/sites/{asset.site_id}/drives", limit=limit)
+    except ActionFailure as exc:
+        exc.set_action_name("list_drives")
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
 
     outputs = [ListDrivesOutput.model_validate(drive) for drive in drives]
     soar.set_summary(DrivesSummary(drives_count=len(outputs)))

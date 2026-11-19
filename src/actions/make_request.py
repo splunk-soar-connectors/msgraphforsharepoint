@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 
 import httpx
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import MakeRequestOutput
+from soar_sdk.action_results import ActionResult, MakeRequestOutput
 from soar_sdk.auth import OAuthClientError
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.params import MakeRequestParams, Param
@@ -26,7 +26,6 @@ from soar_sdk.params import MakeRequestParams, Param
 from ..asset import Asset
 from ..auth import get_graph_client
 from ..consts import GRAPH_BASE_URL
-from ._results import failure_result
 
 
 class GraphMakeRequestParams(MakeRequestParams):
@@ -158,16 +157,19 @@ def make_request(
         request = _build_request(params)
     except ActionFailure as error:
         error.set_action_name("make_request")
-        return failure_result(params, str(error))  # type: ignore[return-value]
+        return ActionResult(False, str(error), params.model_dump(by_alias=True))
 
     try:
         with get_graph_client(asset, verify=params.verify_ssl) as client:
             response = _send_request(client, request, timeout=params.timeout or 30)
+    except ActionFailure as failure:
+        failure.set_action_name("make_request")
+        return ActionResult(False, str(failure), params.model_dump(by_alias=True))
     except (httpx.HTTPError, OAuthClientError, ValueError) as error:
         # Do not echo request URLs, bodies, headers, or token responses.
         failure = _request_failure(error)
         failure.set_action_name("make_request")
-        return failure_result(params, str(failure))  # type: ignore[return-value]
+        return ActionResult(False, str(failure), params.model_dump(by_alias=True))
 
     return MakeRequestOutput(
         status_code=response.status_code, response_body=response.text

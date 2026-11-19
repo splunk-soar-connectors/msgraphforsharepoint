@@ -15,11 +15,16 @@
 
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
+from soar_sdk.action_results import (
+    ActionOutput,
+    ActionResult,
+    OutputField,
+    PermissiveActionOutput,
+)
+from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _paginate
 from ._limits import validate_limit
-from ._results import failure_result
 from ..asset import Asset
 
 
@@ -95,18 +100,23 @@ def list_lists(
 ) -> list[ListListsOutput]:
     """List SharePoint lists and set the legacy `lists_count` summary."""
     if not asset.site_id:
-        return failure_result(
-            params,
+        return ActionResult(
+            False,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
             "for retrieving lists information from specific site",
-        )  # type: ignore[return-value]
+            params.model_dump(by_alias=True),
+        )
 
     try:
         limit = validate_limit(params.limit)
     except ValueError as exc:
-        return failure_result(params, str(exc))  # type: ignore[return-value]
-    with get_graph_client(asset) as graph:
-        lists = _paginate(graph, f"/sites/{asset.site_id}/lists", limit=limit)
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
+    try:
+        with get_graph_client(asset) as graph:
+            lists = _paginate(graph, f"/sites/{asset.site_id}/lists", limit=limit)
+    except ActionFailure as exc:
+        exc.set_action_name("list_lists")
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
 
     outputs = [ListListsOutput.model_validate(list_info) for list_info in lists]
     soar.set_summary(ListListsSummary(lists_count=len(outputs)))

@@ -13,13 +13,9 @@
 # limitations under the License.
 """Registered action failure results retain their submitted parameters."""
 
-from typing import Any
-
 import pytest
-from soar_sdk.exceptions import ActionFailure
 from soar_sdk.params import Params
 
-from src.actions._results import preserve_action_failure_params
 from src.actions.add_item import AddItemParams
 from src.actions.copy_drive_item import CopyDriveItemParams
 from src.actions.create_folder import CreateFolderParams
@@ -148,17 +144,3 @@ def test_registered_action_failures_preserve_parameters(
     assert action_result.get_status() is False
     assert message in action_result.get_message()
     assert action_result.get_param() == params.model_dump(by_alias=True)
-
-
-def test_action_failure_boundary_preserves_parameters() -> None:
-    params = ListSitesParams(limit=5)
-
-    @preserve_action_failure_params
-    def action(params: Params) -> Any:
-        raise ActionFailure("Graph request failed")
-
-    assert action(params) == (
-        False,
-        "Action failure in action: Graph request failed",
-        {"limit": 5.0},
-    )

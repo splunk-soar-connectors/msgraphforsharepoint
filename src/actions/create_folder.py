@@ -13,7 +13,8 @@
 # limitations under the License.
 """SDK action boundary for the SharePoint create_folder action."""
 
-from soar_sdk.action_results import OutputField, PermissiveActionOutput
+from soar_sdk.action_results import ActionResult, OutputField, PermissiveActionOutput
+from soar_sdk.exceptions import ActionFailure
 from soar_sdk.params import Params, Param
 import json
 from soar_sdk.abstract import SOARClient
@@ -21,7 +22,6 @@ from ..auth import get_graph_client
 from ._graph import _request_graph
 from ._paths import encode_path_segment
 from .drives import drive_root_endpoint
-from ._results import failure_result
 from ..asset import Asset
 
 
@@ -141,12 +141,16 @@ def create_folder(
     try:
         parent_item_id = encode_path_segment(params.parent_item_id)
     except ValueError as exc:
-        return failure_result(params, f"Invalid parent item ID: {exc}")  # type: ignore[return-value]
+        return ActionResult(
+            False, f"Invalid parent item ID: {exc}", params.model_dump(by_alias=True)
+        )
 
     try:
         drive_endpoint = drive_root_endpoint(str(asset.site_id), params.drive_id)
     except ValueError as exc:
-        return failure_result(params, f"Invalid drive ID: {exc}")  # type: ignore[return-value]
+        return ActionResult(
+            False, f"Invalid drive ID: {exc}", params.model_dump(by_alias=True)
+        )
     endpoint = f"{drive_endpoint}/items/{parent_item_id}/children"
     request_body = {
         "name": params.folder_name,
@@ -154,10 +158,14 @@ def create_folder(
         "@microsoft.graph.conflictBehavior": "rename",
     }
 
-    with get_graph_client(asset) as graph:
-        response = _request_graph(
-            graph, "POST", endpoint, content=json.dumps(request_body)
-        )
+    try:
+        with get_graph_client(asset) as graph:
+            response = _request_graph(
+                graph, "POST", endpoint, content=json.dumps(request_body)
+            )
+    except ActionFailure as exc:
+        exc.set_action_name("create_folder")
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
 
     soar.set_message("Successfully created a folder")
     return CreateFolderOutput.model_validate(

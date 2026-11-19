@@ -17,12 +17,12 @@ from soar_sdk.params import Params, Param
 import json
 from typing import Any
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import PermissiveActionOutput
+from soar_sdk.action_results import ActionResult, PermissiveActionOutput
+from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _request_graph
 from ._paths import encode_path_segment
 from .drives import drive_root_endpoint
-from ._results import failure_result
 from ..asset import Asset
 
 
@@ -63,7 +63,9 @@ def copy_drive_item(
     try:
         source_item_id = encode_path_segment(params.source_item_id)
     except ValueError as exc:
-        return failure_result(params, f"Invalid source item ID: {exc}")  # type: ignore[return-value]
+        return ActionResult(
+            False, f"Invalid source item ID: {exc}", params.model_dump(by_alias=True)
+        )
 
     try:
         endpoint = (
@@ -71,7 +73,9 @@ def copy_drive_item(
             f"/items/{source_item_id}/copy"
         )
     except ValueError as exc:
-        return failure_result(params, f"Invalid drive ID: {exc}")  # type: ignore[return-value]
+        return ActionResult(
+            False, f"Invalid drive ID: {exc}", params.model_dump(by_alias=True)
+        )
     parent_reference: dict[str, Any] = {"id": params.dest_folder_id}
     if params.dest_drive_id:
         parent_reference["driveId"] = params.dest_drive_id
@@ -79,10 +83,14 @@ def copy_drive_item(
     if params.file_name:
         request_body["name"] = params.file_name
 
-    with get_graph_client(asset) as graph:
-        response = _request_graph(
-            graph, "POST", endpoint, content=json.dumps(request_body)
-        )
+    try:
+        with get_graph_client(asset) as graph:
+            response = _request_graph(
+                graph, "POST", endpoint, content=json.dumps(request_body)
+            )
+    except ActionFailure as exc:
+        exc.set_action_name("copy_drive_item")
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
 
     soar.set_message("Successfully copied an item")
     return CopyDriveItemOutput(**response)

@@ -15,11 +15,11 @@
 
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput
+from soar_sdk.action_results import ActionOutput, ActionResult
+from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _request_graph
 from ._paths import encode_path, encode_path_segment
-from ._results import failure_result
 from .drives import drive_root_endpoint
 from ..asset import Asset
 
@@ -36,26 +36,35 @@ def remove_folder(
 ) -> list[ActionOutput]:
     """Delete a folder using the legacy root path and success message."""
     if not asset.site_id:
-        return failure_result(
-            params,
+        return ActionResult(
+            False,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
             "for removing a file from specific site",
-        )  # type: ignore[return-value]
+            params.model_dump(by_alias=True),
+        )
 
     try:
         encoded_path = encode_path(params.folder_path)
     except ValueError as exc:
-        return failure_result(params, f"Invalid folder path: {exc}")  # type: ignore[return-value]
+        return ActionResult(
+            False, f"Invalid folder path: {exc}", params.model_dump(by_alias=True)
+        )
     if params.drive_id:
         try:
             encode_path_segment(params.drive_id)
         except ValueError as exc:
-            return failure_result(params, f"Invalid drive id: {exc}")  # type: ignore[return-value]
+            return ActionResult(
+                False, f"Invalid drive id: {exc}", params.model_dump(by_alias=True)
+            )
     endpoint = (
         f"{drive_root_endpoint(asset.site_id, params.drive_id)}/root:/{encoded_path}"
     )
-    with get_graph_client(asset) as graph:
-        _request_graph(graph, "DELETE", endpoint)
+    try:
+        with get_graph_client(asset) as graph:
+            _request_graph(graph, "DELETE", endpoint)
+    except ActionFailure as exc:
+        exc.set_action_name("remove_folder")
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
 
     soar.set_message("Successfully deleted folder")
     return []

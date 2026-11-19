@@ -15,11 +15,16 @@
 
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
+from soar_sdk.action_results import (
+    ActionOutput,
+    ActionResult,
+    OutputField,
+    PermissiveActionOutput,
+)
+from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _paginate
 from ._paths import encode_path, encode_path_segment
-from ._results import failure_result
 from ..asset import Asset
 
 
@@ -103,11 +108,12 @@ def list_folder_items(
 ) -> list[ListFolderItemsOutput]:
     """List direct children at a path within the configured site drive."""
     if not asset.site_id:
-        return failure_result(
-            params,
+        return ActionResult(
+            False,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
             "for removing a file from specific site",
-        )  # type: ignore[return-value]
+            params.model_dump(by_alias=True),
+        )
 
     try:
         encoded_path = encode_path(params.folder_path)
@@ -115,7 +121,9 @@ def list_folder_items(
             encode_path_segment(params.drive_id) if params.drive_id else None
         )
     except ValueError as exc:
-        return failure_result(params, f"Invalid folder path: {exc}")  # type: ignore[return-value]
+        return ActionResult(
+            False, f"Invalid folder path: {exc}", params.model_dump(by_alias=True)
+        )
 
     drive_endpoint = (
         f"/sites/{asset.site_id}/drives/{encoded_drive_id}"
@@ -123,8 +131,12 @@ def list_folder_items(
         else f"/sites/{asset.site_id}/drive"
     )
     endpoint = f"{drive_endpoint}/root:/{encoded_path}:/children"
-    with get_graph_client(asset) as graph:
-        items = _paginate(graph, endpoint)
+    try:
+        with get_graph_client(asset) as graph:
+            items = _paginate(graph, endpoint)
+    except ActionFailure as exc:
+        exc.set_action_name("list_folder_items")
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
 
     outputs = [ListFolderItemsOutput.model_validate(item) for item in items]
     soar.set_summary(FolderItemsSummary(items_count=len(outputs)))

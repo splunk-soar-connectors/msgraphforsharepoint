@@ -16,11 +16,16 @@
 from typing import Annotated
 from soar_sdk.params import Params, Param
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
+from soar_sdk.action_results import (
+    ActionOutput,
+    ActionResult,
+    OutputField,
+    PermissiveActionOutput,
+)
+from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ._graph import _request_graph
 from ._paths import encode_path_segment
-from ._results import failure_result
 from ..asset import Asset
 
 
@@ -155,13 +160,19 @@ def add_item(params: AddItemParams, soar: SOARClient, asset: Asset) -> AddItemOu
     try:
         list_id = encode_path_segment(params.list)
     except ValueError as exc:
-        return failure_result(params, f"Invalid list ID: {exc}")  # type: ignore[return-value]
+        return ActionResult(
+            False, f"Invalid list ID: {exc}", params.model_dump(by_alias=True)
+        )
 
     endpoint = f"/sites/{asset.site_id}/lists/{list_id}/items"
-    with get_graph_client(asset) as graph:
-        response = _request_graph(
-            graph, "POST", endpoint, content=params.item.encode("utf-8")
-        )
+    try:
+        with get_graph_client(asset) as graph:
+            response = _request_graph(
+                graph, "POST", endpoint, content=params.item.encode("utf-8")
+            )
+    except ActionFailure as exc:
+        exc.set_action_name("add_item")
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
 
     output = AddItemOutput.model_validate(response)
     soar.set_summary(ListItemSummary(sites_count=1))

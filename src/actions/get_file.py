@@ -21,13 +21,17 @@ from pathlib import Path
 from contextlib import suppress
 from urllib.parse import urlsplit
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
+from soar_sdk.action_results import (
+    ActionOutput,
+    ActionResult,
+    OutputField,
+    PermissiveActionOutput,
+)
 from soar_sdk.exceptions import ActionFailure
 from ..auth import get_graph_client
 from ..graph_response import GraphResponseError, get_graph_response
 from ._graph import _request_graph
 from ._paths import encode_path, encode_path_segment
-from ._results import failure_result
 from .drives import drive_root_endpoint
 from ..asset import Asset
 
@@ -243,18 +247,19 @@ def _file_endpoint(
 def get_file(params: GetFileParams, soar: SOARClient, asset: Asset) -> GetFileOutput:
     """Retrieve file metadata and store the file content in the SOAR vault."""
     if not asset.site_id:
-        return failure_result(
-            params,
+        return ActionResult(
+            False,
             "The asset configuration parameter 'Sharepoint Site ID' is required "
             "for retrieving a file from specific site",
-        )  # type: ignore[return-value]
+            params.model_dump(by_alias=True),
+        )
 
     try:
         metadata_endpoint, encoded_name = _file_endpoint(
             asset.site_id, params.drive_id, params.file_path, params.file_name
         )
     except ValueError as exc:
-        return failure_result(params, str(exc))  # type: ignore[return-value]
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
     temporary_path: str | None = None
     try:
         descriptor, temporary_path = tempfile.mkstemp(
@@ -272,11 +277,15 @@ def get_file(params: GetFileParams, soar: SOARClient, asset: Asset) -> GetFileOu
                 file_name=encoded_name,
             )
         except Exception as exc:
-            return failure_result(
-                params,
+            return ActionResult(
+                False,
                 "Unable to add file to the vault for attachment name: "
                 f"{encoded_name}. Error: {_vault_exception_detail(exc)}",
-            )  # type: ignore[return-value]
+                params.model_dump(by_alias=True),
+            )
+    except ActionFailure as exc:
+        exc.set_action_name("get_file")
+        return ActionResult(False, str(exc), params.model_dump(by_alias=True))
     finally:
         if temporary_path is not None:
             with suppress(OSError):
