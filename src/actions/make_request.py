@@ -160,7 +160,9 @@ def make_request(
         return ActionResult(False, str(error), params.model_dump(by_alias=True))
 
     try:
-        with get_graph_client(asset, verify=params.verify_ssl) as client:
+        with get_graph_client(
+            asset, str(soar.get_asset_id()), verify=params.verify_ssl
+        ) as client:
             response = _send_request(client, request, timeout=params.timeout or 30)
     except ActionFailure as failure:
         failure.set_action_name("make_request")

@@ -18,6 +18,9 @@ separate **Column Info** and **Items Info** tables.
 
 ## Authentication
 
+The app supports **Client Credentials** and **Delegated** authentication. The default is **Client
+Credentials** so existing asset configurations continue to use app-only authentication.
+
 You will first need to create an application on the Azure AD Admin Portal. Follow the steps outlined
 below to do this:
 
@@ -37,41 +40,27 @@ below to do this:
     secure, as it cannot be retrieved after closing the window.
 
   - Under **Authentication** , select **Add a platform** . In the **Add a platform** window,
-    select **Web** . For non-admin consent, add the webhook callback URL printed during **Test
-    Connectivity** as a redirect URI. The test waits for consent, so register that URL before
-    opening the Microsoft consent link.
+    select **Web** . For delegated authentication, register the webhook callback URL printed in
+    the **Using OAuth URL:** log line during **Test Connectivity** as a redirect URI.
 
   - Under **API Permissions** Click on **Add a permission** .
 
   - Under the **Microsoft API** section, select **Microsoft Graph** .
 
-  - There are two ways to gives the Application and Delegated permissions to the app.
-
-    1. Permissive mode
-
-       - Sites.Read.All
-       - Files.Read.All
-       - Files.ReadWrite.All
-       - Sites.ReadWrite.All
-
-    1. Restrictive mode
-
-       - Sites.Selected (only Application permission)
-
-       The user will have to configure permissions for each of the sites that they are working
-       with. You can find more information
-       [here](https://devblogs.microsoft.com/microsoft365dev/controlling-app-access-on-specific-sharepoint-site-collections/)
-       . Also, while using this mode 'list sites' action will return the empty list.\
-       **Note:** You need **Sites.FullControl.All** Application permission while using the site
-       permission endpoint.
+  - Add Microsoft Graph permissions for the authentication method you will use. For **Delegated**,
+    grant the delegated `Sites.ReadWrite.All` permission. The app also requests `offline_access` so
+    the SDK can refresh the user's token. For **Client Credentials**,
+    configure the required application permissions and grant admin consent. `Sites.Selected` is
+    supported for application access; configure access for each site. The `list sites` action may
+    return an empty list with this permission. The site permission endpoint requires application
+    `Sites.FullControl.All`.
 
   - After making these changes, click **Add permissions** at the bottom of the screen.
 
-- If you are an admin user, then click **Grant admin consent for Phantom** and provide admin
-  consent. And configure asset configuration parameter **Admin Consent Already Provided** with
-  value **True** .
+- For **Client Credentials**, an admin can click **Grant admin consent for Phantom** and provide
+  admin consent. Configure **Admin Consent Already Provided** as **True** after consent is granted.
 
-- If you are a non-admin user, then follow the steps listed below to grant admin consent:
+- For **Client Credentials** when consent has not been granted, follow these steps:
 
   - Configure an asset configuration parameter **Admin Consent Already Provided** with value
     **False** .
@@ -87,12 +76,18 @@ below to do this:
   - Now go back and check the message on the Test Connectivity dialog box, it should say **Test
     Connectivity Passed** .
 
+- For **Delegated**, set **Auth Method** to **Delegated**, register the callback URL shown under
+  **Using OAuth URL:** as a Web redirect URI, and run **Test Connectivity**. Open the separate
+  authorization URL printed in the log and sign in as the user whose delegated permissions should
+  be used. After authorization, the SDK stores the user's token and refreshes it as needed.
+
 ## Phantom Asset for SharePoint
 
 When creating an asset for the **MS Graph for SharePoint** app, place the **Application ID** and
 **Client secret** of the app created during the previous step in the **Client/Application ID** and
 **Client Secret** fields respectively. You can also find **Tenant ID** on the application overview
-page. After filling in all the required values, click **SAVE** .
+page. Set **Auth Method** to **Delegated** for user-based access or leave the default **Client
+Credentials** for app-only access. After filling in all the required values, click **SAVE** .
 
 For non-admin consent, the redirect URI is the SDK webhook URL printed in the **Test Connectivity**
 log. Register that URL as a **Web** redirect URI in the Microsoft app registration before opening
@@ -142,6 +137,7 @@ This table lists the configuration variables required to operate MS Graph for Sh
 
 VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
+**auth_method** | optional | string | Authentication method |
 **tenant_id** | required | string | Tenant ID |
 **site_id** | optional | string | SharePoint Site ID |
 **endpoint_test_connectivity** | optional | string | Endpoint for test connectivity (Valid format: /sites/{hostname}:/{site-server-relative-url}) |

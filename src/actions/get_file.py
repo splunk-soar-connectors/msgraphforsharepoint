@@ -266,7 +266,7 @@ def get_file(params: GetFileParams, soar: SOARClient, asset: Asset) -> GetFileOu
             dir=soar.vault.get_vault_tmp_dir()
         )
         os.close(descriptor)
-        with get_graph_client(asset) as graph:
+        with get_graph_client(asset, str(soar.get_asset_id())) as graph:
             metadata = _request_graph(graph, "GET", metadata_endpoint)
             _download_file(graph, f"{metadata_endpoint}:/content", temporary_path)
 

@@ -60,7 +60,7 @@ def remove_folder(
         f"{drive_root_endpoint(asset.site_id, params.drive_id)}/root:/{encoded_path}"
     )
     try:
-        with get_graph_client(asset) as graph:
+        with get_graph_client(asset, str(soar.get_asset_id())) as graph:
             _request_graph(graph, "DELETE", endpoint)
     except ActionFailure as exc:
         exc.set_action_name("remove_folder")

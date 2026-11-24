@@ -132,7 +132,7 @@ def list_folder_items(
     )
     endpoint = f"{drive_endpoint}/root:/{encoded_path}:/children"
     try:
-        with get_graph_client(asset) as graph:
+        with get_graph_client(asset, str(soar.get_asset_id())) as graph:
             items = _paginate(graph, endpoint)
     except ActionFailure as exc:
         exc.set_action_name("list_folder_items")

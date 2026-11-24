@@ -25,9 +25,8 @@ if TYPE_CHECKING:
     from soar_sdk.app import App
 
 
-def register_webhooks(app: App) -> None:
-    """Register the unauthenticated Microsoft redirect callback."""
-    app.enable_webhooks(default_requires_auth=False)
+def register_admin_consent_webhook(app: App) -> None:
+    """Register the unauthenticated Microsoft admin-consent callback."""
 
     @app.webhook("/admin-consent", allowed_methods=["GET"])
     def handle_admin_consent(request: WebhookRequest) -> WebhookResponse:

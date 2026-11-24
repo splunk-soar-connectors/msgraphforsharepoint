@@ -311,7 +311,7 @@ def get_list(params: GetListParams, soar: SOARClient, asset: Asset) -> GetListOu
 
     endpoint = f"/sites/{asset.site_id}/lists/{encoded_list_id}"
     try:
-        with get_graph_client(asset) as graph:
+        with get_graph_client(asset, str(soar.get_asset_id())) as graph:
             list_info = _request_graph(
                 graph, "GET", endpoint, params={"expand": "columns"}
             )

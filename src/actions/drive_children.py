@@ -147,7 +147,7 @@ def list_drive_children(
             False, f"Invalid drive ID: {exc}", params.model_dump(by_alias=True)
         )
     try:
-        with get_graph_client(asset) as graph:
+        with get_graph_client(asset, str(soar.get_asset_id())) as graph:
             children = _paginate(graph, endpoint)
     except ActionFailure as exc:
         exc.set_action_name("list_drive_children")

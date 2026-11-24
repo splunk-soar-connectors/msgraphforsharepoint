@@ -166,7 +166,7 @@ def add_item(params: AddItemParams, soar: SOARClient, asset: Asset) -> AddItemOu
 
     endpoint = f"/sites/{asset.site_id}/lists/{list_id}/items"
     try:
-        with get_graph_client(asset) as graph:
+        with get_graph_client(asset, str(soar.get_asset_id())) as graph:
             response = _request_graph(
                 graph, "POST", endpoint, content=params.item.encode("utf-8")
             )

@@ -112,7 +112,7 @@ def list_lists(
     except ValueError as exc:
         return ActionResult(False, str(exc), params.model_dump(by_alias=True))
     try:
-        with get_graph_client(asset) as graph:
+        with get_graph_client(asset, str(soar.get_asset_id())) as graph:
             lists = _paginate(graph, f"/sites/{asset.site_id}/lists", limit=limit)
     except ActionFailure as exc:
         exc.set_action_name("list_lists")

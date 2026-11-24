@@ -15,8 +15,16 @@
 
 from soar_sdk.asset import BaseAsset, AssetField, FieldCategory
 
+from .consts import AUTH_METHOD_CLIENT_CREDENTIALS, AUTH_METHOD_DELEGATED
+
 
 class Asset(BaseAsset):
+    auth_method: str | None = AssetField(
+        description="Authentication method",
+        default=AUTH_METHOD_CLIENT_CREDENTIALS,
+        value_list=[AUTH_METHOD_DELEGATED, AUTH_METHOD_CLIENT_CREDENTIALS],
+        category=FieldCategory.CONNECTIVITY,
+    )
     tenant_id: str = AssetField(
         description="Tenant ID", category=FieldCategory.CONNECTIVITY
     )

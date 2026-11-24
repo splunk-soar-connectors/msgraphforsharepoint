@@ -170,7 +170,7 @@ def update_item(
 
     endpoint = f"/sites/{asset.site_id}/lists/{list_id}/items/{item_id}"
     try:
-        with get_graph_client(asset) as graph:
+        with get_graph_client(asset, str(soar.get_asset_id())) as graph:
             response = _request_graph(
                 graph, "PATCH", endpoint, content=params.item.encode("utf-8")
             )

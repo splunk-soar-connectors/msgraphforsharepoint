@@ -14,4 +14,14 @@
 """Connector constants shared by the Microsoft Graph integration."""
 
 GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0"
+
+AUTH_METHOD_DELEGATED = "Delegated"
+AUTH_METHOD_CLIENT_CREDENTIALS = "Client Credentials"
+DELEGATED_GRAPH_SCOPES = ["Sites.ReadWrite.All", "offline_access"]
+OAUTH_START_ROUTE = "oauth/start"
+OAUTH_CALLBACK_ROUTE = "oauth/callback"
+AUTHORIZATION_URL_STATE_KEY = "msgraphforsharepoint_authorization_url"
+AUTHORIZATION_ERROR_STATE_KEY = "msgraphforsharepoint_authorization_error"
+REDIRECT_URI_STATE_KEY = "msgraphforsharepoint_redirect_uri"
+OAUTH_SUCCESS_MESSAGE = "Authorization successful! You can close this window."
 MAX_PAGINATION_PAGES = 1000

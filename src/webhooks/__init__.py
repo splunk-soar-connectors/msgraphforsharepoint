@@ -12,3 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """SDK webhook endpoints."""
+
+from .admin_consent import register_admin_consent_webhook
+from .oauth import register_oauth_webhooks
+
+
+def register_webhooks(app) -> None:
+    """Register callback routes for delegated OAuth and admin consent."""
+    app.enable_webhooks(default_requires_auth=False)
+    register_oauth_webhooks(app)
+    register_admin_consent_webhook(app)

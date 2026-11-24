@@ -159,7 +159,7 @@ def create_folder(
     }
 
     try:
-        with get_graph_client(asset) as graph:
+        with get_graph_client(asset, str(soar.get_asset_id())) as graph:
             response = _request_graph(
                 graph, "POST", endpoint, content=json.dumps(request_body)
             )
