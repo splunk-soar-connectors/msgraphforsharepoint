@@ -25,6 +25,7 @@ from .get_list import get_list, GetListSummary
 from .add_item import add_item, ListItemSummary as AddItemSummary
 from .update_item import update_item, ListItemSummary as UpdateItemSummary
 from .get_file import get_file, GetFileSummary
+from .upload_file import upload_file, UploadFileSummary
 from .remove_file import remove_file
 from .remove_folder import remove_folder
 from .make_request import make_request
@@ -123,6 +124,14 @@ def register_actions(app: App) -> App:
         render_as="table",
         verbose="The 'file path' parameter will be considered from the <b>Shared Document</b> library in the configured Site. If the file is available under the <b>Shared Document</b> library itself, then provide only the '/' value in the 'file path' parameter.",
         summary_type=GetFileSummary,
+    )
+    app.register_action(
+        action=upload_file,
+        description="Uploads a file from the SOAR vault to a SharePoint document library",
+        action_type="generic",
+        read_only=False,
+        render_as="table",
+        summary_type=UploadFileSummary,
     )
     app.register_action(
         action=remove_file,
