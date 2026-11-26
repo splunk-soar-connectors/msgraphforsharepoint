@@ -163,6 +163,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [add item](#action-add-item) - Add an item to a list on a SharePoint Site <br>
 [update item](#action-update-item) - Update an item in a list on a SharePoint Site <br>
 [get file](#action-get-file) - Retrieves a file from a SharePoint site <br>
+[upload file](#action-upload-file) - Uploads a file from the SOAR vault to a SharePoint document library <br>
 [remove file](#action-remove-file) - Removes a file from a SharePoint site <br>
 [remove folder](#action-remove-folder) - Removes a folder from a SharePoint site <br>
 [make request](#action-make-request) - Call Microsoft Graph with the asset's authentication and return status and raw body.
@@ -878,6 +879,43 @@ action_result.data.\*.shared.scope | string | | users |
 action_result.data.\*.size | numeric | | 1422 |
 action_result.data.\*.webUrl | string | `url` | https://test-tenant-name.sharepoint.com/sites/TestSiteName/Shared%20Documents/test_folder_name/test_file_name.txt |
 action_result.summary.vault_id | string | `sha1` `vault id` | |
+summary.total_objects | numeric | | 1 |
+summary.total_objects_successful | numeric | | 1 |
+
+## action: 'upload file'
+
+Uploads a file from the SOAR vault to a SharePoint document library
+
+Type: **generic** <br>
+Read only: **False**
+
+If no destination file name is provided, the vault attachment name is used. Uploading to a path where a file with the same name exists replaces that file. Microsoft Graph simple upload supports files up to 250 MB.
+
+#### Action Parameters
+
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**vault_id** | required | Vault ID of the file to upload | string | `vault id` |
+**file_path** | optional | Folder path on the site. Leave blank to upload to the library root. | string | |
+**file_name** | optional | Optional destination file name. Defaults to the vault attachment name. | string | |
+**drive_id** | optional | Drive ID to upload to. If omitted, the default drive is used. | string | `sharepoint drive id` |
+
+#### Action Output
+
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string | | success failure |
+action_result.message | string | | |
+action_result.parameter.vault_id | string | `vault id` | |
+action_result.parameter.file_path | string | | |
+action_result.parameter.file_name | string | | |
+action_result.parameter.drive_id | string | `sharepoint drive id` | |
+action_result.data.*.id | string | `sharepoint drive item id` | |
+action_result.data.*.name | string | | |
+action_result.data.*.size | numeric | | |
+action_result.data.*.webUrl | string | `url` | |
+action_result.summary.file_name | string | | |
+action_result.summary.web_url | string | `url` | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 

@@ -29,6 +29,7 @@ from src.actions.remove_file import RemoveFileParams
 from src.actions.remove_folder import RemoveFolderParams
 from src.actions.sites import ListSitesParams
 from src.actions.update_item import UpdateItemParams
+from src.actions.upload_file import UploadFileParams
 from src.app import create_msgraphforsharepoint_app
 from src.asset import Asset
 
@@ -101,6 +102,12 @@ from src.asset import Asset
         (
             "get_file",
             GetFileParams(file_name="report.csv", file_path="/", drive_id=None),
+            None,
+            "The asset configuration parameter 'Sharepoint Site ID' is required ",
+        ),
+        (
+            "upload_file",
+            UploadFileParams(vault_id="vault-id"),
             None,
             "The asset configuration parameter 'Sharepoint Site ID' is required ",
         ),
