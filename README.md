@@ -126,10 +126,6 @@ host name. The action returns the HTTP status code and raw response body, includ
 responses. It does not follow redirects or paginate results. Requests using write methods can
 change Microsoft Graph data, subject to the permissions granted to the app registration.
 
-## Upload files
-
-The **upload file** action uploads a file from the SOAR vault to the configured SharePoint site. You can choose a destination folder, file name, and drive. If no destination name is supplied, the vault attachment name is used. Uploading to a path where a file with the same name exists replaces that file. Microsoft Graph simple upload supports files up to 250 MB (250,000,000 bytes).
-
 ## Port Information
 
 The app uses HTTP/ HTTPS protocol for communicating with the Microsoft servers. Below are the
